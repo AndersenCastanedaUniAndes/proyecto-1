@@ -1,15 +1,15 @@
 from pydantic import BaseModel
 from datetime import datetime
 
-class PedidoCreate(BaseModel):
+class InventarioCreate(BaseModel):
     cliente: str
 
 class LineaCreate(BaseModel):
     producto: str
     cantidad: int
 
-class PedidoResponse(BaseModel):
+class InventarioResponse(BaseModel):
     id: int
     cliente: str
-    fecha: datetime
+    fecha_caducidad: datetime
     total_items: int = 0

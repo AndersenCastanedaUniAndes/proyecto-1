@@ -1,19 +1,21 @@
 import asyncpg
-import asyncio
+import os
+import logging
 
 pool = None
 
+
+def _get_db_dsn():
+    # DATABASE_URL standard e.g. postgresql://user:pass@host:5432/dbname
+    return os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/cqrs_db")
+
+
 async def init_db():
+    """Inicializa el pool de conexiones usando la variable de entorno DATABASE_URL."""
     global pool
-    pool = await asyncpg.create_pool(
-        user="postgres",
-        password="postgres",
-        database="cqrs_db",
-        host="localhost",
-        port=5432,
-        min_size=1,
-        max_size=10
-    )
+    dsn = _get_db_dsn()
+    logging.getLogger(__name__).info(f"Inicializando pool a {dsn}")
+    pool = await asyncpg.create_pool(dsn=dsn, min_size=1, max_size=10)
 
 async def fetch(sql: str, *args):
     """Ejecuta un SELECT que devuelve varias filas"""
