@@ -1,3 +1,4 @@
-INVENTARIO_CREADO = "inventarioCreado"
-LINEA_AGREGADA = "LineaAgregada"
-INVENTARIO_ELIMINADO = "inventarioEliminado"
+ITEM_UPSERTED = "ItemUpserted"
+ITEM_ADJUSTED = "ItemAdjusted"
+ITEM_RESERVED = "ItemReserved"
+ITEM_RELEASED = "ItemReleased"

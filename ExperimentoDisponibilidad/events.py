@@ -1,9 +1,9 @@
+from fastapi.encoders import jsonable_encoder
 import redis.asyncio as redis
-import json
-import os
-import logging
+import json, os, logging, uuid
+from redis import Redis
 
-redis_client = None
+redis_client: Redis = None
 
 
 def _get_redis_url():
@@ -21,6 +21,14 @@ async def publish_event(event_type, payload):
     if not redis_client:
         raise RuntimeError("Redis no inicializado; invoca init_redis() en startup")
 
-    event = {"type": event_type, "payload": payload}
+    event = {
+        "id"      : str(uuid.uuid4()),
+        "type"    : event_type,
+        "payload" : payload
+    }
+
+    print(f"\nEvento publicado: {event}\n")
+
+    encoded_event = jsonable_encoder(event)
     logging.getLogger(__name__).debug(f"Publicando evento {event_type}: {payload}")
-    await redis_client.publish("events", json.dumps(event))
+    await redis_client.publish("events", json.dumps(encoded_event))

@@ -31,3 +31,8 @@ async def execute(sql: str, *args):
     """Ejecuta un comando (INSERT/UPDATE/DELETE) sin necesidad de retornar filas"""
     async with pool.acquire() as conn:
         return await conn.execute(sql, *args)
+
+
+async def fetchval(sql: str, *args):
+    async with pool.acquire() as conn:
+        return await conn.fetchval(sql, *args)
