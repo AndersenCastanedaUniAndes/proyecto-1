@@ -2,7 +2,7 @@ import asyncpg
 import os
 import logging
 
-pool = None
+pool: asyncpg.Pool = None
 
 
 def _get_db_dsn():

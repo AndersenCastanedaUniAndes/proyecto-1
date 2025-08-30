@@ -1,0 +1,35 @@
+@startuml flujo_procesamiento_eventos
+title MediSupply - Componente de Inventario\nArquitectura Event-Driven CQRS + Unit of Work
+
+actor Usuario1
+
+participant "Comando" as Command
+participant "Consulta" as Query
+database "Modelo de Escritura\nPostgreSQL" as WriteDB
+queue " Inventory-events \nRedis Stream" as Redis
+participant "Consumer Worker" as Worker
+database "Tabla de Deduplicación" as Dedup
+database "Modelo de Lectura\nTabla Denormalizada" as ReadDB
+
+alt Create | Update | Delete]\n[Unit of Work
+Usuario1 --> Command : Ejecuta comando (e.g. ajustar stock)
+Command  --> WriteDB : Transacción: actualiza estado
+Command  --> Redis : Emite evento (e.g. ITEM_ADJUSTED)
+Command  --> Usuario1 : Confirma ejecución
+end
+
+alt Sincronización Tabla de Lectura]\n[Unit of Work
+Redis  --> Worker : Entrega evento
+Worker --> Dedup : Verifica si event_id ya fue procesado
+Dedup  --> ReadDB : Actualiza proyección denormalizada 
+ReadDB --> Dedup : Marca event_id como procesado
+end
+
+alt Read
+Usuario1 --> Query : Ejecuta consulta (e.g. stock disponible)
+Query    --> ReadDB : Solicita estado actual
+ReadDB   --> Query : Devuelve estado actual
+Query    --> Usuario1 : Confirma consulta
+end
+
+@enduml

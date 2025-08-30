@@ -1,8 +1,9 @@
 from fastapi import FastAPI, HTTPException, Response
 from models import ItemUpsert, StockAdjust, StockReserve, ItemResponse, ItemKey
 import commands, queries
-from db import init_db, pool
-from events import init_redis, redis_client
+import db, events
+from db import init_db
+from events import init_redis
 import logging, os
 
 
@@ -17,27 +18,39 @@ async def startup():
 
 
 @app.get("/healthz")
-async def healthz(): return {"status":"ok"}
+async def healthz():
+    return {"status":"ok"}
 
 
 @app.get("/readyz")
 async def readyz():
+    import json, asyncio
+    errors = []
     try:
-        async with pool.acquire() as conn:
+        async with db.pool.acquire() as conn:
             await conn.fetchval("select 1")
-        assert redis_client is not None
-        await redis_client.ping()
-        return {"status":"ready"}
-    except Exception:
-        return Response(status_code=503, content='{"status":"not-ready"}', media_type="application/json")
+    except Exception as e:
+        errors.append(f"db:{e}")
+    try:
+        if not events.redis_client:
+            raise RuntimeError("redis_client=None")
+        # timeout defensivo
+        await asyncio.wait_for(events.redis_client.ping(), timeout=1.0)
+    except Exception as e:
+        errors.append(f"redis:{e}")
+    if errors:
+        return Response(
+            status_code=503,
+            content=json.dumps({"status":"not-ready","errors":errors}),
+            media_type="application/json",
+        )
+    return {"status":"ready"}
 
 
 # --- COMANDOS ---
 @app.post("/items/upsert", response_model=ItemResponse)
 async def upsert_item(data: ItemUpsert):
     payload = await commands.upsert_item(data)
-
-    print(f"\npayload: {payload}\n")
 
     return ItemResponse(
         tenant_id      = payload["tenant_id"],

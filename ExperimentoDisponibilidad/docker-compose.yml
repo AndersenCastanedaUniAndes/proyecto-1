@@ -1,51 +1,89 @@
 version: "3.9"
 
 services:
-  # api:
-  #   build: .
-  #   container_name: cqrs_api
-  #   ports:
-  #     - "8000:8000"
-  #   depends_on:
-  #     - db
-  #     - redis
-  #   environment:
-  #     - DATABASE_URL=postgresql://postgres:postgres@db:5432/cqrs_db
-  #     - REDIS_URL=redis://redis:6379
-  #   restart: always
-
-  # worker:
-  #   build: .
-  #   container_name: cqrs_worker
-  #   command: ["python", "consumers.py"]
-  #   depends_on:
-  #     - db
-  #     - redis
-  #   environment:
-  #     - DATABASE_URL=postgresql://postgres:postgres@db:5432/cqrs_db
-  #     - REDIS_URL=redis://redis:6379
-  #   restart: always
-
-  db:
-    image: postgres:15
-    container_name: cqrs_postgres
+  postgres:
+    image: postgres:16
     environment:
+      POSTGRES_DB: cqrs_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: cqrs_db
+    ports: ["5432:5432"]
     volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
-    ports:
-      - "5432:5432"
-    restart: always
+      - db-data:/var/lib/postgresql/data
+      # Init en primer arranque; para re-aplicar usa el job "migrate" de abajo
+      - ./schema.sql:/docker-entrypoint-initdb.d/00-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cqrs_db || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   redis:
-    image: redis:7
-    container_name: cqrs_redis
-    ports:
-      - "6379:6379"
-    restart: always
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    command: ["redis-server","--appendonly","yes"]
+    healthcheck:
+      test: ["CMD-SHELL","redis-cli ping | grep PONG || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Job idempotente para aplicar schema en cada arranque (útil si ya existe el volumen)
+  migrate:
+    image: postgres:16
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/cqrs_db
+    volumes:
+      - ./schema.sql:/schema.sql:ro
+    entrypoint: [ "sh", "-lc", "psql \"$${DATABASE_URL}\" -f /schema.sql" ]
+    # Se ejecuta una vez y sale; los servicios que dependen de 'migrate' esperan a que termine.
+
+  api:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/cqrs_db
+      REDIS_URL: redis://redis:6379
+      LOG_LEVEL: INFO
+      EVENT_STREAM: events-stream
+      EVENT_GROUP: projector
+    ports: ["8000:8000"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/readyz || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+
+  # Un único servicio 'consumer' que puedes escalar a N réplicas
+  consumer:
+    build: .
+    command: ["python","consumers.py"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/cqrs_db
+      REDIS_URL: redis://redis:6379
+      LOG_LEVEL: INFO
+      EVENT_STREAM: events-stream
+      EVENT_GROUP: projector
+      # Si no pones CONSUMER_NAME, tu código usa por defecto c-<pid>
+      # CONSUMER_NAME: c-1
+    restart: unless-stopped
 
 volumes:
-  pgdata:
+  db-data:
