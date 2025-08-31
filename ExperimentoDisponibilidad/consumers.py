@@ -162,10 +162,10 @@ async def main():
                             # Mover a DLQ y ACK para no ciclar
                             try:
                                 await r.xadd(DLQ_STREAM, {
-                                    "orig_id": msg_id,
-                                    "type": fields.get("type", ""),
-                                    "payload": fields.get("payload", ""),
-                                    "error": str(e)[:500]
+                                    "orig_id" : msg_id,
+                                    "type"    : fields.get("type", ""),
+                                    "payload" : fields.get("payload", ""),
+                                    "error"   : str(e)[:500]
                                 })
                             finally:
                                 await r.xack(STREAM_KEY, GROUP, msg_id)
