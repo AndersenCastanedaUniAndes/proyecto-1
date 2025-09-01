@@ -1,0 +1,113 @@
+MediSupply
+
+@startuml
+skinparam monochrome false
+skinparam shadowing true
+skinparam defaultFontName Arial
+left to right direction
+
+title "MediSupply"
+
+' Presentación
+rectangle "Capa de Presentación" {
+  component "[Aplicación Web]" as webApp
+  component "[Aplicación Móvil]" as mobileApp
+}
+
+' Servicios internos
+rectangle "Capa de Negocio" {
+  component "Ingress" as ingress
+  component "Autenticación" as autenticacion
+
+  rectangle "Inventario (Detallado)" as InventarioGroup {
+    rectangle "Componente de Inventario" as InventoryComponent {
+      component "Inventario" as Inventory
+      component "Comando" as Command
+      component "Consulta" as Query
+    }
+    rectangle "Cola de Mensajes\nInventario" as ColaDeMensajes {
+      queue " Redis Streams " as MessageQueue
+    }
+    rectangle Consumers {
+      component "Consumidor1" as Consumer1
+      component "Consumidor2" as Consumer2
+    }
+  }
+
+  component "Pedidos" as pedidos
+  component "Ventas" as ventas
+  component "Envíos" as envios
+}
+
+' Capa de datos
+rectangle "Capa de Datos" {
+  database "Autenticación DB" as autenticacionDB
+  database "Inventario DB" as InventarioDB {
+    artifact "Tabla de Escritura" as WriteTable
+    artifact "Tabla de Lectura" as ReadTable
+  }
+  database "Pedidos DB" as pedidosDB
+  database "Ventas DB" as ventasDB
+  database "Envíos DB" as enviosDB
+}
+
+' Mensajería
+queue "\n                           Redis Streams\n                              (Event Bus)                             \n" as redis
+
+' Externos
+cloud "Servicios Externos" {
+  component "Payment API" as pagos
+  component "GeoLocation API" as geoLocationService
+}
+
+' ' Conexiones desde presentación
+' webApp -[#Blue]-> ingress : "REST API"
+' mobileApp -[#Blue]-> ingress : "REST API"
+
+' ingress -[#CadetBlue]-> autenticacion : "Login/Registro"
+' autenticacion -[#CadetBlue]-> autenticacionDB : "Query"
+
+' ingress -[#Red]-> ventas : "Ventas"
+' ventas -[#Red]-> ventasDB : "Query"
+
+' ingress -[#Orange]-> Inventario : "Inventario"
+' Inventario -[#Orange]-> InventarioDB : "Query"
+
+' ingress -[#RosyBrown]-> pedidos : "Pedidos"
+' pedidos -[#RosyBrown]-> pedidosDB : "Query"
+
+' ingress -[#Purple]-> envios : "Envíos"
+' envios -[#Purple]-> enviosDB : "Query"
+
+' ' Eventos entre servicios
+' pedidos -[#BlueViolet]-> redis : OrdenCreada
+' redis -[#BlueViolet]-> Inventario : "OrdenCreada"
+' redis -[#BlueViolet]-> envios : "OrdenCreada"
+
+' Inventario -[#DarkRed]-> redis : "EstadoDelStock"
+' redis -[#DarkRed]-> pedidos : "EstadoDelStock"
+
+' ventas -[#Green]-> redis : "OrdenConfirmada"
+' redis -[#Green]-> envios : "OrdenConfirmada"
+
+' ' Conexiones externas
+' ventas -[#Red]-> pagos : "\nProcesar pago"
+' envios -[#Purple]-> geoLocationService : "\n\nTracking"
+
+
+' Inventario
+[Inventory] -[#Red]-> [Command]
+[Inventory] -[#Green]-> [Query]
+
+[Command] -[#Red]-> [WriteTable]
+[Command] .[#Red].> [MessageQueue]
+[MessageQueue] .[#RoyalBlue].> [Consumers]
+
+[Query] -[#Green]-> [ReadTable]
+
+Consumers .[#RoyalBlue]. Consumer1
+Consumers .[#RoyalBlue]. Consumer2
+
+Consumers -[#RoyalBlue]left-> [ReadTable]
+
+@enduml

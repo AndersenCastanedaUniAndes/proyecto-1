@@ -1,0 +1,23 @@
+namespace: cqrs-demo
+
+image:
+  repository: tu-registry/cqrs-api
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount:
+  api: 3
+  worker: 2
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 8000
+
+postgres:
+  user: postgres
+  password: postgres
+  db: cqrs_db
+
+redis:
+  image: redis:7

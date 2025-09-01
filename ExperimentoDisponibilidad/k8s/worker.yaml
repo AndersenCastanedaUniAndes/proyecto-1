@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cqrs-worker
+  namespace: cqrs-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cqrs-worker
+  template:
+    metadata:
+      labels:
+        app: cqrs-worker
+    spec:
+      containers:
+        - name: worker
+          image: tu-registry/cqrs-api:latest
+          command: ["python", "consumers.py"]
+          env:
+            - name: DATABASE_URL
+              value: postgresql://postgres:postgres@cqrs-db:5432/cqrs_db
+            - name: REDIS_URL
+              value: redis://cqrs-redis:6379

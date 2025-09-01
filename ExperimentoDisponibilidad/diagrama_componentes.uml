@@ -1,0 +1,54 @@
+@startuml diagrama_componentes
+title Diagrama Funcional MediSupply - Inventario
+left to right direction
+
+database InventarioDB {
+  artifact "Tabla de Escritura" as WriteTable
+  artifact "Tabla de Lectura" as ReadTable
+}
+
+rectangle MediSupply\n(Kubernetes) {
+  component "Ingress" as Ingress
+
+  rectangle "Componente de Inventario" as InventoryComponent {
+    component "Inventario" as Inventory
+    component "Comando" as Command
+    component "Consulta" as Query
+  }
+
+  rectangle "Cola de Mensajes\nInventario" as ColaDeMensajes {
+    queue " Redis Streams " as MessageQueue
+  }
+
+  rectangle Consumers {
+    component "Consumidor1" as Consumer1
+    component "Consumidor2" as Consumer2
+  }
+}
+
+rectangle "Presentación" as Presentation {
+  component "Aplicación Web" as WebApp
+  component "Aplicación Móvil" as MobileApp
+}
+
+WebApp -down-> [Ingress]
+MobileApp -down-> [Ingress]
+
+' Sección de Inventario
+[Ingress] --> [Inventory]
+
+[Inventory] -[#Red]-> [Command]
+[Inventory] -[#Green]-> [Query]
+
+[Command] -[#Red]-> [WriteTable]
+[Command] .[#Red].> [MessageQueue]
+[MessageQueue] .[#RoyalBlue].> [Consumers]
+
+[Query] -[#Green]-> [ReadTable]
+
+Consumers .[#RoyalBlue]. Consumer1
+Consumers .[#RoyalBlue]. Consumer2
+
+Consumers -[#RoyalBlue]left-> [ReadTable]
+
+@enduml

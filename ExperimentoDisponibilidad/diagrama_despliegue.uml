@@ -1,0 +1,62 @@
+@startuml diagrama_componentes
+title Diagrama Funcional MediSupply - Inventario
+left to right direction
+
+database PostgreSQL {
+  artifact "Tabla de Escritura" as WriteTable
+  artifact "Tabla de Lectura" as ReadTable
+}
+
+queue "Redis Streams" as MessageQueue {
+  ' Redis Streams
+  ' queue "Redis Streams" as MessageQueue
+}
+
+node MediSupply\n(Kubernetes) {
+  node "Autenticación" as Autenticacion
+  node "Envíos" as Envíos
+  node "Pedidos" as Pedidos
+  node "Ventas" as Ventas
+
+  component "Ingress" as Ingress
+
+  node "Pod Inventario Consumer" as Consumers {
+    component "Consumidor1" as Consumer1
+    component "Consumidor2" as Consumer2
+  }
+
+  node "Pod Inventario" as Microservicio {
+    component "Inventario" as Inventory
+    component "Comando" as Command
+    component "Consulta" as Query
+  }
+}
+
+
+
+node "Presentación" as Presentation {
+  component "Aplicación Web" as WebApp
+}
+
+component "Aplicación Móvil" as MobileApp
+
+WebApp -down-> [Ingress]
+MobileApp -down-> [Ingress]
+
+[Ingress] --> [Inventory]
+
+[Inventory] -[#Red]-> [Command]
+[Inventory] -[#Green]-> [Query]
+
+[Command] -[#Red]-> [WriteTable]
+[Command] .[#Red].> [MessageQueue]
+[MessageQueue] .[#RoyalBlue].> [Consumers]
+
+[Query] -[#Green]-> [ReadTable]
+
+Consumers .[#RoyalBlue]up. Consumer1
+Consumers .[#RoyalBlue]up. Consumer2
+
+Consumers -[#RoyalBlue]-> [ReadTable]
+
+@enduml
