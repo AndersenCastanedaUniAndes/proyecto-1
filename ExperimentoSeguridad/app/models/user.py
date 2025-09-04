@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
 class UserBase(BaseModel):
     nombre_usuario: str
@@ -28,6 +29,31 @@ class UserUpdate(BaseModel):
 class UserInDB(UserBase):
     usuario_id: int
     contrasena: str
+
+    class Config:
+        from_attributes = True
+
+# Modelos para autenticación y tokens
+class TokenResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    expires_in: int
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+class RevokeTokenRequest(BaseModel):
+    token: str
+    reason: Optional[str] = None
+
+class BlacklistEntry(BaseModel):
+    jti: str
+    token_type: str
+    expires_at: datetime
+    revoked_at: datetime
+    revoked_by: Optional[str] = None
+    reason: Optional[str] = None
 
     class Config:
         from_attributes = True

@@ -7,9 +7,11 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer
-from app.models.db_models import Base, DBUser
+from app.models.db_models import Base, DBUser, RefreshToken, TokenBlacklist
 from app.models.user import UserCreate, UserUpdate
 from config.config import DATABASE_URL, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+import secrets
+import hashlib
 
 # Configuración de BD
 engine = create_engine(DATABASE_URL)
@@ -81,8 +83,18 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
-        print("-----11111111-......1------")
-        print(payload)
+        # Verificar que es un access token
+        if payload.get("type") != "access":
+            raise credentials_exception
+
+        # Verificar si el token está en la blacklist
+        jti = payload.get("jti")
+        if jti and is_token_blacklisted(jti, db):
+            raise HTTPException(
+                status_code=401,
+                detail="Token revocado",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
         email: str = payload.get("sub")
         if email is None:
@@ -90,10 +102,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     except JWTError:
         raise credentials_exception
 
-    user = db.query(DBUser).filter(DBUser.contrasena == email).first()
-
-    print("-----2222222222211111111-......1------"+email)
-    print(user)
+    user = db.query(DBUser).filter(DBUser.email == email).first()
     
     if user is None:
         raise credentials_exception
@@ -133,8 +142,24 @@ def login_user(email: str, password: str, db: Session):
     if not user or not verify_password(password, user.contrasena):
         raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos")
 
-    access_token = create_access_token(data={"sub": user.email})
-    return {"access_token": access_token, "token_type": "bearer"}
+    # Crear access token con JTI
+    jti = generate_jti()
+    access_token = create_access_token(data={
+        "sub": user.email,
+        "jti": jti,
+        "role": user.rol,
+        "type": "access"
+    })
+    
+    # Crear refresh token
+    refresh_token = create_refresh_token(user.usuario_id, db)
+    
+    return {
+        "access_token": access_token, 
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    }
 
 def get_user(user_id: int, db: Session, current_user: DBUser):
     try:
@@ -188,6 +213,13 @@ def delete_user(user_id: int, db: Session, current_user: DBUser):
         if not db_user:
             raise HTTPException(status_code=404, detail="Usuario no encontrado.")
 
+        # Primero, revocar todos los refresh tokens del usuario antes de eliminarlo
+        refresh_tokens = db.query(RefreshToken).filter(RefreshToken.user_id == user_id).all()
+        for token in refresh_tokens:
+            # Agregar a la blacklist
+            revoke_token(token.jti, "refresh", current_user.email, "Usuario eliminado", db)
+
+        # Eliminar el usuario (los refresh tokens se eliminarán automáticamente por cascade)
         db.delete(db_user)
         db.commit()
         return {"message": "Usuario eliminado con éxito."}
@@ -197,3 +229,138 @@ def delete_user(user_id: int, db: Session, current_user: DBUser):
     except SQLAlchemyError as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error al eliminar usuario: {str(e)}")
+
+# Funciones para refresh tokens y revocación
+def generate_jti():
+    """Genera un JWT ID único"""
+    return secrets.token_urlsafe(32)
+
+def hash_token(token: str) -> str:
+    """Genera hash del token para almacenamiento seguro"""
+    return hashlib.sha256(token.encode()).hexdigest()
+
+def create_refresh_token(user_id: int, db: Session) -> str:
+    """Crea un refresh token y lo almacena en la base de datos"""
+    try:
+        # Generar JTI único
+        jti = generate_jti()
+        
+        # Crear fechas de expiración
+        expires_at = datetime.utcnow() + timedelta(days=7)  # Refresh token válido por 7 días
+        
+        # Crear payload del refresh token
+        refresh_payload = {
+            "sub": str(user_id),
+            "jti": jti,
+            "type": "refresh",
+            "exp": expires_at
+        }
+        
+        # Crear el token
+        refresh_token = jwt.encode(refresh_payload, SECRET_KEY, algorithm=ALGORITHM)
+        
+        # Almacenar en la base de datos
+        db_refresh_token = RefreshToken(
+            jti=jti,
+            user_id=user_id,
+            token_hash=hash_token(refresh_token),
+            expires_at=expires_at,  # Usar el objeto datetime directamente
+            is_revoked=False
+        )
+        
+        db.add(db_refresh_token)
+        db.commit()
+        
+        return refresh_token
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al crear refresh token: {str(e)}")
+
+def verify_refresh_token(token: str, db: Session) -> dict:
+    """Verifica un refresh token y retorna el payload si es válido"""
+    try:
+        # Decodificar el token
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        
+        # Verificar que es un refresh token
+        if payload.get("type") != "refresh":
+            raise HTTPException(status_code=401, detail="Token inválido: no es un refresh token")
+        
+        # Verificar que no esté revocado
+        jti = payload.get("jti")
+        db_token = db.query(RefreshToken).filter(
+            RefreshToken.jti == jti,
+            RefreshToken.is_revoked == False
+        ).first()
+        
+        if not db_token:
+            raise HTTPException(status_code=401, detail="Token revocado o inválido")
+        
+        # Verificar que no haya expirado
+        if datetime.utcnow() > db_token.expires_at:
+            raise HTTPException(status_code=401, detail="Token expirado")
+        
+        return payload
+        
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token inválido")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al verificar refresh token: {str(e)}")
+
+def revoke_token(jti: str, token_type: str, revoked_by: str, reason: str, db: Session):
+    """Revoca un token agregándolo a la blacklist"""
+    try:
+        # Verificar si el token ya está en la blacklist
+        existing_entry = db.query(TokenBlacklist).filter(TokenBlacklist.jti == jti).first()
+        if existing_entry:
+            # El token ya está revocado, no hacer nada
+            return
+        
+        # Crear fechas
+        now = datetime.utcnow()
+        expires_at = now + timedelta(days=30)  # Mantener en blacklist por 30 días
+        
+        # Obtener información del token
+        if token_type == "refresh":
+            db_token = db.query(RefreshToken).filter(RefreshToken.jti == jti).first()
+            if db_token:
+                db_token.is_revoked = True
+                db_token.revoked_at = now
+                db_token.revoked_by = revoked_by
+                db_token.reason = reason
+        
+        # Agregar a la blacklist
+        blacklist_entry = TokenBlacklist(
+            jti=jti,
+            token_type=token_type,
+            expires_at=expires_at,
+            revoked_at=now,
+            revoked_by=revoked_by,
+            reason=reason
+        )
+        
+        db.add(blacklist_entry)
+        db.commit()
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al revocar token: {str(e)}")
+
+def is_token_blacklisted(jti: str, db: Session) -> bool:
+    """Verifica si un token está en la blacklist"""
+    try:
+        blacklist_entry = db.query(TokenBlacklist).filter(TokenBlacklist.jti == jti).first()
+        return blacklist_entry is not None
+    except Exception as e:
+        return False
+
+def get_blacklist_entries(db: Session, limit: int = 100):
+    """Obtiene las entradas de la blacklist"""
+    try:
+        entries = db.query(TokenBlacklist).order_by(TokenBlacklist.revoked_at.desc()).limit(limit).all()
+        return entries
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener blacklist: {str(e)}")
