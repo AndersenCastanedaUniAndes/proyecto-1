@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app.models.user import User, UserCreate, UserUpdate
+from app.models.user import User, UserCreate, UserUpdate, TokenResponse, RefreshTokenRequest, RevokeTokenRequest, BlacklistEntry
 from app.models.db_models import DBUser
 from app.services.user_service import (
     create_user, 
@@ -12,7 +12,12 @@ from app.services.user_service import (
     get_db, 
     verify_password, 
     create_access_token,
-    get_current_user
+    get_current_user,
+    create_refresh_token,
+    verify_refresh_token,
+    revoke_token,
+    get_blacklist_entries,
+    login_user
 )
 
 router = APIRouter()
@@ -40,33 +45,128 @@ def delete_user_route(user_id: int, db: Session = Depends(get_db), current_user:
     return delete_user(user_id, db,current_user)
 
 # Login para obtener token
-@router.post("/token")
+@router.post("/token", response_model=TokenResponse)
 def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
     try:
         user = authenticate_user(db, form_data.username, form_data.password)
-        #print("-----------")
-        #print(user)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect username or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        access_token = create_access_token(data={"sub": user.contrasena})
-        #print("-----------")
-        #print(access_token) 
         
+        # Usar la nueva función de login que incluye refresh token
+        token_data = login_user(form_data.username, form_data.password, db)
+        return token_data
 
+    except HTTPException:
+        raise
     except Exception as e:
-        #print(f"----------Error en login: {str(e)}")
         raise HTTPException(  
             status_code=500,
             detail=f"Error interno en autenticación: {str(e)}"
         )
-    return {"access_token": access_token, "token_type": "bearer"}
+
+
+
+
+# Refresh token endpoint
+@router.post("/auth/refresh", response_model=TokenResponse)
+def refresh_access_token(
+    refresh_request: RefreshTokenRequest,
+    db: Session = Depends(get_db)
+):
+    try:
+        # Verificar el refresh token
+        payload = verify_refresh_token(refresh_request.refresh_token, db)
+        
+        # Obtener el usuario
+        user_id = int(payload.get("sub"))
+        user = db.query(DBUser).filter(DBUser.usuario_id == user_id).first()
+        
+        if not user:
+            raise HTTPException(status_code=401, detail="Usuario no encontrado")
+        
+        # Crear nuevo access token
+        from app.services.user_service import generate_jti
+        jti = generate_jti()
+        access_token = create_access_token(data={
+            "sub": user.email,
+            "jti": jti,
+            "role": user.rol,
+            "type": "access"
+        })
+        
+        # Crear nuevo refresh token (rotación)
+        new_refresh_token = create_refresh_token(user.usuario_id, db)
+        
+        # Revocar el refresh token anterior
+        old_jti = payload.get("jti")
+        revoke_token(old_jti, "refresh", user.email, "Token rotado", db)
+        
+        return {
+            "access_token": access_token,
+            "refresh_token": new_refresh_token,
+            "token_type": "bearer",
+            "expires_in": 30 * 60  # 30 minutos
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al refrescar token: {str(e)}")
+
+# Revocar token endpoint
+@router.post("/auth/revoke")
+def revoke_access_token(
+    revoke_request: RevokeTokenRequest,
+    current_user: DBUser = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    try:
+        # Decodificar el token para obtener el JTI
+        from jose import jwt
+        from config.config import SECRET_KEY, ALGORITHM
+        
+        payload = jwt.decode(revoke_request.token, SECRET_KEY, algorithms=[ALGORITHM])
+        jti = payload.get("jti")
+        token_type = payload.get("type", "access")
+        
+        if not jti:
+            raise HTTPException(status_code=400, detail="Token inválido: no contiene JTI")
+        
+        # Revocar el token
+        revoke_token(jti, token_type, current_user.email, revoke_request.reason or "Revocado por usuario", db)
+        
+        return {"message": "Token revocado exitosamente"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al revocar token: {str(e)}")
+
+# Ver blacklist endpoint (solo para admins)
+@router.get("/auth/blacklist", response_model=list[BlacklistEntry])
+def get_token_blacklist(
+    limit: int = 100,
+    current_user: DBUser = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Verificar que el usuario sea admin
+    if current_user.rol != "admin":
+        raise HTTPException(status_code=403, detail="Solo administradores pueden ver la blacklist")
+    
+    try:
+        entries = get_blacklist_entries(db, limit)
+        return entries
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener blacklist: {str(e)}")
 
 # Autenticación interna
 def authenticate_user(db, email: str, password: str):
