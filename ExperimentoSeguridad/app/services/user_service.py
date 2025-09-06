@@ -4,12 +4,15 @@ from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, Depends
 from pydantic import ValidationError
 from passlib.context import CryptContext
-from jose import JWTError, jwt
+import jwt
+from jwt.exceptions import InvalidTokenError
 from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer
 from app.models.db_models import Base, DBUser, RefreshToken, TokenBlacklist
 from app.models.user import UserCreate, UserUpdate
-from config.config import DATABASE_URL, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from config.config import DATABASE_URL, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from app.services.key_service import key_service
+from app.services.redis_service import redis_service
 import secrets
 import hashlib
 
@@ -62,11 +65,16 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
         to_encode = data.copy()
         expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
         
-        to_encode.update({"exp": expire})
-        #print("-----222222222------")
-        #print(jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM))
+        to_encode.update({
+            "exp": expire,
+            "iat": datetime.utcnow(),
+            "iss": "experimento-seguridad",
+            "aud": "experimento-seguridad",
+            "kid": key_service.get_current_kid()
+        })
 
-        return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        private_key = key_service.get_private_key()
+        return jwt.encode(to_encode, private_key, algorithm=ALGORITHM)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al crear el token: {str(e)}")
 
@@ -81,7 +89,26 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        # Obtener el kid del token para validar con la clave correcta
+        unverified_header = jwt.get_unverified_header(token)
+        kid = unverified_header.get("kid")
+        
+        if not kid:
+            raise credentials_exception
+        
+        # Obtener la clave pública correspondiente
+        public_key = key_service.get_key_by_kid(kid)
+        if not public_key:
+            raise credentials_exception
+        
+        # Decodificar el token con la clave pública
+        payload = jwt.decode(
+            token, 
+            public_key, 
+            algorithms=[ALGORITHM],
+            audience="experimento-seguridad",
+            issuer="experimento-seguridad"
+        )
 
         # Verificar que es un access token
         if payload.get("type") != "access":
@@ -89,7 +116,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
         # Verificar si el token está en la blacklist
         jti = payload.get("jti")
-        if jti and is_token_blacklisted(jti, db):
+        if jti and redis_service.is_token_blacklisted(jti, db):
             raise HTTPException(
                 status_code=401,
                 detail="Token revocado",
@@ -99,7 +126,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
-    except JWTError:
+    except InvalidTokenError:
         raise credentials_exception
 
     user = db.query(DBUser).filter(DBUser.email == email).first()
@@ -257,7 +284,8 @@ def create_refresh_token(user_id: int, db: Session) -> str:
         }
         
         # Crear el token
-        refresh_token = jwt.encode(refresh_payload, SECRET_KEY, algorithm=ALGORITHM)
+        private_key = key_service.get_private_key()
+        refresh_token = jwt.encode(refresh_payload, private_key, algorithm=ALGORITHM)
         
         # Almacenar en la base de datos
         db_refresh_token = RefreshToken(
@@ -280,8 +308,26 @@ def create_refresh_token(user_id: int, db: Session) -> str:
 def verify_refresh_token(token: str, db: Session) -> dict:
     """Verifica un refresh token y retorna el payload si es válido"""
     try:
-        # Decodificar el token
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        # Obtener el kid del token para validar con la clave correcta
+        unverified_header = jwt.get_unverified_header(token)
+        kid = unverified_header.get("kid")
+        
+        if not kid:
+            raise HTTPException(status_code=401, detail="Token inválido: no contiene kid")
+        
+        # Obtener la clave pública correspondiente
+        public_key = key_service.get_key_by_kid(kid)
+        if not public_key:
+            raise HTTPException(status_code=401, detail="Token inválido: kid no encontrado")
+        
+        # Decodificar el token con la clave pública
+        payload = jwt.decode(
+            token, 
+            public_key, 
+            algorithms=[ALGORITHM],
+            audience="experimento-seguridad",
+            issuer="experimento-seguridad"
+        )
         
         # Verificar que es un refresh token
         if payload.get("type") != "refresh":
@@ -303,7 +349,7 @@ def verify_refresh_token(token: str, db: Session) -> dict:
         
         return payload
         
-    except JWTError:
+    except InvalidTokenError:
         raise HTTPException(status_code=401, detail="Token inválido")
     except HTTPException:
         raise
@@ -311,11 +357,10 @@ def verify_refresh_token(token: str, db: Session) -> dict:
         raise HTTPException(status_code=500, detail=f"Error al verificar refresh token: {str(e)}")
 
 def revoke_token(jti: str, token_type: str, revoked_by: str, reason: str, db: Session):
-    """Revoca un token agregándolo a la blacklist"""
+    """Revoca un token agregándolo a la blacklist (Redis + SQL)"""
     try:
         # Verificar si el token ya está en la blacklist
-        existing_entry = db.query(TokenBlacklist).filter(TokenBlacklist.jti == jti).first()
-        if existing_entry:
+        if redis_service.is_token_blacklisted(jti, db):
             # El token ya está revocado, no hacer nada
             return
         
@@ -332,19 +377,21 @@ def revoke_token(jti: str, token_type: str, revoked_by: str, reason: str, db: Se
                 db_token.revoked_by = revoked_by
                 db_token.reason = reason
         
-        # Agregar a la blacklist
-        blacklist_entry = TokenBlacklist(
+        # Agregar a la blacklist usando Redis + SQL
+        success = redis_service.add_to_blacklist(
             jti=jti,
             token_type=token_type,
             expires_at=expires_at,
-            revoked_at=now,
             revoked_by=revoked_by,
-            reason=reason
+            reason=reason,
+            db=db
         )
         
-        db.add(blacklist_entry)
-        db.commit()
+        if not success:
+            raise HTTPException(status_code=500, detail="Error al revocar token")
         
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error al revocar token: {str(e)}")
@@ -358,9 +405,9 @@ def is_token_blacklisted(jti: str, db: Session) -> bool:
         return False
 
 def get_blacklist_entries(db: Session, limit: int = 100):
-    """Obtiene las entradas de la blacklist"""
+    """Obtiene las entradas de la blacklist (Redis + SQL)"""
     try:
-        entries = db.query(TokenBlacklist).order_by(TokenBlacklist.revoked_at.desc()).limit(limit).all()
+        entries = redis_service.get_blacklist_entries(limit, db)
         return entries
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener blacklist: {str(e)}")

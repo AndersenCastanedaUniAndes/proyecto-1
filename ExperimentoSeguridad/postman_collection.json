@@ -1,0 +1,461 @@
+{
+	"info": {
+		"_postman_id": "2696fe30-d01c-4f67-a5da-458d2afcc657",
+		"name": "Experimento Seguridad - JWT + RBAC + Redis",
+		"description": "# Experimento de Seguridad - JWT + RBAC + Redis\n\nColección completa para el experimento de seguridad que incluye:\n- Autenticación JWT con RS256\n- Refresh tokens\n- Revocación de tokens\n- Blacklist con Redis + SQL fallback\n- JWKS público\n- Monitoreo de Redis\n\n## Endpoints disponibles\n- Gestión de usuarios (CRUD)\n- Autenticación (login, refresh, revoke)\n- Autorización (RBAC)\n- Monitoreo (blacklist, Redis status)\n- JWKS público",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "8000916"
+	},
+	"item": [
+		{
+			"name": "Gestión de Usuarios",
+			"item": [
+				{
+					"name": "Crear usuario",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre_usuario\": \"usuario1\",\n  \"email\": \"usuario1@email.com\",\n  \"contrasena\": \"Password123!\",\n  \"rol\": \"usuario\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/users",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["users"]
+						},
+						"description": "Crea un nuevo usuario en el sistema."
+					}
+				},
+				{
+					"name": "Crear administrador",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre_usuario\": \"admin1\",\n  \"email\": \"admin1@email.com\",\n  \"contrasena\": \"Admin123!\",\n  \"rol\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/users",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["users"]
+						},
+						"description": "Crea un nuevo administrador en el sistema."
+					}
+				},
+				{
+					"name": "Obtener usuario por ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/users/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["users", "1"]
+						},
+						"description": "Obtiene la información de un usuario por su ID (requiere autenticación)."
+					}
+				},
+				{
+					"name": "Actualizar usuario",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre_usuario\": \"usuario1_modificado\",\n  \"email\": \"usuario1nuevo@email.com\",\n  \"contrasena\": \"NuevoPassword123!\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/users/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["users", "1"]
+						},
+						"description": "Actualiza la información de un usuario existente (requiere autenticación)."
+					}
+				},
+				{
+					"name": "Eliminar usuario (solo admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/users/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["users", "1"]
+						},
+						"description": "Elimina un usuario del sistema (solo administradores)."
+					}
+				}
+			]
+		},
+		{
+			"name": "Autenticación JWT",
+			"item": [
+				{
+					"name": "Login (crear token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Script para guardar tokens automáticamente",
+									"console.log(\"🚀 Iniciando login...\");",
+									"console.log(\"Código de respuesta:\", pm.response.code);",
+									"console.log(\"Respuesta:\", pm.response.text());",
+									"",
+									"if (pm.response.code === 200) {",
+									"    console.log(\"✅ Login exitoso\");",
+									"    ",
+									"    // Parsear respuesta",
+									"    const response = pm.response.json();",
+									"    console.log(\"JSON parseado:\", response);",
+									"    ",
+									"    // Guardar variables",
+									"    pm.environment.set(\"access_token\", response.access_token);",
+									"    pm.environment.set(\"refresh_token\", response.refresh_token);",
+									"    pm.environment.set(\"token_type\", response.token_type);",
+									"    pm.environment.set(\"expires_in\", response.expires_in);",
+									"    ",
+									"    console.log(\"✅ Tokens guardados en variables\");",
+									"    ",
+									"} else {",
+									"    console.log(\"❌ Error en login\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin1@email.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "Admin123!",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8000/token",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["token"]
+						},
+						"description": "Inicia sesión y obtiene access_token y refresh_token."
+					}
+				},
+				{
+					"name": "Refresh token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Script para guardar nuevo access token",
+									"console.log(\"🔄 Refrescando token...\");",
+									"console.log(\"Código de respuesta:\", pm.response.code);",
+									"",
+									"if (pm.response.code === 200) {",
+									"    console.log(\"✅ Token refrescado exitosamente\");",
+									"    ",
+									"    const response = pm.response.json();",
+									"    console.log(\"Nuevo token:\", response);",
+									"    ",
+									"    // Guardar nuevo access token",
+									"    pm.environment.set(\"access_token\", response.access_token);",
+									"    pm.environment.set(\"refresh_token\", response.refresh_token);",
+									"    ",
+									"    console.log(\"✅ Nuevo access token guardado\");",
+									"    ",
+									"} else {",
+									"    console.log(\"❌ Error al refrescar token\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/auth/refresh",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["auth", "refresh"]
+						},
+						"description": "Refresca el access token usando el refresh token."
+					}
+				},
+				{
+					"name": "Revocar token",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token_type\": \"access\",\n  \"reason\": \"Logout del usuario\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8000/auth/revoke",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["auth", "revoke"]
+						},
+						"description": "Revoca un token agregándolo a la blacklist."
+					}
+				}
+			]
+		},
+		{
+			"name": "Monitoreo y JWKS",
+			"item": [
+				{
+					"name": "Ver blacklist (solo admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/auth/blacklist?limit=10",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["auth", "blacklist"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Obtiene la lista de tokens revocados (solo administradores)."
+					}
+				},
+				{
+					"name": "Estado de Redis (solo admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/auth/redis-status",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["auth", "redis-status"]
+						},
+						"description": "Verifica el estado de conexión con Redis (solo administradores)."
+					}
+				},
+				{
+					"name": "JWKS público",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/.well-known/jwks.json",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": [".well-known", "jwks.json"]
+						},
+						"description": "Obtiene las claves públicas (JWKS) para validación de tokens RS256."
+					}
+				}
+			]
+		},
+		{
+			"name": "Tests de Seguridad",
+			"item": [
+				{
+					"name": "Token expirado (debería fallar)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImRlZmF1bHQifQ.eyJzdWIiOiJhZG1pbjFAZW1haWwuY29tIiwicm9sZSI6ImFkbWluIiwidHlwZSI6ImFjY2VzcyIsImV4cCI6MTY5OTk5OTk5OSwiaWF0IjoxNjk5OTk5OTk5LCJpc3MiOiJleHBlcmltZW50by1zZWd1cmlkYWQiLCJhdWQiOiJleHBlcmltZW50by1zZWd1cmlkYWQiLCJqdGkiOiJ0ZXN0LWp0aSJ9.invalid_signature",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/users/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["users", "1"]
+						},
+						"description": "Intenta acceder con un token expirado (debería devolver 401)."
+					}
+				},
+				{
+					"name": "Token con rol insuficiente (debería fallar)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/users/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["users", "1"]
+						},
+						"description": "Intenta eliminar usuario con rol de usuario (debería devolver 403)."
+					}
+				},
+				{
+					"name": "Sin token (debería fallar)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8000/users/1",
+							"protocol": "http",
+							"host": ["localhost"],
+							"port": "8000",
+							"path": ["users", "1"]
+						},
+						"description": "Intenta acceder sin token (debería devolver 401)."
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		}
+	]
+}

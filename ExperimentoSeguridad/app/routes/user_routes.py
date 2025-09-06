@@ -19,6 +19,8 @@ from app.services.user_service import (
     get_blacklist_entries,
     login_user
 )
+from app.services.key_service import key_service
+from app.services.redis_service import redis_service
 
 router = APIRouter()
 
@@ -129,10 +131,29 @@ def revoke_access_token(
 ):
     try:
         # Decodificar el token para obtener el JTI
-        from jose import jwt
-        from config.config import SECRET_KEY, ALGORITHM
+        import jwt
+        from jwt.exceptions import InvalidTokenError
+        from app.services.key_service import key_service
         
-        payload = jwt.decode(revoke_request.token, SECRET_KEY, algorithms=[ALGORITHM])
+        # Obtener el kid del token
+        unverified_header = jwt.get_unverified_header(revoke_request.token)
+        kid = unverified_header.get("kid")
+        
+        if not kid:
+            raise HTTPException(status_code=400, detail="Token inválido: falta kid")
+        
+        # Obtener la clave pública correspondiente
+        public_key = key_service.get_key_by_kid(kid)
+        if not public_key:
+            raise HTTPException(status_code=400, detail="Token inválido: kid no encontrado")
+        
+        payload = jwt.decode(
+            revoke_request.token, 
+            public_key, 
+            algorithms=["RS256"],
+            audience="experimento-seguridad",
+            issuer="experimento-seguridad"
+        )
         jti = payload.get("jti")
         token_type = payload.get("type", "access")
         
@@ -167,6 +188,29 @@ def get_token_blacklist(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener blacklist: {str(e)}")
+
+# JWKS endpoint (público)
+@router.get("/.well-known/jwks.json")
+def get_jwks():
+    """Endpoint público para obtener las claves públicas (JWKS)"""
+    try:
+        jwks = key_service.get_jwks()
+        return jwks
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener JWKS: {str(e)}")
+
+# Estado de Redis endpoint (solo para admins)
+@router.get("/auth/redis-status")
+def get_redis_status(current_user: DBUser = Depends(get_current_user)):
+    """Endpoint para verificar el estado de Redis (solo admin)"""
+    if current_user.rol != "admin":
+        raise HTTPException(status_code=403, detail="Solo administradores pueden ver el estado de Redis")
+    
+    try:
+        status = redis_service.get_redis_status()
+        return status
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener estado de Redis: {str(e)}")
 
 # Autenticación interna
 def authenticate_user(db, email: str, password: str):
