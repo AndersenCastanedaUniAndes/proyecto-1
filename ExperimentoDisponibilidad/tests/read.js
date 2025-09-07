@@ -13,7 +13,7 @@ export const options = {
 const BASE = __ENV.BASE || "http://localhost:8000";
 
 export default function () {
-  const r = http.get(`${BASE}/items?tenant_id=t1&warehouse_id=wh1`);
+  const r = http.get(`${BASE}/items/by-key?tenant_id=t1&warehouse_id=wh1&location_id=A-01-01&product_id=P-001&lot_number=L-2025`);
   check(r, { "200": (res) => res.status === 200 });
   sleep(0.1);
 }
