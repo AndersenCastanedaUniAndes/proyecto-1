@@ -50,23 +50,8 @@ async def readyz():
 # --- COMANDOS ---
 @app.post("/items/upsert", response_model=ItemResponse)
 async def upsert_item(data: ItemUpsert):
-    payload = await commands.upsert_item(data)
-
-    return ItemResponse(
-        tenant_id      = payload["tenant_id"],
-        warehouse_id   = payload["warehouse_id"],
-        location_id    = payload["location_id"],
-        product_id     = payload["product_id"],
-        lot_number     = payload["lot_number"],
-        serial_number  = payload["serial_number"],
-        qty_on_hand    = int(payload["qty_on_hand"]),
-        qty_reserved   = int(payload["qty_reserved"]),
-        qty_available  = int(payload["qty_on_hand"]) - int(payload["qty_reserved"]),
-        storage_class  = payload["storage_class"],
-        expiry_date    = payload["expiry_date"],
-        quality_status = payload["quality_status"],
-        updated_at     = payload["updated_at"]
-    )
+    response = await commands.upsert_item(data)
+    return response
 
 
 @app.post("/items/adjust")

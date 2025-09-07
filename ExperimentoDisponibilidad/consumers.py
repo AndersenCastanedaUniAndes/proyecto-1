@@ -18,39 +18,47 @@ RETRY_TTL_S  = int(os.getenv("RETRY_TTL_S", "86400"))  # contador de reintentos 
 
 
 async def upsert_projection_from_db(conn, key: dict):
-    row = await conn.fetchrow("""
-      SELECT tenant_id, warehouse_id, location_id, product_id, lot_number, serial_number,
-             qty_on_hand, qty_reserved, storage_class, expiry_date, quality_status, updated_at
-      FROM inventory_item
-      WHERE tenant_id=$1 AND warehouse_id=$2 AND location_id=$3 AND product_id=$4
-        AND lot_number=$5 AND serial_number=$6
-    """, key["tenant_id"], key["warehouse_id"], key["location_id"], key["product_id"], key["lot_number"], key["serial_number"])
+    row = await conn.fetchrow(
+        """
+            SELECT tenant_id, warehouse_id, location_id, product_id, lot_number, serial_number,
+                qty_on_hand, qty_reserved, storage_class, expiry_date, quality_status, updated_at
+            FROM inventory_item
+            WHERE tenant_id=$1 AND warehouse_id=$2 AND location_id=$3 AND product_id=$4
+            AND lot_number=$5 AND serial_number=$6
+        """,
+        key["tenant_id"], key["warehouse_id"], key["location_id"], key["product_id"], key["lot_number"], key["serial_number"]
+    )
 
     if not row:
-        await conn.execute("""
-          DELETE FROM inventory_search
-          WHERE tenant_id=$1 AND warehouse_id=$2 AND location_id=$3 AND product_id=$4 AND lot_number=$5 AND serial_number=$6
-        """, key["tenant_id"], key["warehouse_id"], key["location_id"], key["product_id"], key["lot_number"], key["serial_number"])
+        await conn.execute(
+            """
+                DELETE FROM inventory_search
+                WHERE tenant_id=$1 AND warehouse_id=$2 AND location_id=$3 AND product_id=$4 AND lot_number=$5 AND serial_number=$6
+            """,
+            key["tenant_id"], key["warehouse_id"], key["location_id"], key["product_id"], key["lot_number"], key["serial_number"]
+        )
         return
 
     qty_available = int(row["qty_on_hand"]) - int(row["qty_reserved"])
-    await conn.execute("""
-      INSERT INTO inventory_search
-        (tenant_id, warehouse_id, location_id, product_id, lot_number, serial_number,
-         qty_on_hand, qty_reserved, qty_available, storage_class, expiry_date, quality_status, updated_at)
-      VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-      ON CONFLICT (tenant_id, warehouse_id, location_id, product_id, lot_number, serial_number)
-      DO UPDATE SET
-        qty_on_hand=excluded.qty_on_hand,
-        qty_reserved=excluded.qty_reserved,
-        qty_available=excluded.qty_available,
-        storage_class=excluded.storage_class,
-        expiry_date=excluded.expiry_date,
-        quality_status=excluded.quality_status,
-        updated_at=excluded.updated_at
-    """,
-    row["tenant_id"], row["warehouse_id"], row["location_id"], row["product_id"], row["lot_number"], row["serial_number"],
-    row["qty_on_hand"], row["qty_reserved"], qty_available, row["storage_class"], row["expiry_date"], row["quality_status"], row["updated_at"])
+    await conn.execute(
+        """
+            INSERT INTO inventory_search
+                (tenant_id, warehouse_id, location_id, product_id, lot_number, serial_number,
+                qty_on_hand, qty_reserved, qty_available, storage_class, expiry_date, quality_status, updated_at)
+            VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+            ON CONFLICT (tenant_id, warehouse_id, location_id, product_id, lot_number, serial_number)
+            DO UPDATE SET
+                qty_on_hand=excluded.qty_on_hand,
+                qty_reserved=excluded.qty_reserved,
+                qty_available=excluded.qty_available,
+                storage_class=excluded.storage_class,
+                expiry_date=excluded.expiry_date,
+                quality_status=excluded.quality_status,
+                updated_at=excluded.updated_at
+        """,
+        row["tenant_id"], row["warehouse_id"], row["location_id"], row["product_id"], row["lot_number"], row["serial_number"],
+        row["qty_on_hand"], row["qty_reserved"], qty_available, row["storage_class"], row["expiry_date"], row["quality_status"], row["updated_at"]
+    )
 
 
 async def handle_item_upserted(conn, event: dict):
