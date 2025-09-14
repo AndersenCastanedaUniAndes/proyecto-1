@@ -3,7 +3,12 @@ uvicorn==0.30.1
 pydantic==2.8.2
 pydantic-settings==2.3.4
 sqlalchemy==1.4.23
+# Mantienes python-jose si quieres, pero evita usarlo para encode/decode
 python-jose[cryptography]==3.3.0
+# Subo PyJWT y cryptography a versiones estables y con wheel precompilado en Windows
+PyJWT==2.9.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
+cryptography>=42.0.0
+requests==2.32.3
 

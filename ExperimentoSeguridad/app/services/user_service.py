@@ -9,7 +9,9 @@ from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer
 from app.models.db_models import Base, DBUser, RefreshToken, TokenBlacklist
 from app.models.user import UserCreate, UserUpdate
-from config.config import DATABASE_URL, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from config.config import DATABASE_URL, ACCESS_TOKEN_EXPIRE_MINUTES
+from app.utils.auth import create_access_token, verify_token
+from app.utils.key_manager import key_manager
 import secrets
 import hashlib
 
@@ -56,17 +58,16 @@ def hash_password(password: str):
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
-# Crear token JWT
-def create_access_token(data: dict, expires_delta: timedelta = None):
+# Crear token JWT (ahora usa RS256 con kid)
+def create_access_token_service(data: dict, expires_delta: timedelta = None, kid: str = None):
+    """Crea un token JWT RS256 con header kid"""
     try:
         to_encode = data.copy()
         expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-        
         to_encode.update({"exp": expire})
-        #print("-----222222222------")
-        #print(jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM))
-
-        return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        
+        # Usar la función de auth.py que maneja RS256
+        return create_access_token(to_encode, kid)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al crear el token: {str(e)}")
 
@@ -74,14 +75,14 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
 
 # Obtener usuario autenticado
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-       
     credentials_exception = HTTPException(
         status_code=401,
         detail="Credenciales inválidas o token expirado",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        # Verificar token con RS256
+        payload = verify_token(token)
 
         # Verificar que es un access token
         if payload.get("type") != "access":
@@ -99,7 +100,9 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         email: str = payload.get("sub")
         if email is None:
             raise credentials_exception
-    except JWTError:
+    except HTTPException:
+        raise
+    except Exception:
         raise credentials_exception
 
     user = db.query(DBUser).filter(DBUser.email == email).first()
@@ -142,9 +145,9 @@ def login_user(email: str, password: str, db: Session):
     if not user or not verify_password(password, user.contrasena):
         raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos")
 
-    # Crear access token con JTI
+    # Crear access token con JTI usando RS256
     jti = generate_jti()
-    access_token = create_access_token(data={
+    access_token = create_access_token_service(data={
         "sub": user.email,
         "jti": jti,
         "role": user.rol,
@@ -256,8 +259,8 @@ def create_refresh_token(user_id: int, db: Session) -> str:
             "exp": expires_at
         }
         
-        # Crear el token
-        refresh_token = jwt.encode(refresh_payload, SECRET_KEY, algorithm=ALGORITHM)
+        # Crear el token usando RS256
+        refresh_token = create_access_token_service(refresh_payload)
         
         # Almacenar en la base de datos
         db_refresh_token = RefreshToken(
@@ -280,8 +283,8 @@ def create_refresh_token(user_id: int, db: Session) -> str:
 def verify_refresh_token(token: str, db: Session) -> dict:
     """Verifica un refresh token y retorna el payload si es válido"""
     try:
-        # Decodificar el token
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        # Verificar token con RS256
+        payload = verify_token(token)
         
         # Verificar que es un refresh token
         if payload.get("type") != "refresh":
@@ -303,8 +306,6 @@ def verify_refresh_token(token: str, db: Session) -> dict:
         
         return payload
         
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Token inválido")
     except HTTPException:
         raise
     except Exception as e:
