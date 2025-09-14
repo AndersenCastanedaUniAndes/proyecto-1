@@ -92,9 +92,9 @@ def refresh_access_token(
             raise HTTPException(status_code=401, detail="Usuario no encontrado")
         
         # Crear nuevo access token
-        from app.services.user_service import generate_jti
+        from app.services.user_service import generate_jti, create_access_token_service
         jti = generate_jti()
-        access_token = create_access_token(data={
+        access_token = create_access_token_service(data={
             "sub": user.email,
             "jti": jti,
             "role": user.rol,
@@ -128,11 +128,10 @@ def revoke_access_token(
     db: Session = Depends(get_db)
 ):
     try:
-        # Decodificar el token para obtener el JTI
-        from jose import jwt
-        from config.config import SECRET_KEY, ALGORITHM
+        # Decodificar el token para obtener el JTI usando RS256
+        from app.utils.auth import verify_token
         
-        payload = jwt.decode(revoke_request.token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = verify_token(revoke_request.token)
         jti = payload.get("jti")
         token_type = payload.get("type", "access")
         
@@ -167,6 +166,38 @@ def get_token_blacklist(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener blacklist: {str(e)}")
+
+# JWKS endpoint para descubrimiento de claves públicas
+@router.get("/.well-known/jwks.json")
+def get_jwks():
+    """Endpoint JWKS para descubrimiento de claves públicas"""
+    try:
+        from app.utils.key_manager import key_manager
+        return key_manager.get_jwks()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener JWKS: {str(e)}")
+
+# Endpoint para rotación de claves (solo para admins)
+@router.post("/auth/rotate-keys")
+def rotate_keys(
+    current_user: DBUser = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Rota las claves de firma (solo para administradores)"""
+    # Verificar que el usuario sea admin
+    if current_user.rol != "admin":
+        raise HTTPException(status_code=403, detail="Solo administradores pueden rotar claves")
+    
+    try:
+        from app.utils.key_manager import key_manager
+        new_kid = key_manager.rotate_key()
+        return {
+            "message": "Claves rotadas exitosamente",
+            "new_kid": new_kid,
+            "active_kid": key_manager.get_active_kid()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al rotar claves: {str(e)}")
 
 # Autenticación interna
 def authenticate_user(db, email: str, password: str):
