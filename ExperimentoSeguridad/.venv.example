@@ -1,0 +1,21 @@
+# ===== App / Security =====
+JWT_ISS=experimento-seguridad
+JWT_AUD=api-users
+ACCESS_TTL_SEC=900
+SKEW_SECONDS=60
+ACTIVE_KID=key-1
+KEYS_DIR=keys
+
+# ===== Data stores =====
+DATABASE_URL=sqlite:///./users.db
+# Para compose con Postgres: postgresql+psycopg://postgres:postgres@postgres:5432/expsec
+REDIS_URL=redis://redis:6379/0
+
+# ===== Observabilidad =====
+PROMETHEUS_ENABLED=true
+METRICS_PATH=/metrics
+
+# ===== Grafana/Prometheus (opcional) =====
+GRAFANA_ADMIN_USER=admin
+GRAFANA_ADMIN_PASSWORD=admin
+PROMETHEUS_SCRAPE_INTERVAL=5s
