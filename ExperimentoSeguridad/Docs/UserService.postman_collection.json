@@ -15,6 +15,25 @@
 					"item": [
 						{
 							"name": "Crear",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 200) {\r",
+											"    const response = pm.response.json();\r",
+											"    console.log(\"JSON parseado:\", response);\r",
+											"    pm.environment.set(\"usuario_id\", response.usuario_id);   \r",
+											"    pm.environment.set(\"email_usuario\", response.email);    \r",
+											"} else {\r",
+											"    console.log(\"❌ Error en la respuesta\");\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
 							"request": {
 								"method": "POST",
 								"header": [
@@ -58,7 +77,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:{{puerto}}/users/1",
+									"raw": "http://localhost:{{puerto}}/users/{{usuario_id}}",
 									"protocol": "http",
 									"host": [
 										"localhost"
@@ -66,7 +85,7 @@
 									"port": "{{puerto}}",
 									"path": [
 										"users",
-										"1"
+										"{{usuario_id}}"
 									]
 								},
 								"description": "Obtiene la información de un usuario por su ID.\n\n### Path Parameter\n- `id` (integer, requerido): ID del usuario.\n\n### Response\n- **200 OK**: Usuario encontrado.\n- **404 Not Found**: Usuario no existe."
@@ -98,7 +117,7 @@
 									"raw": "{\n  \"username\": \"usuario1_modificado\",\n  \"email\": \"usuario1nuevo@email.com\",\n  \"password\": \"NuevoPassword123!\"\n}"
 								},
 								"url": {
-									"raw": "http://localhost:{{puerto}}/users/1",
+									"raw": "http://localhost:{{puerto}}/users/{{usuario_id}}",
 									"protocol": "http",
 									"host": [
 										"localhost"
@@ -106,7 +125,7 @@
 									"port": "{{puerto}}",
 									"path": [
 										"users",
-										"1"
+										"{{usuario_id}}"
 									]
 								},
 								"description": "Actualiza la información de un usuario existente.\n\n### Path Parameter\n- `id` (integer, requerido): ID del usuario.\n\n### Request Body\n- `username` (string, opcional): Nuevo nombre de usuario.\n- `email` (string, opcional): Nuevo correo electrónico.\n- `password` (string, opcional): Nueva contraseña.\n\n### Response\n- **200 OK**: Usuario actualizado.\n- **404 Not Found**: Usuario no existe."
@@ -129,7 +148,7 @@
 								"method": "DELETE",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:{{puerto}}/users/2",
+									"raw": "http://localhost:{{puerto}}/users/{{usuario_id}}",
 									"protocol": "http",
 									"host": [
 										"localhost"
@@ -137,10 +156,72 @@
 									"port": "{{puerto}}",
 									"path": [
 										"users",
-										"2"
+										"{{usuario_id}}"
 									]
 								},
 								"description": "Elimina un usuario del sistema por su ID.\n\n### Path Parameter\n- `id` (integer, requerido): ID del usuario.\n\n### Response\n- **200 OK**: Usuario eliminado.\n- **404 Not Found**: Usuario no existe."
+							},
+							"response": []
+						},
+						{
+							"name": "Login",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"if (pm.response.code === 200) {\r",
+											"    const response = pm.response.json();\r",
+											"    console.log(\"JSON parseado:\", response);\r",
+											"    pm.environment.set(\"access_token_user\", response.access_token);\r",
+											"    pm.environment.set(\"token_type_user\", response.token_type);\r",
+											"    pm.environment.set(\"refresh_token_user\", response.refresh_token);\r",
+											"    \r",
+											"    \r",
+											"} else {\r",
+											"    console.log(\"❌ Error en la respuesta\");\r",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "username",
+											"value": "{{email_usuario}}",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "Password123!",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "http://localhost:{{puerto}}/token",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "{{puerto}}",
+									"path": [
+										"token"
+									]
+								},
+								"description": "Generated from cURL: curl --location 'http://localhost:8000/token' \\\n--header 'Content-Type: application/x-www-form-urlencoded' \\\n--data-urlencode 'username=admin1@email.com' \\\n--data-urlencode 'password=Admin123!'"
 							},
 							"response": []
 						}
@@ -185,8 +266,18 @@
 							"response": []
 						},
 						{
-							"name": "Revoke token",
+							"name": "Revoke token user",
 							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{access_token_user}}",
+											"type": "string"
+										}
+									]
+								},
 								"method": "POST",
 								"header": [
 									{
@@ -196,7 +287,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"refresh_token\": \"{{refresh_token_user}}\"\n}",
+									"raw": "{\n    \"token\": \"{{access_token_user}}\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -272,68 +363,6 @@
 							"response": []
 						}
 					]
-				},
-				{
-					"name": "Login",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {\r",
-									"    const response = pm.response.json();\r",
-									"    console.log(\"JSON parseado:\", response);\r",
-									"    pm.environment.set(\"access_token_user\", response.access_token);\r",
-									"    pm.environment.set(\"token_type_user\", response.token_type);\r",
-									"    pm.environment.set(\"refresh_token_user\", response.refresh_token);\r",
-									"    \r",
-									"    \r",
-									"} else {\r",
-									"    console.log(\"❌ Error en la respuesta\");\r",
-									"}"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/x-www-form-urlencoded"
-							}
-						],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "usuario@email.com",
-									"type": "text"
-								},
-								{
-									"key": "password",
-									"value": "Password123!",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "http://localhost:{{puerto}}/token",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "{{puerto}}",
-							"path": [
-								"token"
-							]
-						},
-						"description": "Generated from cURL: curl --location 'http://localhost:8000/token' \\\n--header 'Content-Type: application/x-www-form-urlencoded' \\\n--data-urlencode 'username=admin1@email.com' \\\n--data-urlencode 'password=Admin123!'"
-					},
-					"response": []
 				}
 			]
 		},
@@ -580,7 +609,7 @@
 					"response": []
 				},
 				{
-					"name": "Eliminar (No permitido por el rol)",
+					"name": "Eliminar",
 					"request": {
 						"auth": {
 							"type": "bearer",
@@ -637,6 +666,34 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Health",
+			"item": []
+		},
+		{
+			"name": "Redis",
+			"item": []
+		},
+		{
+			"name": "http://localhost:8000/health",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"health"
+					]
+				},
+				"description": "Generated from cURL: curl http://localhost:8000/health\r\n"
+			},
+			"response": []
 		}
 	]
 }

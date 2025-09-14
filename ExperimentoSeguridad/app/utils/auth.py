@@ -3,7 +3,7 @@ import jwt as pyjwt
 from passlib.context  import CryptContext
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
-from config.config import ACCESS_TOKEN_EXPIRE_MINUTES
+from config.config import ACCESS_TOKEN_EXPIRE_MINUTES, JWT_ISS, JWT_AUD, SKEW_SECONDS
 from app.utils.key_manager import key_manager
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -16,11 +16,19 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 def create_access_token(data: dict, kid: str = None):
-    """Crea un token JWT RS256 con header kid (PyJWT)"""
+    """Crea un token JWT RS256 con header kid y claims completos (PyJWT)"""
     try:
         to_encode = data.copy()
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        to_encode.update({"exp": expire})
+        now = datetime.utcnow()
+        expire = now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        
+        # Claims completos
+        to_encode.update({
+            "exp": expire,
+            "iat": now,
+            "iss": JWT_ISS,
+            "aud": JWT_AUD
+        })
 
         # kid activo por defecto
         if not kid:
@@ -31,11 +39,6 @@ def create_access_token(data: dict, kid: str = None):
 
         # Headers con kid (incluye typ/alg por claridad)
         headers = {"kid": kid, "typ": "JWT", "alg": "RS256"}
-
-        # ✅ Usa el alias correcto (pyjwt), no 'jwt'
-        print("DEBUG create_access_token -> using PyJWT:", pyjwt.__file__, flush=True)
-        print("DEBUG type(private_key_pem)=", type(private_key_pem), flush=True)
-        print("DEBUG beginswith:", str(private_key_pem).strip()[:27], flush=True)
 
         encoded_jwt = pyjwt.encode(
             to_encode,
@@ -52,9 +55,9 @@ def create_access_token(data: dict, kid: str = None):
         )
 
 def verify_token(token: str) -> dict:
-    """Verifica un token JWT RS256 y retorna el payload (PyJWT)"""
+    """Verifica un token JWT RS256 con validaciones completas (PyJWT)"""
     try:
-        # ✅ Usa PyJWT también para leer el header
+        # Leer header para obtener kid
         unverified_header = pyjwt.get_unverified_header(token)
         kid = unverified_header.get("kid")
         if not kid:
@@ -63,10 +66,14 @@ def verify_token(token: str) -> dict:
         # Clave pública correspondiente
         public_key_pem = key_manager.get_public_key_pem(kid)
 
+        # Decodificar con validaciones completas
         payload = pyjwt.decode(
             token,
             public_key_pem,
-            algorithms=["RS256"]
+            algorithms=["RS256"],
+            issuer=JWT_ISS,
+            audience=JWT_AUD,
+            leeway=SKEW_SECONDS  # Tolerancia de ±60s
         )
         return payload
 

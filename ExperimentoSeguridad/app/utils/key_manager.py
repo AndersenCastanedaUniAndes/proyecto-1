@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 from typing import Dict, Optional, Tuple
 import secrets
 import base64
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 class RSAKeyManager:
     """Gestor de claves RSA con rotación automática"""

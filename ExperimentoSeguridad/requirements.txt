@@ -12,3 +12,11 @@ bcrypt==4.0.1
 cryptography>=42.0.0
 requests==2.32.3
 
+# Dependencias para el experimento
+redis==5.0.1
+prometheus-client==0.19.0
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
+psycopg2-binary==2.9.9
+
