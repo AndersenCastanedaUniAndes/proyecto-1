@@ -1,52 +1,62 @@
 """
-Configuración de tests para el experimento de seguridad
+Pytest configuration and fixtures.
 """
 import pytest
-import asyncio
+import tempfile
+import os
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from app.main import app
-from app.models.db_models import Base
-from config.config import DATABASE_URL
 
-# Base de datos de prueba
-TEST_DATABASE_URL = "sqlite:///./test_users.db"
-engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+from app.main import app
+from app.models.database import get_db, Base
+from app.models.db_models import User
+
 
 @pytest.fixture(scope="session")
-def event_loop():
-    """Crear event loop para tests asíncronos"""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
-
-@pytest.fixture(scope="function")
-def db_session():
-    """Crear sesión de base de datos para cada test"""
-    # Crear tablas
+def test_db():
+    """Create a test database."""
+    # Create temporary database
+    db_fd, db_path = tempfile.mkstemp()
+    os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
+    
+    # Create engine and tables
+    engine = create_engine(f"sqlite:///{db_path}")
     Base.metadata.create_all(bind=engine)
     
-    # Crear sesión
-    session = TestingSessionLocal()
+    yield db_path
     
-    yield session
-    
-    # Limpiar después del test
-    session.close()
-    Base.metadata.drop_all(bind=engine)
+    # Cleanup
+    os.close(db_fd)
+    os.unlink(db_path)
+
 
 @pytest.fixture(scope="function")
-def client(db_session):
-    """Cliente de prueba FastAPI"""
-    def override_get_db():
-        try:
-            yield db_session
-        finally:
-            pass
+def db_session(test_db):
+    """Create a database session for each test."""
+    engine = create_engine(f"sqlite:///{test_db}")
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     
-    from app.services.user_service import get_db
+    session = TestingSessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+
+
+@pytest.fixture(scope="function")
+def client(test_db):
+    """Create a test client."""
+    # Override database dependency
+    def override_get_db():
+        engine = create_engine(f"sqlite:///{test_db}")
+        TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        session = TestingSessionLocal()
+        try:
+            yield session
+        finally:
+            session.close()
+    
     app.dependency_overrides[get_db] = override_get_db
     
     with TestClient(app) as test_client:
@@ -54,56 +64,62 @@ def client(db_session):
     
     app.dependency_overrides.clear()
 
-@pytest.fixture
-def admin_user_data():
-    """Datos de usuario administrador para tests"""
-    return {
-        "nombre_usuario": "admin_test",
-        "email": "admin@test.com",
-        "contrasena": "admin123",
-        "rol": "admin"
-    }
 
 @pytest.fixture
-def regular_user_data():
-    """Datos de usuario regular para tests"""
+def test_user_data():
+    """Test user data."""
     return {
-        "nombre_usuario": "user_test",
-        "email": "user@test.com",
-        "contrasena": "user123",
-        "rol": "user"
+        "email": "test@example.com",
+        "password": "testpassword123",
+        "full_name": "Test User",
+        "role": "user"
     }
 
+
 @pytest.fixture
-def admin_token(client, admin_user_data):
-    """Token de administrador para tests"""
-    # Crear usuario admin
-    response = client.post("/users/", json=admin_user_data)
-    assert response.status_code == 200
+def test_admin_data():
+    """Test admin data."""
+    return {
+        "email": "admin@example.com",
+        "password": "adminpassword123",
+        "full_name": "Admin User",
+        "role": "admin"
+    }
+
+
+@pytest.fixture
+def auth_headers(client, test_user_data):
+    """Create authenticated headers for test user."""
+    # Create user
+    response = client.post("/users/", json=test_user_data)
+    assert response.status_code == 201
     
     # Login
     login_data = {
-        "username": admin_user_data["email"],
-        "password": admin_user_data["contrasena"]
+        "username": test_user_data["email"],
+        "password": test_user_data["password"]
     }
     response = client.post("/token", data=login_data)
     assert response.status_code == 200
     
-    return response.json()["access_token"]
+    token = response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
 
 @pytest.fixture
-def user_token(client, regular_user_data):
-    """Token de usuario regular para tests"""
-    # Crear usuario regular
-    response = client.post("/users/", json=regular_user_data)
-    assert response.status_code == 200
+def admin_headers(client, test_admin_data):
+    """Create authenticated headers for admin user."""
+    # Create admin
+    response = client.post("/users/", json=test_admin_data)
+    assert response.status_code == 201
     
     # Login
     login_data = {
-        "username": regular_user_data["email"],
-        "password": regular_user_data["contrasena"]
+        "username": test_admin_data["email"],
+        "password": test_admin_data["password"]
     }
     response = client.post("/token", data=login_data)
     assert response.status_code == 200
     
-    return response.json()["access_token"]
+    token = response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
