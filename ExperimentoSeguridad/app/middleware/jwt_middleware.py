@@ -1,246 +1,261 @@
 """
-Middleware JWT con métricas Prometheus para observabilidad
+JWT Middleware with Prometheus metrics for observability.
 """
-import time
 import logging
-from typing import Optional, Dict, Any
-from fastapi import Request, HTTPException, status
+import time
+from typing import Any, Dict, Optional
+
+import jwt as pyjwt
+from fastapi import HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
-import jwt as pyjwt
-from datetime import datetime, timedelta
 
+from app.config import JWT_AUD, JWT_ISS, PROMETHEUS_MULTIPROC_DIR, SKEW_SECONDS
 from app.utils.auth import verify_token
-from app.utils.revocation_store import revocation_store
 from app.utils.rbac import rbac_manager
-from config.config import JWT_ISS, JWT_AUD, SKEW_SECONDS
+from app.utils.revocation_store import revocation_store
 
-# Configurar logging
 logger = logging.getLogger(__name__)
 
-# Métricas Prometheus
+# Prometheus metrics
 try:
-    from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
+    from prometheus_client import (
+        CONTENT_TYPE_LATEST,
+        Counter,
+        Gauge,
+        Histogram,
+        MultiProcessCollector,
+        generate_latest,
+        CollectorRegistry,
+    )
+
     PROMETHEUS_AVAILABLE = True
-    
-    # Métricas de validación JWT
+
+    # Create registry for multiprocess support
+    if PROMETHEUS_MULTIPROC_DIR:
+        registry = CollectorRegistry()
+        MultiProcessCollector(registry)
+    else:
+        registry = None
+
+    # JWT validation metrics
     jwt_validation_seconds = Histogram(
-        'jwt_validation_seconds',
-        'Tiempo de validación JWT en segundos',
-        ['endpoint', 'method'],
-        unit='seconds'
+        "jwt_validation_seconds",
+        "JWT validation time in seconds",
+        ["route_path", "method"],
+        unit="seconds",
+        registry=registry,
     )
-    
+
     jwt_validation_failures_total = Counter(
-        'jwt_validation_failures_total',
-        'Total de fallos en validación JWT',
-        ['reason', 'endpoint']
+        "jwt_validation_failures_total",
+        "Total JWT validation failures",
+        ["reason", "route_path"],
+        registry=registry,
     )
-    
+
     jwt_validation_success_total = Counter(
-        'jwt_validation_success_total',
-        'Total de validaciones JWT exitosas',
-        ['endpoint']
+        "jwt_validation_success_total",
+        "Total successful JWT validations",
+        ["route_path"],
+        registry=registry,
     )
-    
-    active_tokens_gauge = Gauge(
-        'active_tokens_total',
-        'Total de tokens activos'
-    )
-    
+
     redis_connection_status = Gauge(
-        'redis_connection_status',
-        'Estado de conexión Redis (1=conectado, 0=desconectado)'
+        "redis_connection_status",
+        "Redis connection status (1=connected, 0=disconnected)",
+        registry=registry,
     )
-    
+
 except ImportError:
     PROMETHEUS_AVAILABLE = False
-    logger.warning("Prometheus no disponible. Métricas deshabilitadas.")
+    logger.warning("Prometheus not available. Metrics disabled.")
+
 
 class JWTMiddleware(BaseHTTPMiddleware):
-    """Middleware JWT con métricas y validación completa"""
-    
+    """JWT Middleware with comprehensive validation and metrics."""
+
     def __init__(self, app: ASGIApp, skip_paths: Optional[list] = None):
         super().__init__(app)
-        self.skip_paths = skip_paths or [
-            "/",
-            "/docs",
-            "/redoc",
-            "/openapi.json",
-            "/.well-known/jwks.json",
-            "/metrics",
-            "/health"
-        ]
-    
+        # Exact public routes
+        self.skip_exact = {"/", "/metrics", "/health", "/openapi.json", "/token"}
+        # Public prefixes (docs/UI, JWKS)
+        self.skip_prefixes = ("/docs", "/redoc", "/.well-known")
+
+    def _should_skip_validation(self, request: Request) -> bool:
+        """Check if request should skip JWT validation."""
+        path = request.url.path
+        if path in self.skip_exact:
+            return True
+        return any(path.startswith(prefix) for prefix in self.skip_prefixes)
+
     async def dispatch(self, request: Request, call_next):
-        """Procesa la request con validación JWT"""
-        
-        # Verificar si debe saltar la validación
+        """Process request with JWT validation."""
         if self._should_skip_validation(request):
             return await call_next(request)
-        
-        # Iniciar medición de tiempo
-        start_time = time.time()
-        
+
+        start_time = time.perf_counter()
+        route_path = self._get_route_path(request)
+
         try:
-            # Extraer token del header Authorization
+            # Extract token from Authorization header
             token = self._extract_token(request)
             if not token:
-                self._record_failure("no_token", request.url.path)
-                return self._unauthorized_response("Token de autorización requerido")
-            
-            # Validar token JWT
+                self._record_failure("no_token", route_path)
+                return self._unauthorized_response("Authorization token required")
+
+            # Validate JWT token
             payload = await self._validate_jwt_token(token, request)
-            
-            # Verificar revocación
+
+            # Check token revocation
             if await self._is_token_revoked(payload.get("jti"), request):
-                self._record_failure("token_revoked", request.url.path)
-                return self._unauthorized_response("Token revocado")
-            
-            # Verificar permisos RBAC
+                self._record_failure("token_revoked", route_path)
+                return self._unauthorized_response("Token revoked")
+
+            # Check RBAC permissions
             if not await self._check_rbac_permissions(payload, request):
-                self._record_failure("insufficient_permissions", request.url.path)
-                return self._forbidden_response("Permisos insuficientes")
-            
-            # Agregar información del usuario a la request
+                self._record_failure("insufficient_permissions", route_path)
+                return self._forbidden_response("Insufficient permissions")
+
+            # Add user information to request state
             request.state.user_payload = payload
             request.state.user_role = payload.get("role")
             request.state.user_email = payload.get("sub")
-            
-            # Registrar éxito
-            self._record_success(request.url.path)
-            
-            # Procesar request
-            response = await call_next(request)
-            
-            # Calcular tiempo de validación
-            validation_time = time.time() - start_time
-            self._record_validation_time(request.url.path, request.method, validation_time)
-            
-            return response
-            
+
+            self._record_success(route_path)
+            return await call_next(request)
+
         except HTTPException as e:
-            self._record_failure("http_exception", request.url.path)
+            self._record_failure("http_exception", route_path)
             return JSONResponse(
-                status_code=e.status_code,
-                content={"detail": e.detail}
+                status_code=e.status_code, content={"detail": e.detail}
             )
         except Exception as e:
-            logger.error(f"Error en middleware JWT: {e}")
-            self._record_failure("internal_error", request.url.path)
-            return self._internal_error_response("Error interno del servidor")
-    
-    def _should_skip_validation(self, request: Request) -> bool:
-        """Verifica si debe saltar la validación JWT"""
-        return any(request.url.path.startswith(path) for path in self.skip_paths)
-    
+            logger.error(f"JWT middleware error: {e}")
+            self._record_failure("internal_error", route_path)
+            return self._internal_error_response("Internal server error")
+        finally:
+            # Record validation time in finally block
+            duration = time.perf_counter() - start_time
+            self._record_validation_time(route_path, request.method, duration)
+
+    def _get_route_path(self, request: Request) -> str:
+        """Get route path for metrics (avoid high cardinality)."""
+        path = request.url.path
+        # Normalize paths to avoid high cardinality
+        if path.startswith("/users/"):
+            return "/users/{user_id}"
+        elif path.startswith("/auth/"):
+            return "/auth/*"
+        return path
+
     def _extract_token(self, request: Request) -> Optional[str]:
-        """Extrae el token del header Authorization"""
+        """Extract token from Authorization header."""
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
             return None
-        return auth_header[7:]  # Remover "Bearer "
-    
+        return auth_header[7:]  # Remove "Bearer "
+
     async def _validate_jwt_token(self, token: str, request: Request) -> Dict[str, Any]:
-        """Valida el token JWT con validaciones completas"""
+        """Validate JWT token with comprehensive checks."""
         try:
-            # Decodificar header para obtener kid
+            # Decode header to get kid
             unverified_header = pyjwt.get_unverified_header(token)
             kid = unverified_header.get("kid")
-            
+
             if not kid:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Token inválido: no contiene kid"
+                    detail="Invalid token: missing kid",
                 )
-            
-            # Obtener clave pública
+
+            # Get public key
             from app.utils.key_manager import key_manager
+
             public_key_pem = key_manager.get_public_key_pem(kid)
-            
-            # Decodificar con validaciones completas
+
+            # Decode with comprehensive validations
             payload = pyjwt.decode(
                 token,
                 public_key_pem,
                 algorithms=["RS256"],
                 issuer=JWT_ISS,
                 audience=JWT_AUD,
-                leeway=SKEW_SECONDS  # Tolerancia de ±60s
+                leeway=SKEW_SECONDS,  # ±60s tolerance
             )
-            
-            # Validaciones adicionales
+
+            # Additional validations
             if not payload.get("sub"):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Token inválido: no contiene subject"
+                    detail="Invalid token: missing subject",
                 )
-            
+
             if not payload.get("role"):
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Token inválido: no contiene role"
+                    detail="Invalid token: missing role",
                 )
-            
+
             return payload
-            
+
         except pyjwt.ExpiredSignatureError:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token expirado"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired"
             )
         except pyjwt.InvalidTokenError as e:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=f"Token inválido: {str(e)}"
+                detail=f"Invalid token: {str(e)}",
             )
         except Exception as e:
-            logger.error(f"Error validando JWT: {e}")
+            logger.error(f"JWT validation error: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Error interno validando token"
+                detail="Internal error validating token",
             )
-    
+
     async def _is_token_revoked(self, jti: str, request: Request) -> bool:
-        """Verifica si el token está revocado"""
+        """Check if token is revoked using the same function as services."""
         try:
-            # Obtener sesión de DB (simplificado para el middleware)
+            # Use the same database function as services
             from app.services.user_service import get_db
+
             db = next(get_db())
-            
             try:
                 return revocation_store.is_token_revoked(jti, db)
             finally:
                 db.close()
-                
+
         except Exception as e:
-            logger.error(f"Error verificando revocación: {e}")
+            logger.error(f"Error checking token revocation: {e}")
             return True  # Fail-closed
-    
+
     async def _check_rbac_permissions(self, payload: Dict[str, Any], request: Request) -> bool:
-        """Verifica permisos RBAC para el endpoint"""
+        """Check RBAC permissions for the endpoint."""
         try:
             role = payload.get("role")
             if not role:
                 return False
-            
-            # Mapear endpoint a recurso y acción
+
+            # Map endpoint to resource and action
             resource, action = self._map_endpoint_to_permission(request)
             if not resource or not action:
-                return True  # Si no se puede mapear, permitir (endpoints públicos)
-            
+                return True  # Allow if cannot map (public endpoints)
+
             return rbac_manager.has_permission(role, resource, action)
-            
+
         except Exception as e:
-            logger.error(f"Error verificando RBAC: {e}")
+            logger.error(f"RBAC permission check error: {e}")
             return False
-    
+
     def _map_endpoint_to_permission(self, request: Request) -> tuple:
-        """Mapea endpoint HTTP a recurso y acción RBAC"""
+        """Map HTTP endpoint to RBAC resource and action."""
         path = request.url.path
         method = request.method
-        
-        # Mapeo de endpoints a permisos
+
+        # Map endpoints to permissions
         if path.startswith("/users"):
             if method == "GET":
                 return "users", "read"
@@ -250,60 +265,67 @@ class JWTMiddleware(BaseHTTPMiddleware):
                 return "users", "update"
             elif method == "DELETE":
                 return "users", "delete"
-        
+
         elif path.startswith("/auth"):
             if "rotate-keys" in path:
                 return "auth", "rotate_keys"
             elif "blacklist" in path:
                 return "auth", "view_blacklist"
-        
+
         return None, None
-    
-    def _record_failure(self, reason: str, endpoint: str):
-        """Registra fallo en métricas"""
+
+    def _record_failure(self, reason: str, route_path: str):
+        """Record failure in metrics."""
         if PROMETHEUS_AVAILABLE:
-            jwt_validation_failures_total.labels(reason=reason, endpoint=endpoint).inc()
-    
-    def _record_success(self, endpoint: str):
-        """Registra éxito en métricas"""
+            jwt_validation_failures_total.labels(
+                reason=reason, route_path=route_path
+            ).inc()
+
+    def _record_success(self, route_path: str):
+        """Record success in metrics."""
         if PROMETHEUS_AVAILABLE:
-            jwt_validation_success_total.labels(endpoint=endpoint).inc()
-    
-    def _record_validation_time(self, endpoint: str, method: str, duration: float):
-        """Registra tiempo de validación"""
+            jwt_validation_success_total.labels(route_path=route_path).inc()
+
+    def _record_validation_time(self, route_path: str, method: str, duration: float):
+        """Record validation time."""
         if PROMETHEUS_AVAILABLE:
-            jwt_validation_seconds.labels(endpoint=endpoint, method=method).observe(duration)
-    
+            jwt_validation_seconds.labels(
+                route_path=route_path, method=method
+            ).observe(duration)
+
     def _unauthorized_response(self, detail: str) -> JSONResponse:
-        """Respuesta 401"""
+        """401 Unauthorized response."""
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
             content={"detail": detail},
-            headers={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     def _forbidden_response(self, detail: str) -> JSONResponse:
-        """Respuesta 403"""
+        """403 Forbidden response."""
         return JSONResponse(
-            status_code=status.HTTP_403_FORBIDDEN,
-            content={"detail": detail}
+            status_code=status.HTTP_403_FORBIDDEN, content={"detail": detail}
         )
-    
+
     def _internal_error_response(self, detail: str) -> JSONResponse:
-        """Respuesta 500"""
+        """500 Internal Server Error response."""
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"detail": detail}
+            content={"detail": detail},
         )
 
+
 def get_metrics():
-    """Obtiene métricas de Prometheus"""
+    """Get Prometheus metrics."""
     if PROMETHEUS_AVAILABLE:
+        if PROMETHEUS_MULTIPROC_DIR:
+            return generate_latest(registry)
         return generate_latest()
-    return b"# Prometheus no disponible\n"
+    return b"# Prometheus not available\n"
+
 
 def get_redis_status():
-    """Obtiene estado de Redis"""
+    """Get Redis status."""
     if PROMETHEUS_AVAILABLE:
         status = revocation_store.get_redis_status()
         redis_connection_status.set(1 if status["available"] else 0)

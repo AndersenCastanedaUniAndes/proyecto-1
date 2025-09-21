@@ -1,9 +1,9 @@
 FROM python:3.11-slim
 
-# Establecer directorio de trabajo
+# Set working directory
 WORKDIR /app
 
-# Instalar dependencias del sistema
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
@@ -11,24 +11,28 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiar archivos de dependencias
-COPY requirements.txt .
+# Copy dependency files
+COPY pyproject.toml ./
 
-# Instalar dependencias de Python
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies
+RUN pip install --no-cache-dir -e ".[dev]"
 
-# Copiar código de la aplicación
+# Copy application code
 COPY . .
 
-# Crear directorio para claves
+# Create keys directory
 RUN mkdir -p /app/keys
 
-# Crear usuario no-root
+# Create non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
-# Exponer puerto
+# Expose port
 EXPOSE 8000
 
-# Comando de inicio
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Development command (single worker)
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--workers", "1"]
