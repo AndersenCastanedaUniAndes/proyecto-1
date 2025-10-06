@@ -14,7 +14,7 @@ def key_service_instance():
         ks.jwks = {"keys": []}
         ks.current_kid = "testkid"
         return ks
-
+ 
 
 
 def test_get_private_key_not_loaded():
