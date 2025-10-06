@@ -195,5 +195,6 @@ class RedisService:
             db.rollback()
             return False
 
+
 # Instancia global del servicio Redis
 redis_service = RedisService()

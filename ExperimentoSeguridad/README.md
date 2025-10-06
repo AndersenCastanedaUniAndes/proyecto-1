@@ -46,6 +46,7 @@ user_service/
 ├── requirements.txt           # Dependencias Python
 ├── Dockerfile                 # Contenedor Docker
 ├── users.db                   # Base de datos SQLite
+├──tests                       # Test unitarios
 └── .gitignore
 ```
 

@@ -1,6 +1,6 @@
 # Configuración de la base de datos, claves secretas, etc.
-DATABASE_URL = "sqlite:///./users.db"
-# DATABASE_URL = "postgresql://user:password@localhost:5432/experimento_seguridad"  # Para PostgreSQL
+#DATABASE_URL = "sqlite:///./users.db"
+DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/users"  # Para PostgreSQL
 
 # Configuración de JWT
 ALGORITHM = "RS256"
