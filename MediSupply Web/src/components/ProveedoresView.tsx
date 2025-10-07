@@ -16,8 +16,8 @@ interface Proveedor {
 }
 
 interface ProveedoresViewProps {
-  onSuccess?: (message: string) => void;
-}
+  onSuccess: (mensaje: string, tipo?: "success" | "info" | "warning") => void;
+}  
 
 export function ProveedoresView({ onSuccess }: ProveedoresViewProps) {
   const [proveedores, setProveedores] = useState<Proveedor[]>([

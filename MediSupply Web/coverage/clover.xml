@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1759844819460" clover="3.2.0">
+  <project timestamp="1759844819460" name="All files">
+    <metrics statements="184" coveredstatements="119" conditionals="73" coveredconditionals="31" methods="62" coveredmethods="27" elements="319" coveredelements="177" complexity="0" loc="184" ncloc="184" packages="2" files="10" classes="10"/>
+    <package name="components">
+      <metrics statements="126" coveredstatements="66" conditionals="67" coveredconditionals="27" methods="44" coveredmethods="14"/>
+      <file name="ForgotPasswordForm.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ForgotPasswordForm.tsx">
+        <metrics statements="24" coveredstatements="18" conditionals="4" coveredconditionals="3" methods="5" coveredmethods="3"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="13" count="4" type="stmt"/>
+        <line num="14" count="4" type="stmt"/>
+        <line num="15" count="4" type="stmt"/>
+        <line num="17" count="4" type="stmt"/>
+        <line num="18" count="1" type="stmt"/>
+        <line num="19" count="1" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="23" count="0" type="stmt"/>
+        <line num="24" count="0" type="stmt"/>
+        <line num="25" count="0" type="stmt"/>
+        <line num="29" count="4" type="stmt"/>
+        <line num="30" count="0" type="stmt"/>
+        <line num="31" count="0" type="stmt"/>
+        <line num="34" count="4" type="cond" truecount="1" falsecount="1"/>
+        <line num="35" count="0" type="stmt"/>
+        <line num="78" count="4" type="stmt"/>
+        <line num="102" count="1" type="stmt"/>
+      </file>
+      <file name="VendedoresView.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\VendedoresView.tsx">
+        <metrics statements="102" coveredstatements="48" conditionals="63" coveredconditionals="24" methods="39" coveredmethods="11"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="9" count="1" type="stmt"/>
+        <line num="40" count="1" type="stmt"/>
+        <line num="41" count="3" type="stmt"/>
+        <line num="65" count="3" type="stmt"/>
+        <line num="71" count="3" type="stmt"/>
+        <line num="72" count="3" type="stmt"/>
+        <line num="78" count="3" type="stmt"/>
+        <line num="79" count="3" type="stmt"/>
+        <line num="80" count="3" type="stmt"/>
+        <line num="81" count="3" type="stmt"/>
+        <line num="82" count="3" type="stmt"/>
+        <line num="83" count="3" type="stmt"/>
+        <line num="84" count="3" type="stmt"/>
+        <line num="85" count="3" type="stmt"/>
+        <line num="88" count="3" type="stmt"/>
+        <line num="89" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="90" count="1" type="stmt"/>
+        <line num="91" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="97" count="3" type="stmt"/>
+        <line num="98" count="3" type="stmt"/>
+        <line num="104" count="3" type="stmt"/>
+        <line num="105" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="108" count="3" type="stmt"/>
+        <line num="109" count="0" type="stmt"/>
+        <line num="110" count="0" type="cond" truecount="0" falsecount="5"/>
+        <line num="113" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="114" count="0" type="stmt"/>
+        <line num="115" count="0" type="stmt"/>
+        <line num="118" count="0" type="stmt"/>
+        <line num="119" count="0" type="stmt"/>
+        <line num="122" count="0" type="stmt"/>
+        <line num="123" count="0" type="stmt"/>
+        <line num="124" count="0" type="stmt"/>
+        <line num="131" count="0" type="stmt"/>
+        <line num="132" count="0" type="stmt"/>
+        <line num="133" count="0" type="stmt"/>
+        <line num="134" count="0" type="stmt"/>
+        <line num="135" count="0" type="stmt"/>
+        <line num="136" count="0" type="stmt"/>
+        <line num="140" count="3" type="stmt"/>
+        <line num="141" count="0" type="stmt"/>
+        <line num="142" count="0" type="stmt"/>
+        <line num="149" count="3" type="stmt"/>
+        <line num="150" count="0" type="stmt"/>
+        <line num="151" count="0" type="stmt"/>
+        <line num="152" count="0" type="stmt"/>
+        <line num="153" count="0" type="stmt"/>
+        <line num="156" count="3" type="stmt"/>
+        <line num="157" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="160" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="161" count="0" type="stmt"/>
+        <line num="162" count="0" type="stmt"/>
+        <line num="165" count="0" type="stmt"/>
+        <line num="166" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="174" count="0" type="stmt"/>
+        <line num="175" count="0" type="stmt"/>
+        <line num="176" count="0" type="stmt"/>
+        <line num="177" count="0" type="stmt"/>
+        <line num="180" count="3" type="stmt"/>
+        <line num="181" count="0" type="stmt"/>
+        <line num="184" count="3" type="stmt"/>
+        <line num="185" count="0" type="stmt"/>
+        <line num="186" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="190" count="3" type="stmt"/>
+        <line num="210" count="9" type="stmt"/>
+        <line num="222" count="9" type="stmt"/>
+        <line num="225" count="9" type="stmt"/>
+        <line num="237" count="9" type="stmt"/>
+        <line num="240" count="9" type="cond" truecount="1" falsecount="1"/>
+        <line num="253" count="9" type="stmt"/>
+        <line num="254" count="9" type="stmt"/>
+        <line num="255" count="9" type="stmt"/>
+        <line num="256" count="9" type="stmt"/>
+        <line num="299" count="0" type="stmt"/>
+        <line num="303" count="0" type="stmt"/>
+        <line num="321" count="0" type="stmt"/>
+        <line num="325" count="0" type="stmt"/>
+        <line num="343" count="0" type="stmt"/>
+        <line num="347" count="0" type="stmt"/>
+        <line num="354" count="0" type="stmt"/>
+        <line num="393" count="1" type="stmt"/>
+        <line num="394" count="1" type="stmt"/>
+        <line num="417" count="7" type="stmt"/>
+        <line num="432" count="0" type="stmt"/>
+        <line num="445" count="0" type="stmt"/>
+        <line num="457" count="0" type="stmt"/>
+        <line num="499" count="0" type="stmt"/>
+        <line num="506" count="0" type="stmt"/>
+        <line num="513" count="0" type="stmt"/>
+        <line num="533" count="0" type="stmt"/>
+        <line num="541" count="0" type="stmt"/>
+        <line num="542" count="0" type="stmt"/>
+        <line num="546" count="0" type="stmt"/>
+        <line num="557" count="0" type="stmt"/>
+      </file>
+    </package>
+    <package name="components.ui">
+      <metrics statements="58" coveredstatements="53" conditionals="6" coveredconditionals="4" methods="18" coveredmethods="13"/>
+      <file name="alert.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\alert.tsx">
+        <metrics statements="8" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="27" count="0" type="stmt"/>
+        <line num="38" count="0" type="stmt"/>
+        <line num="54" count="0" type="stmt"/>
+        <line num="66" count="1" type="stmt"/>
+      </file>
+      <file name="badge.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\badge.tsx">
+        <metrics statements="8" coveredstatements="8" conditionals="3" coveredconditionals="2" methods="1" coveredmethods="1"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="35" count="14" type="cond" truecount="1" falsecount="1"/>
+        <line num="37" count="14" type="stmt"/>
+        <line num="46" count="1" type="stmt"/>
+      </file>
+      <file name="button.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\button.tsx">
+        <metrics statements="8" coveredstatements="8" conditionals="3" coveredconditionals="2" methods="1" coveredmethods="1"/>
+        <line num="1" count="2" type="stmt"/>
+        <line num="2" count="2" type="stmt"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="5" count="2" type="stmt"/>
+        <line num="7" count="2" type="stmt"/>
+        <line num="47" count="25" type="cond" truecount="1" falsecount="1"/>
+        <line num="49" count="25" type="stmt"/>
+        <line num="58" count="2" type="stmt"/>
+      </file>
+      <file name="card.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\card.tsx">
+        <metrics statements="16" coveredstatements="14" conditionals="0" coveredconditionals="0" methods="7" coveredmethods="5"/>
+        <line num="1" count="2" type="stmt"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="6" count="22" type="stmt"/>
+        <line num="19" count="22" type="stmt"/>
+        <line num="32" count="22" type="stmt"/>
+        <line num="42" count="19" type="stmt"/>
+        <line num="52" count="0" type="stmt"/>
+        <line num="65" count="19" type="stmt"/>
+        <line num="75" count="0" type="stmt"/>
+        <line num="85" count="2" type="stmt"/>
+        <line num="86" count="2" type="stmt"/>
+        <line num="87" count="2" type="stmt"/>
+        <line num="88" count="2" type="stmt"/>
+        <line num="89" count="2" type="stmt"/>
+        <line num="90" count="2" type="stmt"/>
+        <line num="91" count="2" type="stmt"/>
+      </file>
+      <file name="collapsible.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\collapsible.tsx">
+        <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="3"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="8" count="3" type="stmt"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="25" count="3" type="stmt"/>
+        <line num="33" count="1" type="stmt"/>
+      </file>
+      <file name="input.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\input.tsx">
+        <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="1" count="2" type="stmt"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="6" count="7" type="stmt"/>
+        <line num="21" count="2" type="stmt"/>
+      </file>
+      <file name="label.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\label.tsx">
+        <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="4" count="2" type="stmt"/>
+        <line num="6" count="2" type="stmt"/>
+        <line num="12" count="4" type="stmt"/>
+        <line num="24" count="2" type="stmt"/>
+      </file>
+      <file name="utils.ts" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\utils.ts">
+        <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="1" count="2" type="stmt"/>
+        <line num="2" count="2" type="stmt"/>
+        <line num="4" count="2" type="stmt"/>
+        <line num="5" count="154" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>

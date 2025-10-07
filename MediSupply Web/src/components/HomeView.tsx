@@ -1,5 +1,5 @@
 import { useState } from "react";
-import {
+import {  
   Sidebar,
   SidebarContent,
   SidebarGroup,
@@ -45,7 +45,7 @@ import {
 } from "./ui/popover";
 import { Separator } from "./ui/separator";
 import { ScrollArea } from "./ui/scroll-area";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 import { ProveedoresView } from "./ProveedoresView";
 import { ProductosView } from "./ProductosView";
 import { VendedoresView } from "./VendedoresView";
@@ -219,9 +219,9 @@ export function HomeView({ onLogout }: HomeViewProps) {
 
       case "rutas":
         return (
-          <RutasEntregaView onSuccess={agregarNotificacion} />
-        );
-
+          <RutasEntregaView onSuccess={agregarNotificacion} />  
+        );  
+  
       default:
         return (
           <div className="space-y-6">
