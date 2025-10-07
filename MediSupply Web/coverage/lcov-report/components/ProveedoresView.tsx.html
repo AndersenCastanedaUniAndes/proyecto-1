@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">38.82% </span>
+                <span class="strong">43.52% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>33/85</span>
+                <span class='fraction'>37/85</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">21.73% </span>
+                <span class="strong">30.43% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>10/46</span>
+                <span class='fraction'>14/46</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">10.71% </span>
+                <span class="strong">17.85% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>3/28</span>
+                <span class='fraction'>5/28</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">40% </span>
+                <span class="strong">45% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>32/80</span>
+                <span class='fraction'>36/80</span>
             </div>
         
             
@@ -600,8 +600,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -833,8 +833,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -857,7 +857,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1015,8 +1015,8 @@ interface Proveedor {
 }
 &nbsp;
 interface ProveedoresViewProps {
-  onSuccess?: (message: string) =&gt; void;
-}
+  onSuccess: (mensaje: string, tipo?: "success" | "info" | "warning") =&gt; void;
+}  
 &nbsp;
 export function ProveedoresView({ onSuccess }: ProveedoresViewProps) {
   const [proveedores, setProveedores] = useState&lt;Proveedor[]&gt;([
@@ -1066,9 +1066,9 @@ export function ProveedoresView({ onSuccess }: ProveedoresViewProps) {
 &nbsp;
   // Filtrar proveedores
   const proveedoresFiltrados = useMemo(() =&gt; {
-    <span class="missing-if-branch" title="else path not taken" >E</span>if (!filtro.trim()) return proveedores;
-<span class="cstat-no" title="statement not covered" >    return proveedores.filter(<span class="fstat-no" title="function not covered" >proveedor </span>=&gt; </span>
-<span class="cstat-no" title="statement not covered" >      proveedor.nombre.toLowerCase().includes(filtro.toLowerCase()) ||</span>
+    if (!filtro.trim()) return proveedores;
+    return proveedores.filter(proveedor =&gt; 
+      proveedor.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
       proveedor.correo.toLowerCase().includes(filtro.toLowerCase())
     );
   }, [proveedores, filtro]);
@@ -1290,7 +1290,7 @@ export function ProveedoresView({ onSuccess }: ProveedoresViewProps) {
             &lt;div&gt;
               &lt;CardTitle&gt;Proveedores Registrados&lt;/CardTitle&gt;
               &lt;CardDescription&gt;
-                {proveedoresFiltrados.length} de {proveedores.length} proveedor{proveedores.length !== 1 ? 'es' : <span class="branch-1 cbranch-no" title="branch not covered" >''}</span> mostrado{proveedoresFiltrados.length !== 1 ? 's' : <span class="branch-1 cbranch-no" title="branch not covered" >''}</span>
+                {proveedoresFiltrados.length} de {proveedores.length} proveedor{proveedores.length !== 1 ? 'es' : <span class="branch-1 cbranch-no" title="branch not covered" >''}</span> mostrado{proveedoresFiltrados.length !== 1 ? 's' : ''}
               &lt;/CardDescription&gt;
             &lt;/div&gt;
             &lt;div className="w-72"&gt;
@@ -1299,9 +1299,9 @@ export function ProveedoresView({ onSuccess }: ProveedoresViewProps) {
                 &lt;Input
                   placeholder="Filtrar por nombre o correo..."
                   value={filtro}
-                  onChange={<span class="fstat-no" title="function not covered" >(e</span>) =&gt; {
-<span class="cstat-no" title="statement not covered" >                    setFiltro(e.target.value);</span>
-<span class="cstat-no" title="statement not covered" >                    setCurrentPage(1);</span>
+                  onChange={(e) =&gt; {
+                    setFiltro(e.target.value);
+                    setCurrentPage(1);
                   }}
                   className="pl-10"
                 /&gt;
@@ -1471,7 +1471,7 @@ export function ProveedoresView({ onSuccess }: ProveedoresViewProps) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-07T13:27:18.057Z
+                at 2025-10-07T15:52:20.117Z
             </div>
         <script src="../prettify.js"></script>
         <script>
