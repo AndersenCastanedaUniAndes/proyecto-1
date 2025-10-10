@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware 
 from fastapi.responses import JSONResponse
 
 from app.services.crud import init_db
@@ -10,6 +11,15 @@ app = FastAPI( title="API de Productos",
             description="API para gestionar productos",
             version="1.0.0")
 app.include_router(router, prefix="/productos", tags=["Productos"])
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Puerto de tu frontend
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.on_event("startup")
 async def on_startup():
