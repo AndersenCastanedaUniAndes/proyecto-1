@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import UploadFile, File,APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
@@ -8,7 +8,16 @@ from ..models.producto import ProductoBase, ProductoCreate, ProductoUpdate, Prod
 from ..models.databases import get_db
 from ..utils.auth import get_current_user
 
+from ..services import crud
+from ..models.databases import get_db
+from ..models.producto import ProductoCreate
+
 router = APIRouter()
+
+
+@router.post("/upload_excel", status_code=201)
+async def upload_productos_excel( file: UploadFile = File(...),  db: Session = Depends(get_db)):
+    return await crud.get_productos_creados(file, db)
 
 @router.get("/", response_model=List[ProductoOut])
 #def list_productos(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), _user: dict = Depends(get_current_user)):

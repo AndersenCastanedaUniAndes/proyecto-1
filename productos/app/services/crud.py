@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import SQLAlchemyError
-from fastapi import HTTPException, Depends
+from fastapi import UploadFile, File,HTTPException, Depends
 from pydantic import ValidationError
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -12,7 +12,8 @@ from config.config import DATABASE_URL, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPI
 from sqlalchemy.orm import Session
 from app.models import models, producto
 from typing import List, Optional
-
+from datetime import datetime
+import pandas as pd 
 # Configuración de BD
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -83,6 +84,66 @@ def get_producto_by_serial(db: Session, numeroSerial: str) -> Optional[models.Pr
 
 def get_productos(db: Session, skip: int = 0, limit: int = 100) -> List[models.Producto]:
     return db.query(models.Producto).offset(skip).limit(limit).all()
+
+
+
+async def get_productos_creados(file: UploadFile = File(...),  db: Session = Depends(get_db)):
+    """
+    Endpoint para cargar un archivo Excel con productos y guardarlos en la BD.
+    """
+
+    # Validar extensión
+    if not file.filename.endswith((".xlsx", ".xls")):
+        raise HTTPException(status_code=400, detail="El archivo debe ser un Excel (.xlsx o .xls)")
+
+    try:
+        # Leer el archivo Excel con pandas
+        contents = await file.read()
+        df = pd.read_excel(contents)
+
+        # Validar columnas obligatorias
+        columnas_requeridas = [
+            "nombre", "lote", "numeroSerial", "proveedor",
+            "precioUnidad", "precioTotal", "paisOrigen",
+            "uom", "cantidad", "tipoAlmacenamiento",
+            "temperaturaMin", "temperaturaMax"
+        ]
+
+        for col in columnas_requeridas:
+            if col not in df.columns:
+                raise HTTPException(status_code=400, detail=f"Columna faltante en el Excel: {col}")
+
+        productos_creados = []
+        for _, row in df.iterrows():
+            # Evitar duplicados por numeroSerial
+            if get_producto_by_serial(db, str(row["numeroSerial"])):
+                continue  # puedes cambiar por raise si prefieres abortar
+
+            producto_data = models.Producto(
+                nombre=row["nombre"],
+                lote=row["lote"],
+                numeroSerial=str(row["numeroSerial"]),
+                proveedor=row["proveedor"],
+                precioUnidad=float(row["precioUnidad"]),
+                precioTotal=float(row["precioTotal"]),
+                paisOrigen=row["paisOrigen"],
+                uom=row["uom"],
+                cantidad=int(row["cantidad"]),
+                tipoAlmacenamiento=row["tipoAlmacenamiento"],
+                temperaturaMin=float(row["temperaturaMin"]) if not pd.isna(row["temperaturaMin"]) else None,
+                temperaturaMax=float(row["temperaturaMax"]) if not pd.isna(row["temperaturaMax"]) else None
+            )
+
+            nuevo_producto = create_producto(db, producto_data)
+            productos_creados.append(nuevo_producto)
+
+        return {"mensaje": f"{len(productos_creados)} productos cargados exitosamente."}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error procesando el archivo: {str(e)}")
+
+
+
 
 
 def create_producto(db: Session, producto) -> models.Producto:
