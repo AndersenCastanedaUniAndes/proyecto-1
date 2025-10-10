@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo,useEffect } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -60,38 +60,34 @@ interface ProductosViewProps {
 }
 
 export function ProductosView({ onSuccess }: ProductosViewProps) {
-  const [productos, setProductos] = useState<Producto[]>([
-    {
-      id: 1,
-      nombre: "Paracetamol 500mg",
-      lote: "PT2024001",
-      numeroSerial: "PAR500-2024-001",
-      proveedor: "Laboratorios Pharma Plus",
-      precioUnidad: 0.25,
-      precioTotal: 250.00,
-      paisOrigen: "Colombia",
-      uom: "caja",
-      cantidad: 1000,
-      tipoAlmacenamiento: "ambiente",
-      fechaCreacion: "2024-01-15"
-    },
-    {
-      id: 2,
-      nombre: "Vacuna COVID-19",
-      lote: "VC2024001",
-      numeroSerial: "VAC-CV19-2024-001",
-      proveedor: "Distribuidora Médica Central",
-      precioUnidad: 15.50,
-      precioTotal: 3100.00,
-      paisOrigen: "Estados Unidos",
-      uom: "unidad",
-      cantidad: 200,
-      tipoAlmacenamiento: "controlado",
-      temperaturaMin: -70,
-      temperaturaMax: -60,
-      fechaCreacion: "2024-02-10"
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+  const cargarProductos = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("http://localhost:8000/productos/?skip=0&limit=100");
+      if (!response.ok) {
+        throw new Error(`Error al cargar productos: ${response.statusText}`);
+      }
+      const data = await response.json();
+      console.log("--------------"+data.length);
+      setProductos(data);
+    } catch (error: any) {
+      console.error(error);
+      setErrorMessage("No se pudieron cargar los productos desde el servidor.");
+    } finally {
+      setIsLoading(false);
     }
-  ]);
+  };
+
+  cargarProductos();
+}, []);
+
+
+
 
   const [nuevoProducto, setNuevoProducto] = useState({
     nombre: "",
@@ -124,10 +120,9 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
     temperaturaMax: ""
   });
 
-  const [isLoading, setIsLoading] = useState(false);
+
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [filtro, setFiltro] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [filtro, setFiltro] = useState("");  
   const [currentPage, setCurrentPage] = useState(1);
   const [uploadingFile, setUploadingFile] = useState(false);
   const itemsPerPage = 5;
