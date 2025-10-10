@@ -1,4 +1,5 @@
 import { useState, useMemo,useEffect } from "react";
+import config from "../config/config";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -68,12 +69,13 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
   const cargarProductos = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("http://localhost:8000/productos/?skip=0&limit=100");
+      //const response = await fetch("http://localhost:8000/productos/?skip=0&limit=100");
+      const response = await fetch(`${config.API_BASE_URL}/productos/?skip=0&limit=100`);
       if (!response.ok) {
         throw new Error(`Error al cargar productos: ${response.statusText}`);
       }
       const data = await response.json();
-      console.log("--------------"+data.length);
+      //console.log("--------------"+data.length);
       setProductos(data);
     } catch (error: any) {
       console.error(error);
