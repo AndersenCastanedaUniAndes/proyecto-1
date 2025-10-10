@@ -305,65 +305,47 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const file = event.target.files?.[0];
+  if (!file) return;
 
-    // Validar que sea un archivo Excel o CSV
-    const allowedTypes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/csv'];
-    if (!allowedTypes.includes(file.type)) {
-      setErrorMessage("Por favor selecciona un archivo Excel (.xlsx, .xls) o CSV");
-      return;
+  // Validar que sea un archivo Excel
+  const allowedTypes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+  if (!allowedTypes.includes(file.type)) {
+    setErrorMessage("Por favor selecciona un archivo Excel (.xlsx, .xls)");
+    return;
+  }
+
+  setUploadingFile(true);
+  setErrorMessage("");
+
+  try {
+    // Crear un objeto FormData para enviar el archivo
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Enviar el archivo al backend
+    const response = await fetch(`${config.API_BASE_URL}/productos/upload_excel`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || "Error al cargar el archivo");
     }
 
-    setUploadingFile(true);
-    setErrorMessage("");
-
-    // Simular procesamiento del archivo
-    setTimeout(() => {
-      // Aquí iría la lógica real de procesamiento del archivo
-      // Por ahora simulamos la carga de productos de ejemplo
-      const nuevosProductos: Producto[] = [
-        {
-          id: Math.max(...productos.map(p => p.id), 0) + 1,
-          nombre: "Ibuprofeno 600mg",
-          lote: "IB2024001",
-          numeroSerial: "IBU600-2024-001",
-          proveedor: "Laboratorios Pharma Plus",
-          precioUnidad: 0.35,
-          precioTotal: 350.00,
-          paisOrigen: "México",
-          uom: "caja",
-          cantidad: 1000,
-          tipoAlmacenamiento: "ambiente",
-          fechaCreacion: new Date().toISOString().split('T')[0]
-        },
-        {
-          id: Math.max(...productos.map(p => p.id), 0) + 2,
-          nombre: "Insulina Rápida",
-          lote: "IN2024001", 
-          numeroSerial: "INS-RAP-2024-001",
-          proveedor: "Distribuidora Médica Central",
-          precioUnidad: 25.00,
-          precioTotal: 2500.00,
-          paisOrigen: "Dinamarca",
-          uom: "unidad",
-          cantidad: 100,
-          tipoAlmacenamiento: "controlado",
-          temperaturaMin: 2,
-          temperaturaMax: 8,
-          fechaCreacion: new Date().toISOString().split('T')[0]
-        }
-      ];
-
-      setProductos([...productos, ...nuevosProductos]);
-      setUploadingFile(false);
-      
-      onSuccess?.(`Se han cargado ${nuevosProductos.length} productos exitosamente`);
-    }, 2000);
-
+    const result = await response.json();
+    onSuccess?.(result.mensaje);
+  } catch (error: any) {
+    console.error(error);
+    setErrorMessage(error.message || "Error al cargar el archivo");
+  } finally {
+    setUploadingFile(false);
     // Limpiar el input
     event.target.value = '';
-  };
+  }
+};
+
 
   return (
     <div className="space-y-8">
@@ -749,13 +731,13 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                     <input
                       id="file-upload"
                       type="file"
-                      accept=".xlsx,.xls,.csv"
+                      accept=".xlsx,.xls"
                       onChange={handleFileUpload}
                       disabled={uploadingFile}
                       className="hidden"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Formatos: Excel (.xlsx, .xls) o CSV
+                      Formatos: Excel (.xlsx, .xls) 
                     </p>
                   </div>
                 </div>
