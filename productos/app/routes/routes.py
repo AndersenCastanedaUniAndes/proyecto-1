@@ -14,6 +14,19 @@ from ..models.producto import ProductoCreate
 
 router = APIRouter()
 
+@router.get("/paises")
+def get_paises( ):
+    return  crud.get_paises()
+
+
+@router.get("/uom")
+def get_uom( ):
+    return  crud.get_uom()
+
+@router.get("/tipos_almacenamiento")
+def get_uom( ):
+    return  crud.get_tipo_almacenamiento()
+
 
 @router.post("/upload_excel", status_code=201)
 async def upload_productos_excel( file: UploadFile = File(...),  db: Session = Depends(get_db)):
