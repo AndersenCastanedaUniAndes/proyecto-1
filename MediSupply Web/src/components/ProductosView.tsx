@@ -1,4 +1,4 @@
-import { useState, useMemo,useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import config from "../config/config";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -8,17 +8,17 @@ import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { 
-  Edit, 
-  Trash2, 
-  Save, 
-  X, 
-  Plus, 
-  Package, 
-  Search, 
-  ChevronDown, 
-  AlertCircle, 
-  ChevronLeft, 
+import {
+  Edit,
+  Trash2,
+  Save,
+  X,
+  Plus,
+  Package,
+  Search,
+  ChevronDown,
+  AlertCircle,
+  ChevronLeft,
   ChevronRight,
   Thermometer,
   MapPin,
@@ -47,14 +47,11 @@ interface Producto {
 
 const proveedoresDisponibles = [
   "Laboratorios Pharma Plus",
-  "Distribuidora Médica Central", 
+  "Distribuidora Médica Central",
   "Farmacéutica del Valle"
 ];
 
-const paisesDisponibles = [
-  "Argentina", "Brasil", "Chile", "Colombia", "España", "Estados Unidos",
-  "Francia", "Alemania", "India", "México", "Reino Unido", "Suiza"
-];
+
 
 interface ProductosViewProps {
   onSuccess?: (message: string) => void;
@@ -64,67 +61,158 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [paisesDisponibles, setPaisesDisponibles] = useState<string[]>([]);
+  const [uomsDisponibles, setUomsDisponibles] = useState<string[]>([]);
+  const [tiposAlmacenamiento, setTiposAlmacenamiento] = useState<string[]>([]);
+  const [proveedoresDisponibles, setProveedoresDisponibles] = useState<string[]>([]);
 
   useEffect(() => {
-  const cargarProductos = async () => {
-    try {
-      setIsLoading(true);
-      //const response = await fetch("http://localhost:8000/productos/?skip=0&limit=100");
-      const response = await fetch(`${config.API_BASE_URL}/productos/?skip=0&limit=100`);
-      if (!response.ok) {
-        throw new Error(`Error al cargar productos: ${response.statusText}`);
+    const cargarProveedores = async () => {
+      try {
+        const response = await fetch(`${config.API_BASE_URL}/productos/proveedores`);
+        if (!response.ok) throw new Error("Error al cargar proveedores");
+        const data = await response.json();
+        setProveedoresDisponibles(data);
+      } catch (error) {
+        console.error("Error al cargar proveedores:", error);
+        setProveedoresDisponibles([]);
       }
-      const data = await response.json();
-      //console.log("--------------"+data.length);
-      setProductos(data);
-    } catch (error: any) {
-      console.error(error);
-      setErrorMessage("No se pudieron cargar los productos desde el servidor.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
-  cargarProductos();
-}, []);
+    cargarProveedores();
+  }, []);
+
+  useEffect(() => {
+    const cargarUOM = async () => {
+      try {
+        const response = await fetch(`${config.API_BASE_URL}/productos/uom`);
+        if (!response.ok) throw new Error("Error al cargar unidades de medida");
+        const data = await response.json();
+        setUomsDisponibles(data);
+      } catch (error) {
+        console.error("Error al cargar unidades de medida:", error);
+        setUomsDisponibles([]);
+      }
+    };
+    cargarUOM();
+  }, []);
+
+  useEffect(() => {
+    const cargarTiposAlmacenamiento = async () => {
+      try {
+        const response = await fetch(`${config.API_BASE_URL}/productos/tipos_almacenamiento`);
+        if (!response.ok) throw new Error("Error al cargar tipos de almacenamiento");
+        const data = await response.json();
+        setTiposAlmacenamiento(data);
+      } catch (error) {
+        console.error("Error al cargar tipos de almacenamiento:", error);
+        setTiposAlmacenamiento([]);
+      }
+    };
+    cargarTiposAlmacenamiento();
+  }, []);
+
+  useEffect(() => {
+    const cargarPaises = async () => {
+      try {
+        const response = await fetch(`${config.API_BASE_URL}/productos/paises`);
+        if (!response.ok) throw new Error("Error al cargar países");
+        const data = await response.json();
+        setPaisesDisponibles(data);
+      } catch (error) {
+        console.error("Error al cargar países:", error);
+        setPaisesDisponibles([]);
+      }
+    };
+
+    cargarPaises();
+  }, []);
+
+  useEffect(() => {
+    const cargarProductos = async () => {
+      try {
+        setIsLoading(true);
+        //const response = await fetch("http://localhost:8000/productos/?skip=0&limit=100");
+        const response = await fetch(`${config.API_BASE_URL}/productos/?skip=0&limit=100`);
+        if (!response.ok) {
+          throw new Error(`Error al cargar productos: ${response.statusText}`);
+        }
+        const data = await response.json();
+        //console.log("--------------"+data.length);
+        setProductos(data);
+      } catch (error: any) {
+        console.error(error);
+        setErrorMessage("No se pudieron cargar los productos desde el servidor.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    cargarProductos();
+  }, []);
 
 
 
 
-  const [nuevoProducto, setNuevoProducto] = useState({
+  const [nuevoProducto, setNuevoProducto] = useState<{
+    nombre: string;
+    lote: string;
+    numeroSerial: string;
+    proveedor: string | null;
+    precioUnidad: string;
+    precioTotal: string;
+    paisOrigen: string | null;
+    uom: string | null;
+    cantidad: string;
+    tipoAlmacenamiento: string | null;
+    temperaturaMin: string;
+    temperaturaMax: string;
+  }>({
     nombre: "",
     lote: "",
     numeroSerial: "",
-    proveedor: "",
+    proveedor: "Laboratorios Pharma Plus",
     precioUnidad: "",
     precioTotal: "",
-    paisOrigen: "",
-    uom: "",
+    paisOrigen: "México",
+    uom: "unidad",
     cantidad: "",
-    tipoAlmacenamiento: "",
+    tipoAlmacenamiento: "ambiente",
     temperaturaMin: "",
     temperaturaMax: ""
   });
 
   const [editandoId, setEditandoId] = useState<number | null>(null);
-  const [productoEditado, setProductoEditado] = useState({
+  const [productoEditado, setProductoEditado] = useState<{
+    nombre: string;
+    lote: string;
+    numeroSerial: string;
+    proveedor: string | null;
+    precioUnidad: string;
+    precioTotal: string;
+    paisOrigen: string | null;
+    uom: string | null;
+    cantidad: string;
+    tipoAlmacenamiento: string | null;
+    temperaturaMin: string;
+    temperaturaMax: string;
+  }>({
     nombre: "",
     lote: "",
     numeroSerial: "",
-    proveedor: "",
+    proveedor: null,
     precioUnidad: "",
     precioTotal: "",
-    paisOrigen: "",
-    uom: "",
+    paisOrigen: null,
+    uom: null,
     cantidad: "",
-    tipoAlmacenamiento: "",
+    tipoAlmacenamiento: null,
     temperaturaMin: "",
     temperaturaMax: ""
   });
 
-
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [filtro, setFiltro] = useState("");  
+  const [filtro, setFiltro] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [uploadingFile, setUploadingFile] = useState(false);
   const itemsPerPage = 5;
@@ -132,7 +220,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
   // Filtrar productos
   const productosFiltrados = useMemo(() => {
     if (!filtro.trim()) return productos;
-    return productos.filter(producto => 
+    return productos.filter(producto =>
       producto.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
       producto.proveedor.toLowerCase().includes(filtro.toLowerCase())
     );
@@ -154,12 +242,14 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
 
   const handleAgregarProducto = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const datosCompletos = Object.values(nuevoProducto).every(valor => {
+
+    // Validar campos
+    const datosCompletos = Object.values(nuevoProducto).every((valor) => {
+      const val = valor ? valor.toString().trim() : "";
       if (nuevoProducto.tipoAlmacenamiento === "ambiente") {
-        return valor.trim() !== "" || valor === nuevoProducto.temperaturaMin || valor === nuevoProducto.temperaturaMax;
+        return val !== "" || valor === nuevoProducto.temperaturaMin || valor === nuevoProducto.temperaturaMax;
       }
-      return valor.trim() !== "";
+      return val !== "";
     });
 
     if (!datosCompletos) {
@@ -169,10 +259,10 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
 
     setIsLoading(true);
     setErrorMessage("");
-    
-    setTimeout(() => {
-      const nuevo: Producto = {
-        id: Math.max(...productos.map(p => p.id), 0) + 1,
+
+    try {
+      // Preparar el objeto para enviar al backend
+      const productoPayload = {
         nombre: nuevoProducto.nombre.trim(),
         lote: nuevoProducto.lote.trim(),
         numeroSerial: nuevoProducto.numeroSerial.trim(),
@@ -180,35 +270,64 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
         precioUnidad: parseFloat(nuevoProducto.precioUnidad),
         precioTotal: parseFloat(nuevoProducto.precioTotal),
         paisOrigen: nuevoProducto.paisOrigen,
-        uom: nuevoProducto.uom as any,
+        uom: nuevoProducto.uom,
         cantidad: parseInt(nuevoProducto.cantidad),
-        tipoAlmacenamiento: nuevoProducto.tipoAlmacenamiento as any,
+        tipoAlmacenamiento: nuevoProducto.tipoAlmacenamiento,
         ...(nuevoProducto.tipoAlmacenamiento !== "ambiente" && {
           temperaturaMin: parseFloat(nuevoProducto.temperaturaMin),
-          temperaturaMax: parseFloat(nuevoProducto.temperaturaMax)
+          temperaturaMax: parseFloat(nuevoProducto.temperaturaMax),
         }),
-        fechaCreacion: new Date().toISOString().split('T')[0]
+        fechaCreacion: new Date().toISOString().split("T")[0],
       };
 
-      setProductos([...productos, nuevo]);
+      // Enviar al microservicio create_producto
+      const response = await fetch(`${config.API_BASE_URL}/productos/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(productoPayload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Error al crear el producto");
+      }
+
+      const productoCreado = await response.json();
+
+      // Actualizar lista local
+      setProductos([...productos, productoCreado]);
+
+      // Limpiar formulario
+
       setNuevoProducto({
         nombre: "",
         lote: "",
         numeroSerial: "",
-        proveedor: "",
+        proveedor: "Laboratorios Pharma Plus",
         precioUnidad: "",
         precioTotal: "",
-        paisOrigen: "",
-        uom: "",
+        paisOrigen: "México",
+        uom: "unidad",
         cantidad: "",
-        tipoAlmacenamiento: "",
+        tipoAlmacenamiento: "ambiente",
         temperaturaMin: "",
-        temperaturaMax: ""
+        temperaturaMax: "",
       });
+
+      //setIsFormOpen(false);
+      // Usa timeout para evitar conflicto con Radix Portal
+      setTimeout(() => {
+        setIsFormOpen(false);
+      }, 2000);
+      onSuccess?.(`Producto "${productoCreado.nombre}" agregado exitosamente`);
+    } catch (error: any) {
+      console.error("Error al agregar producto:", error);
+      setErrorMessage(error.message || "Error al agregar el producto");
+    } finally {
       setIsLoading(false);
-      setIsFormOpen(false);
-      onSuccess?.(`Producto "${nuevo.nombre}" agregado exitosamente`);
-    }, 1000);
+    }
   };
 
   const iniciarEdicion = (producto: Producto) => {
@@ -250,10 +369,11 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
 
   const guardarEdicion = (id: number) => {
     const datosCompletos = Object.entries(productoEditado).every(([key, valor]) => {
+      const val = valor ? valor.toString().trim() : "";
       if (productoEditado.tipoAlmacenamiento === "ambiente" && (key === "temperaturaMin" || key === "temperaturaMax")) {
         return true;
       }
-      return valor.trim() !== "";
+      return val !== "";
     });
 
     if (!datosCompletos) {
@@ -261,25 +381,29 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
       return;
     }
 
-    setProductos(productos.map(p => 
-      p.id === id 
-        ? { 
-            ...p, 
-            nombre: productoEditado.nombre.trim(),
-            lote: productoEditado.lote.trim(),
-            numeroSerial: productoEditado.numeroSerial.trim(),
-            proveedor: productoEditado.proveedor,
-            precioUnidad: parseFloat(productoEditado.precioUnidad),
-            precioTotal: parseFloat(productoEditado.precioTotal),
-            paisOrigen: productoEditado.paisOrigen,
-            uom: productoEditado.uom as any,
-            cantidad: parseInt(productoEditado.cantidad),
-            tipoAlmacenamiento: productoEditado.tipoAlmacenamiento as any,
-            ...(productoEditado.tipoAlmacenamiento !== "ambiente" && {
-              temperaturaMin: parseFloat(productoEditado.temperaturaMin),
-              temperaturaMax: parseFloat(productoEditado.temperaturaMax)
-            })
-          }
+    setProductos(productos.map(p =>
+      p.id === id
+        ? {
+          ...p,
+          nombre: (productoEditado.nombre ?? "").trim(),
+          lote: (productoEditado.lote ?? "").trim(),
+          numeroSerial: (productoEditado.numeroSerial ?? "").trim(),
+          proveedor: (productoEditado.proveedor ?? "").trim(),
+          precioUnidad: parseFloat(productoEditado.precioUnidad ?? "0"),
+          precioTotal: parseFloat(productoEditado.precioTotal ?? "0"),
+          paisOrigen: (productoEditado.paisOrigen ?? "").trim(),
+          uom: (["unidad", "paquete", "caja", "pallet"].includes(productoEditado.uom ?? "")
+            ? (productoEditado.uom as "unidad" | "paquete" | "caja" | "pallet")
+            : "unidad"),
+          cantidad: parseInt(productoEditado.cantidad ?? "0"),
+          tipoAlmacenamiento: (["ambiente", "controlado", "hazmat"].includes(productoEditado.tipoAlmacenamiento ?? "")
+            ? (productoEditado.tipoAlmacenamiento as "ambiente" | "controlado" | "hazmat")
+            : "ambiente"),
+          ...(productoEditado.tipoAlmacenamiento !== "ambiente" && {
+            temperaturaMin: parseFloat(productoEditado.temperaturaMin ?? "0"),
+            temperaturaMax: parseFloat(productoEditado.temperaturaMax ?? "0"),
+          }),
+        }
         : p
     ));
     setEditandoId(null);
@@ -305,46 +429,46 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-  // Validar que sea un archivo Excel
-  const allowedTypes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
-  if (!allowedTypes.includes(file.type)) {
-    setErrorMessage("Por favor selecciona un archivo Excel (.xlsx, .xls)");
-    return;
-  }
-
-  setUploadingFile(true);
-  setErrorMessage("");
-
-  try {
-    // Crear un objeto FormData para enviar el archivo
-    const formData = new FormData();
-    formData.append('file', file);
-
-    // Enviar el archivo al backend
-    const response = await fetch(`${config.API_BASE_URL}/productos/upload_excel`, {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || "Error al cargar el archivo");
+    // Validar que sea un archivo Excel
+    const allowedTypes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+    if (!allowedTypes.includes(file.type)) {
+      setErrorMessage("Por favor selecciona un archivo Excel (.xlsx, .xls)");
+      return;
     }
 
-    const result = await response.json();
-    onSuccess?.(result.mensaje);
-  } catch (error: any) {
-    console.error(error);
-    setErrorMessage(error.message || "Error al cargar el archivo");
-  } finally {
-    setUploadingFile(false);
-    // Limpiar el input
-    event.target.value = '';
-  }
-};
+    setUploadingFile(true);
+    setErrorMessage("");
+
+    try {
+      // Crear un objeto FormData para enviar el archivo
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Enviar el archivo al backend
+      const response = await fetch(`${config.API_BASE_URL}/productos/upload_excel`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Error al cargar el archivo");
+      }
+
+      const result = await response.json();
+      onSuccess?.(result.mensaje);
+    } catch (error: any) {
+      console.error(error);
+      setErrorMessage(error.message || "Error al cargar el archivo");
+    } finally {
+      setUploadingFile(false);
+      // Limpiar el input
+      event.target.value = '';
+    }
+  };
 
 
   return (
@@ -371,7 +495,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Almacenamiento</CardTitle>
@@ -394,7 +518,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Proveedores Únicos</CardTitle>
@@ -409,7 +533,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Países de Origen</CardTitle>
@@ -460,7 +584,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                         placeholder="Nombre del producto"
                         value={nuevoProducto.nombre}
                         onChange={(e) => {
-                          setNuevoProducto({...nuevoProducto, nombre: e.target.value});
+                          setNuevoProducto({ ...nuevoProducto, nombre: e.target.value });
                           setErrorMessage("");
                         }}
                         className="pl-10"
@@ -468,7 +592,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="lote">Lote</Label>
                     <div className="relative">
@@ -478,7 +602,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                         placeholder="Número de lote"
                         value={nuevoProducto.lote}
                         onChange={(e) => {
-                          setNuevoProducto({...nuevoProducto, lote: e.target.value});
+                          setNuevoProducto({ ...nuevoProducto, lote: e.target.value });
                           setErrorMessage("");
                         }}
                         className="pl-10"
@@ -486,7 +610,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="numeroSerial">Número Serial</Label>
                     <div className="relative">
@@ -496,7 +620,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                         placeholder="Número serial"
                         value={nuevoProducto.numeroSerial}
                         onChange={(e) => {
-                          setNuevoProducto({...nuevoProducto, numeroSerial: e.target.value});
+                          setNuevoProducto({ ...nuevoProducto, numeroSerial: e.target.value });
                           setErrorMessage("");
                         }}
                         className="pl-10"
@@ -510,29 +634,35 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="proveedor">Proveedor</Label>
-                    <Select value={nuevoProducto.proveedor} onValueChange={(value) => {
-                      setNuevoProducto({...nuevoProducto, proveedor: value});
-                      setErrorMessage("");
-                    }}>
+                    <Select
+                      value={nuevoProducto.proveedor ?? ""}
+                      onValueChange={(value) => {
+                        setNuevoProducto({ ...nuevoProducto, proveedor: value });
+                        setErrorMessage("");
+                      }}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecciona un proveedor" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent {...({ forceMount: true } as any)}>
                         {proveedoresDisponibles.map((proveedor) => (
                           <SelectItem key={proveedor} value={proveedor}>
                             {proveedor}
-                          </SelectItem>
+                          </SelectItem> 
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="paisOrigen">País de Origen</Label>
-                    <Select value={nuevoProducto.paisOrigen} onValueChange={(value) => {
-                      setNuevoProducto({...nuevoProducto, paisOrigen: value});
-                      setErrorMessage("");
-                    }}>
+                    <Select
+                      value={nuevoProducto.paisOrigen ?? ""}
+                      onValueChange={(value) => {
+                        setNuevoProducto({ ...nuevoProducto, paisOrigen: value });
+                        setErrorMessage("");
+                      }}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecciona un país" />
                       </SelectTrigger>
@@ -546,8 +676,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                           </SelectItem>
                         ))}
                       </SelectContent>
-                    </Select>
-                  </div>
+                    </Select>                  </div>
                 </div>
 
                 {/* Precios y cantidades */}
@@ -566,7 +695,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                           const newValue = e.target.value;
                           const precioTotal = calcularPrecioTotal(newValue, nuevoProducto.cantidad);
                           setNuevoProducto({
-                            ...nuevoProducto, 
+                            ...nuevoProducto,
                             precioUnidad: newValue,
                             precioTotal: precioTotal
                           });
@@ -577,7 +706,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="cantidad">Cantidad</Label>
                     <Input
@@ -589,7 +718,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                         const newValue = e.target.value;
                         const precioTotal = calcularPrecioTotal(nuevoProducto.precioUnidad, newValue);
                         setNuevoProducto({
-                          ...nuevoProducto, 
+                          ...nuevoProducto,
                           cantidad: newValue,
                           precioTotal: precioTotal
                         });
@@ -598,25 +727,26 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <Label htmlFor="uom">UOM</Label>
-                    <Select value={nuevoProducto.uom} onValueChange={(value) => {
-                      setNuevoProducto({...nuevoProducto, uom: value});
+                    <Label htmlFor="uom"> UOM </Label>
+                    <Select value={nuevoProducto.uom ?? ""} onValueChange={(value) => {
+                      setNuevoProducto({ ...nuevoProducto, uom: value });
                       setErrorMessage("");
                     }}>
                       <SelectTrigger>
                         <SelectValue placeholder="Unidad de medida" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="unidad">Unidad</SelectItem>
-                        <SelectItem value="paquete">Paquete</SelectItem>
-                        <SelectItem value="caja">Caja</SelectItem>
-                        <SelectItem value="pallet">Pallet</SelectItem>
+                      <SelectContent {...({ forceMount: true ,modal:false} as any)}>
+                        {uomsDisponibles.map((uom) => (
+                          <SelectItem key={uom} value={uom}>
+                            {uom}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="precioTotal">Precio Total ($)</Label>
                     <div className="relative">
@@ -628,7 +758,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                         placeholder="0.00"
                         value={nuevoProducto.precioTotal}
                         onChange={(e) => {
-                          setNuevoProducto({...nuevoProducto, precioTotal: e.target.value});
+                          setNuevoProducto({ ...nuevoProducto, precioTotal: e.target.value });
                           setErrorMessage("");
                         }}
                         className="pl-10 bg-muted"
@@ -643,9 +773,9 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="tipoAlmacenamiento">Tipo de Almacenamiento</Label>
-                      <Select value={nuevoProducto.tipoAlmacenamiento} onValueChange={(value) => {
+                      <Select value={nuevoProducto.tipoAlmacenamiento ?? ""} onValueChange={(value) => {
                         setNuevoProducto({
-                          ...nuevoProducto, 
+                          ...nuevoProducto,
                           tipoAlmacenamiento: value,
                           ...(value === "ambiente" && { temperaturaMin: "", temperaturaMax: "" })
                         });
@@ -655,13 +785,15 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                           <SelectValue placeholder="Tipo de almacenamiento" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="ambiente">Ambiente</SelectItem>
-                          <SelectItem value="controlado">Controlado</SelectItem>
-                          <SelectItem value="hazmat">Hazmat</SelectItem>
+                          {tiposAlmacenamiento.map((tipo) => (
+                            <SelectItem key={tipo} value={tipo}>
+                              {tipo}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     {nuevoProducto.tipoAlmacenamiento && nuevoProducto.tipoAlmacenamiento !== "ambiente" && (
                       <>
                         <div className="space-y-2">
@@ -674,7 +806,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                               placeholder="-80"
                               value={nuevoProducto.temperaturaMin}
                               onChange={(e) => {
-                                setNuevoProducto({...nuevoProducto, temperaturaMin: e.target.value});
+                                setNuevoProducto({ ...nuevoProducto, temperaturaMin: e.target.value });
                                 setErrorMessage("");
                               }}
                               className="pl-10"
@@ -682,7 +814,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                             />
                           </div>
                         </div>
-                        
+
                         <div className="space-y-2">
                           <Label htmlFor="temperaturaMax">Temperatura Máxima (°C)</Label>
                           <div className="relative">
@@ -693,7 +825,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                               placeholder="8"
                               value={nuevoProducto.temperaturaMax}
                               onChange={(e) => {
-                                setNuevoProducto({...nuevoProducto, temperaturaMax: e.target.value});
+                                setNuevoProducto({ ...nuevoProducto, temperaturaMax: e.target.value });
                                 setErrorMessage("");
                               }}
                               className="pl-10"
@@ -705,12 +837,12 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                     )}
                   </div>
                 </div>
-                
+
                 <div className="flex gap-4 items-center">
                   <Button type="submit" disabled={isLoading}>
                     {isLoading ? "Agregando..." : "Agregar Producto"}
                   </Button>
-                  
+
                   <div className="border-l border-muted pl-4">
                     <Label htmlFor="file-upload" className="cursor-pointer">
                       <div className="flex items-center gap-2 px-4 py-2 border border-dashed border-muted-foreground rounded-lg hover:bg-muted/50 transition-colors">
@@ -737,7 +869,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                       className="hidden"
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Formatos: Excel (.xlsx, .xls) 
+                      Formatos: Excel (.xlsx, .xls)
                     </p>
                   </div>
                 </div>
@@ -809,8 +941,8 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                             })}
                             placeholder="Lote"
                           />
-                          <Select value={productoEditado.proveedor} onValueChange={(value) => 
-                            setProductoEditado({...productoEditado, proveedor: value})
+                          <Select value={productoEditado.proveedor ?? ""} onValueChange={(value) =>
+                            setProductoEditado({ ...productoEditado, proveedor: value })
                           }>
                             <SelectTrigger>
                               <SelectValue />
@@ -825,16 +957,16 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                           </Select>
                         </div>
                         <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             onClick={() => guardarEdicion(producto.id)}
                           >
                             <Save className="h-4 w-4 mr-1" />
                             Guardar
                           </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={cancelarEdicion}
                           >
                             <X className="h-4 w-4 mr-1" />
@@ -850,16 +982,16 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                             <h3 className="font-medium">{producto.nombre}</h3>
                             <Badge variant="secondary">ID: {producto.id}</Badge>
                             <Badge variant="outline">Lote: {producto.lote}</Badge>
-                            <Badge 
+                            <Badge
                               variant={
                                 producto.tipoAlmacenamiento === "ambiente" ? "secondary" :
-                                producto.tipoAlmacenamiento === "controlado" ? "default" : "destructive"
+                                  producto.tipoAlmacenamiento === "controlado" ? "default" : "destructive"
                               }
                             >
                               {producto.tipoAlmacenamiento.charAt(0).toUpperCase() + producto.tipoAlmacenamiento.slice(1)}
                             </Badge>
                           </div>
-                          
+
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-muted-foreground">
                             <div>
                               <span className="font-medium">Proveedor:</span> {producto.proveedor}
@@ -889,17 +1021,17 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="flex gap-2 ml-4">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => iniciarEdicion(producto)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => eliminarProducto(producto.id)}
                           >
@@ -910,7 +1042,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                     )}
                   </div>
                 ))}
-                
+
                 {/* Paginación */}
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between pt-4 border-t">
@@ -927,7 +1059,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                         <ChevronLeft className="h-4 w-4" />
                         Anterior
                       </Button>
-                      
+
                       <div className="flex gap-1">
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                           <Button
@@ -941,7 +1073,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                           </Button>
                         ))}
                       </div>
-                      
+
                       <Button
                         variant="outline"
                         size="sm"

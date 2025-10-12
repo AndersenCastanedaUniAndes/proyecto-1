@@ -219,7 +219,7 @@ export function HomeView({ onLogout }: HomeViewProps) {
 
       case "rutas":
         return (
-          <RutasEntregaView onSuccess={agregarNotificacion} />  
+          <RutasEntregaView />  
         );  
   
       default:
