@@ -127,19 +127,30 @@ def get_uom() -> List[str]:
     """
     Retorna una lista completa de uom.
     """
-    paises = ["unidad" , "paquete" , "caja" , "pallet"]
+    uoms = ["unidad" , "paquete" , "caja" , "pallet"]
     
     # Ordena la lista alfabéticamente ignorando mayúsculas y tildes
-    return sorted(paises, key=lambda p: p.lower())
+    return sorted(uoms, key=lambda p: p.lower())
+
+def get_proveedores() -> List[str]:
+    """
+    Retorna una lista completa de proveedores.
+    """
+    proveedores = [ "Laboratorios Pharma Plus",  "Distribuidora Médica Central",  "Farmacéutica del Valle"]
+    
+    # Ordena la lista alfabéticamente ignorando mayúsculas y tildes
+    return sorted(proveedores, key=lambda p: p.lower())
+
+
 
 def get_tipo_almacenamiento() -> List[str]:
     """
     Retorna una lista completa de tipos de almacenamiento.
     """
-    paises = ["unidad" , "paquete" , "caja" , "pallet"]
     
+    tipos = ["seco" , "refrigerado"]
     # Ordena la lista alfabéticamente ignorando mayúsculas y tildes
-    return sorted(paises, key=lambda p: p.lower())
+    return sorted(tipos, key=lambda p: p.lower())
 
 
 async def get_productos_creados(file: UploadFile = File(...),  db: Session = Depends(get_db)):
@@ -215,9 +226,9 @@ def create_producto(db: Session, producto) -> models.Producto:
         tipoAlmacenamiento=producto.tipoAlmacenamiento,
         temperaturaMin=producto.temperaturaMin,
         temperaturaMax=producto.temperaturaMax,
-        fechaCreacion = producto.fechaCreacion if hasattr(producto, 'fechaCreacion') else __import__('datetime').datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+       )
 
-    )
+    
     db.add(db_obj)
     db.commit()
     db.refresh(db_obj)

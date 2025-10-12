@@ -18,6 +18,10 @@ router = APIRouter()
 def get_paises( ):
     return  crud.get_paises()
 
+@router.get("/proveedores")
+def get_proveedores( ):
+    return  crud.get_proveedores()
+
 
 @router.get("/uom")
 def get_uom( ):
