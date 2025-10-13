@@ -8,7 +8,12 @@ __pycache__/
 env/
 venv/
 
-node_modules/
+**/.venv/
+**/env/
+**/venv/
+
+**/node_modules/
+MediSupply Web/coverage/
 
 # Database files
 *.db
@@ -27,3 +32,4 @@ Thumbs.db
 
 # Logs
 *.log
+MediSupply Web/coverage

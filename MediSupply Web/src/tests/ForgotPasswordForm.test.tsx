@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { ForgotPasswordForm } from "../components/ForgotPasswordForm";
 
 describe("ForgotPasswordForm", () => {
@@ -19,8 +19,14 @@ describe("ForgotPasswordForm", () => {
 
     // Cambia el texto del botón si es diferente en tu componente
     const sendButton = screen.getByRole('button', { name: /Enviar Instrucciones/i });
+    jest.useFakeTimers();
     fireEvent.click(sendButton);
-
+    // Avanza temporizador simulado del componente (2000ms)
+    await act(async () => {
+      jest.runAllTimers();
+    });
+    // Debe mostrar la vista de "Correo Enviado"
+    expect(await screen.findByText(/Correo Enviado/i)).toBeInTheDocument();
   });
    
 

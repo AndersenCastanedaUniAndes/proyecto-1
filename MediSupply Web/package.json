@@ -62,7 +62,9 @@
             "vite": "6.3.5"
       },
       "scripts": {
-            "dev": "vite",
-            "build": "vite build"
+                                          "dev": "vite",
+                                          "build": "vite build",
+                                          "test": "jest --runInBand",
+                                          "test:watch": "jest --watch"
       }
 }
