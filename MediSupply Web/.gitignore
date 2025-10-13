@@ -1,0 +1,63 @@
+# Dependencias y módulos de Node.js
+node_modules/
+
+# Archivos de configuración local
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env*.local
+
+# Archivos de logs y debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Archivos de IDE y editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Archivos de construcción y distribución
+dist/
+build/
+output/
+coverage/
+
+# Archivos de cache
+.cache/
+*.log
+*.cache
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de pruebas y reportes
+nyc_output/
+testem.log
+coverage/
+
+# Archivos de configuración de herramientas
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Archivos de dependencias de lock (pueden ser subidos si es necesario)
+# Si trabajas en equipo, es común subir package-lock.json o yarn.lock
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Archivos de Vite (si usas Vite)
+vite.config.ts
+!vite.config.ts
+
+# Archivos de Docker (si los tienes)
+.dockerignore  
