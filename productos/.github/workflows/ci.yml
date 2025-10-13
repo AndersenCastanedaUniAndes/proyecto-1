@@ -40,11 +40,15 @@ jobs:
         with:
           python-version: "3.11"
 
+    - name: Print directory structure
+        run: ls -R
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pwd
-          pip install -r  /productos/requirements.txt
+          ls
+          pip install -r requirements.txt
 
       - name: Run tests
         run: python -m pytest -v --maxfail=1 --disable-warnings
