@@ -43,6 +43,6 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r ../../productos/requirements.txt
+          pip install -r productos/requirements.txt
       - name: Run tests
         run: python -m pytest -v --maxfail=1 --disable-warnings
