@@ -45,4 +45,4 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r productos/requirements.txt
       - name: Run tests
-        run: python -m pytest -v --maxfail=1 --disable-warnings
+        run: python -m pytest productos/tests -v --maxfail=1 --disable-warnings
