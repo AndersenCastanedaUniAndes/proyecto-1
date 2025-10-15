@@ -40,15 +40,9 @@ jobs:
         with:
           python-version: "3.11"
 
-    - name: Print directory structure
-        run: ls -R
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pwd
-          ls
-          pip install fastapi==0.111.0 uvicorn==0.30.1 pydantic==2.8.2 pydantic-settings==2.3.4 sqlalchemy==2.0.16 python-jose[cryptography]==3.3.0 passlib[bcrypt]==1.7.4 bcrypt==4.0.1 psycopg2-binary==2.9.9 pandas openpyxl XlsxWriter pytest pytest-asyncio pytest-cov
-
+          pip install -r productos/requirements.txt
       - name: Run tests
-        run: python -m pytest -v --maxfail=1 --disable-warnings
+        run: python -m pytest productos/tests -v --maxfail=1 --disable-warnings

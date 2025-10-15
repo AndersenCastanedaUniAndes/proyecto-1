@@ -1,3 +1,24 @@
+"""
+/**
+ * @file crud.py
+ * @brief Módulo CRUD principal para la gestión de productos en la base de datos.
+ *
+ * Este módulo implementa operaciones básicas de persistencia sobre la entidad Producto,
+ * así como utilidades complementarias para la inicialización de la base de datos, manejo
+ * de contraseñas, autenticación mediante JWT, y carga masiva de productos desde archivos Excel.
+ *
+ * <p><b>Tecnologías utilizadas:</b></p>
+ * - FastAPI
+ * - SQLAlchemy ORM
+ * - Passlib (bcrypt)
+ * - JOSE (JWT)
+ * - Pandas
+ *
+ * <p><b>Autor:</b> Equipo de Desarrollo Grupo 1</p>
+ * <p><b>Versión:</b> 1.0</p>
+ * <p><b>Fecha:</b> 2025-10-15</p>
+ */
+"""
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import SQLAlchemyError
@@ -75,14 +96,38 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
 # CRUD básico
 
 def get_producto(db: Session, producto_id: int) -> Optional[models.Producto]:
+    """
+    /**
+     * @brief Obtiene un producto por su ID.
+     * @param db Sesión de base de datos.
+     * @param producto_id Identificador del producto.
+     * @return Producto encontrado o None si no existe.
+     */
+    """
     return db.query(models.Producto).filter(models.Producto.id == producto_id).first()
 
 
 def get_producto_by_serial(db: Session, numeroSerial: str) -> Optional[models.Producto]:
+    """
+    /**
+     * @brief Obtiene un producto mediante su número de serie.
+     * @param db Sesión de base de datos.
+     * @param numeroSerial Número de serie del producto.
+     * @return Producto encontrado o None si no existe.
+     */
+    """
     return db.query(models.Producto).filter(models.Producto.numeroSerial == numeroSerial).first()
 
 
 def get_productos(db: Session, skip: int = 0, limit: int = 100) -> List[models.Producto]:
+    """
+    /**
+     * @brief Obtiene un producto por su ID.
+     * @param db Sesión de base de datos.
+     * @param producto_id Identificador del producto.
+     * @return Producto encontrado o None si no existe.
+     */
+    """
     return db.query(models.Producto).offset(skip).limit(limit).all()
 
 
@@ -125,7 +170,10 @@ def get_paises() -> List[str]:
 
 def get_uom() -> List[str]:
     """
-    Retorna una lista completa de uom.
+    /**
+     * @brief Retorna una lista de unidades de medida (UOM).
+     * @return List[str] Lista de UOM ordenadas alfabéticamente.
+     */
     """
     uoms = ["unidad" , "paquete" , "caja" , "pallet"]
     
@@ -134,7 +182,10 @@ def get_uom() -> List[str]:
 
 def get_proveedores() -> List[str]:
     """
-    Retorna una lista completa de proveedores.
+    /**
+     * @brief Retorna una lista de proveedores disponibles.
+     * @return List[str] Lista de proveedores.
+     */
     """
     proveedores = [ "Laboratorios Pharma Plus",  "Distribuidora Médica Central",  "Farmacéutica del Valle"]
     
@@ -145,9 +196,11 @@ def get_proveedores() -> List[str]:
 
 def get_tipo_almacenamiento() -> List[str]:
     """
-    Retorna una lista completa de tipos de almacenamiento.
+    /**
+     * @brief Retorna los tipos de almacenamiento disponibles.
+     * @return List[str] Lista de tipos de almacenamiento.
+     */
     """
-    
     tipos = ["seco" , "refrigerado"]
     # Ordena la lista alfabéticamente ignorando mayúsculas y tildes
     return sorted(tipos, key=lambda p: p.lower())
@@ -155,7 +208,13 @@ def get_tipo_almacenamiento() -> List[str]:
 
 async def get_productos_creados(file: UploadFile = File(...),  db: Session = Depends(get_db)):
     """
-    Endpoint para cargar un archivo Excel con productos y guardarlos en la BD.
+    /**
+     * @brief Carga masiva de productos desde un archivo Excel.
+     * @param file Archivo Excel (.xlsx o .xls) con los datos de productos.
+     * @param db Sesión de base de datos.
+     * @return dict Mensaje con la cantidad de productos creados.
+     * @throws HTTPException Si el archivo no es válido o ocurre un error de procesamiento.
+     */
     """
 
     # Validar extensión
@@ -213,6 +272,15 @@ async def get_productos_creados(file: UploadFile = File(...),  db: Session = Dep
 
 
 def create_producto(db: Session, producto) -> models.Producto:
+    """
+    /**
+     * @brief Crea un nuevo producto en la base de datos.
+     * @param db Sesión de base de datos.
+     * @param producto Objeto Producto con los datos a insertar.
+     * @return Producto creado.
+     */
+    """
+    
     db_obj = models.Producto(
         nombre=producto.nombre,
         lote=producto.lote,
@@ -236,6 +304,16 @@ def create_producto(db: Session, producto) -> models.Producto:
 
 
 def update_producto(db: Session, db_producto: models.Producto, producto_in: models.Producto) -> models.Producto:
+    """
+    /**
+     * @brief Actualiza los datos de un producto existente.
+     * @param db Sesión de base de datos.
+     * @param db_producto Producto existente en la BD.
+     * @param producto_in Objeto con los nuevos valores.
+     * @return Producto actualizado.
+     */
+    """
+    
     for field, value in producto_in.dict().items():
         setattr(db_producto, field, value)
     db.commit()
@@ -244,6 +322,13 @@ def update_producto(db: Session, db_producto: models.Producto, producto_in: mode
 
 
 def delete_producto(db: Session, db_producto: models.Producto):
+    """
+    /**
+     * @brief Elimina un producto de la base de datos.
+     * @param db Sesión de base de datos.
+     * @param db_producto Producto a eliminar.
+     */
+    """
     db.delete(db_producto)
     db.commit()
     return
