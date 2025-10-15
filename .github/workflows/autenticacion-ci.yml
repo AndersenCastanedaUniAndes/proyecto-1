@@ -1,0 +1,41 @@
+name: CI - Autenticacion
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      # Variables de entorno que tu app pueda necesitar
+      JWT_SECRET: super-secret-change-me
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+      PYTHONPATH: ExperimentoSeguridad
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ExperimentoSeguridad/requirements.txt
+
+      - name: Generate RSA keys (si tu servicio los necesita)
+        run: |
+          python ExperimentoSeguridad/scripts/generate_keys.py
+
+      - name: Run tests
+        run: |
+          cd ExperimentoSeguridad
+          python -m pytest tests -v --maxfail=1 --disable-warnings
