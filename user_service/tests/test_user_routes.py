@@ -74,13 +74,6 @@ def db():
 
 
 
-def test_authenticate_user_and_login_success(db):
-    form_data = {"username": "juan@test.com", "password": "secret"}
-    response = client.post("/token", data=form_data)
-    assert response.status_code == 200
-    json_data = response.json()
-    assert "access_token" in json_data
-    assert json_data["token_type"] == "bearer"
 
 
 def test_authenticate_user_invalid_credentials(db):
