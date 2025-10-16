@@ -1,0 +1,969 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1759852340213" clover="3.2.0">
+  <project timestamp="1759852340213" name="All files">
+    <metrics statements="894" coveredstatements="478" conditionals="447" coveredconditionals="179" methods="322" coveredmethods="119" elements="1663" coveredelements="776" complexity="0" loc="894" ncloc="894" packages="2" files="21" classes="21"/>
+    <package name="components">
+      <metrics statements="777" coveredstatements="373" conditionals="435" coveredconditionals="169" methods="282" coveredmethods="91"/>
+      <file name="ForgotPasswordForm.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ForgotPasswordForm.tsx">
+        <metrics statements="24" coveredstatements="18" conditionals="4" coveredconditionals="3" methods="5" coveredmethods="3"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="13" count="4" type="stmt"/>
+        <line num="14" count="4" type="stmt"/>
+        <line num="15" count="4" type="stmt"/>
+        <line num="17" count="4" type="stmt"/>
+        <line num="18" count="1" type="stmt"/>
+        <line num="19" count="1" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="23" count="0" type="stmt"/>
+        <line num="24" count="0" type="stmt"/>
+        <line num="25" count="0" type="stmt"/>
+        <line num="29" count="4" type="stmt"/>
+        <line num="30" count="0" type="stmt"/>
+        <line num="31" count="0" type="stmt"/>
+        <line num="34" count="4" type="cond" truecount="1" falsecount="1"/>
+        <line num="35" count="0" type="stmt"/>
+        <line num="78" count="4" type="stmt"/>
+        <line num="102" count="1" type="stmt"/>
+      </file>
+      <file name="InformesView.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\InformesView.tsx">
+        <metrics statements="85" coveredstatements="34" conditionals="36" coveredconditionals="14" methods="28" coveredmethods="6"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="53" count="1" type="stmt"/>
+        <line num="55" count="12" type="stmt"/>
+        <line num="83" count="12" type="stmt"/>
+        <line num="158" count="12" type="stmt"/>
+        <line num="164" count="12" type="stmt"/>
+        <line num="165" count="12" type="stmt"/>
+        <line num="166" count="12" type="stmt"/>
+        <line num="168" count="12" type="stmt"/>
+        <line num="169" count="3" type="cond" truecount="5" falsecount="0"/>
+        <line num="170" count="1" type="stmt"/>
+        <line num="171" count="1" type="stmt"/>
+        <line num="174" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="175" count="0" type="stmt"/>
+        <line num="176" count="0" type="stmt"/>
+        <line num="179" count="2" type="stmt"/>
+        <line num="182" count="2" type="stmt"/>
+        <line num="183" count="0" type="stmt"/>
+        <line num="184" count="0" type="stmt"/>
+        <line num="185" count="0" type="stmt"/>
+        <line num="186" count="0" type="stmt"/>
+        <line num="188" count="0" type="cond" truecount="0" falsecount="3"/>
+        <line num="193" count="0" type="stmt"/>
+        <line num="194" count="0" type="stmt"/>
+        <line num="195" count="0" type="stmt"/>
+        <line num="199" count="12" type="stmt"/>
+        <line num="200" count="0" type="stmt"/>
+        <line num="205" count="0" type="stmt"/>
+        <line num="206" count="0" type="stmt"/>
+        <line num="210" count="12" type="stmt"/>
+        <line num="212" count="0" type="stmt"/>
+        <line num="213" count="0" type="stmt"/>
+        <line num="214" count="0" type="cond" truecount="1" falsecount="1"/>
+        <line num="215" count="0" type="stmt"/>
+        <line num="216" count="0" type="stmt"/>
+        <line num="220" count="12" type="stmt"/>
+        <line num="221" count="0" type="stmt"/>
+        <line num="222" count="0" type="stmt"/>
+        <line num="223" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="224" count="0" type="stmt"/>
+        <line num="225" count="0" type="stmt"/>
+        <line num="227" count="0" type="stmt"/>
+        <line num="229" count="0" type="stmt"/>
+        <line num="232" count="12" type="stmt"/>
+        <line num="233" count="0" type="stmt"/>
+        <line num="234" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="235" count="0" type="stmt"/>
+        <line num="236" count="0" type="stmt"/>
+        <line num="238" count="0" type="stmt"/>
+        <line num="240" count="0" type="stmt"/>
+        <line num="242" count="0" type="stmt"/>
+        <line num="245" count="12" type="stmt"/>
+        <line num="247" count="12" type="stmt"/>
+        <line num="248" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="250" count="0" type="stmt"/>
+        <line num="251" count="0" type="stmt"/>
+        <line num="256" count="0" type="stmt"/>
+        <line num="260" count="0" type="stmt"/>
+        <line num="261" count="0" type="stmt"/>
+        <line num="262" count="0" type="stmt"/>
+        <line num="263" count="0" type="stmt"/>
+        <line num="264" count="0" type="stmt"/>
+        <line num="265" count="0" type="stmt"/>
+        <line num="266" count="0" type="stmt"/>
+        <line num="267" count="0" type="stmt"/>
+        <line num="268" count="0" type="stmt"/>
+        <line num="271" count="12" type="stmt"/>
+        <line num="297" count="2" type="stmt"/>
+        <line num="304" count="48" type="stmt"/>
+        <line num="324" count="2" type="stmt"/>
+        <line num="338" count="2" type="stmt"/>
+        <line num="444" count="0" type="stmt"/>
+        <line num="467" count="0" type="stmt"/>
+        <line num="470" count="0" type="stmt"/>
+        <line num="473" count="0" type="stmt"/>
+        <line num="478" count="0" type="stmt"/>
+        <line num="525" count="0" type="stmt"/>
+      </file>
+      <file name="InventarioView.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\InventarioView.tsx">
+        <metrics statements="49" coveredstatements="42" conditionals="36" coveredconditionals="27" methods="20" coveredmethods="15"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="45" count="1" type="stmt"/>
+        <line num="46" count="7" type="stmt"/>
+        <line num="165" count="6" type="stmt"/>
+        <line num="166" count="6" type="stmt"/>
+        <line num="167" count="6" type="stmt"/>
+        <line num="170" count="6" type="stmt"/>
+        <line num="171" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="172" count="2" type="stmt"/>
+        <line num="173" count="10" type="cond" truecount="4" falsecount="0"/>
+        <line num="181" count="6" type="stmt"/>
+        <line num="182" count="6" type="stmt"/>
+        <line num="188" count="6" type="stmt"/>
+        <line num="189" count="21" type="cond" truecount="3" falsecount="1"/>
+        <line num="191" count="9" type="stmt"/>
+        <line num="193" count="8" type="stmt"/>
+        <line num="195" count="4" type="stmt"/>
+        <line num="197" count="0" type="stmt"/>
+        <line num="201" count="6" type="stmt"/>
+        <line num="202" count="42" type="cond" truecount="3" falsecount="1"/>
+        <line num="204" count="18" type="stmt"/>
+        <line num="206" count="16" type="stmt"/>
+        <line num="208" count="8" type="stmt"/>
+        <line num="210" count="0" type="stmt"/>
+        <line num="214" count="6" type="stmt"/>
+        <line num="215" count="21" type="stmt"/>
+        <line num="220" count="21" type="cond" truecount="1" falsecount="1"/>
+        <line num="224" count="6" type="stmt"/>
+        <line num="226" count="30" type="stmt"/>
+        <line num="227" count="30" type="stmt"/>
+        <line num="228" count="30" type="stmt"/>
+        <line num="229" count="30" type="stmt"/>
+        <line num="230" count="36" type="stmt"/>
+        <line num="233" count="6" type="stmt"/>
+        <line num="323" count="2" type="stmt"/>
+        <line num="324" count="2" type="stmt"/>
+        <line num="347" count="21" type="stmt"/>
+        <line num="489" count="26" type="stmt"/>
+        <line num="551" count="0" type="stmt"/>
+        <line num="559" count="0" type="stmt"/>
+        <line num="560" count="0" type="stmt"/>
+        <line num="564" count="0" type="stmt"/>
+        <line num="575" count="0" type="stmt"/>
+      </file>
+      <file name="LoginForm.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\LoginForm.tsx">
+        <metrics statements="22" coveredstatements="21" conditionals="6" coveredconditionals="4" methods="6" coveredmethods="5"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="17" count="1" type="stmt"/>
+        <line num="18" count="6" type="stmt"/>
+        <line num="19" count="6" type="stmt"/>
+        <line num="20" count="6" type="stmt"/>
+        <line num="21" count="6" type="stmt"/>
+        <line num="23" count="6" type="stmt"/>
+        <line num="24" count="1" type="stmt"/>
+        <line num="25" count="1" type="stmt"/>
+        <line num="28" count="1" type="stmt"/>
+        <line num="29" count="1" type="stmt"/>
+        <line num="30" count="1" type="stmt"/>
+        <line num="31" count="1" type="stmt"/>
+        <line num="35" count="6" type="stmt"/>
+        <line num="59" count="1" type="stmt"/>
+        <line num="75" count="1" type="stmt"/>
+        <line num="81" count="0" type="stmt"/>
+      </file>
+      <file name="PlanesVentaView.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\PlanesVentaView.tsx">
+        <metrics statements="114" coveredstatements="58" conditionals="74" coveredconditionals="31" methods="44" coveredmethods="17"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="9" count="1" type="stmt"/>
+        <line num="10" count="1" type="stmt"/>
+        <line num="11" count="1" type="stmt"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="51" count="1" type="stmt"/>
+        <line num="53" count="3" type="stmt"/>
+        <line num="80" count="3" type="stmt"/>
+        <line num="101" count="12" type="stmt"/>
+        <line num="107" count="3" type="stmt"/>
+        <line num="113" count="3" type="stmt"/>
+        <line num="114" count="3" type="stmt"/>
+        <line num="120" count="3" type="stmt"/>
+        <line num="121" count="3" type="stmt"/>
+        <line num="122" count="3" type="stmt"/>
+        <line num="123" count="3" type="stmt"/>
+        <line num="124" count="3" type="stmt"/>
+        <line num="125" count="3" type="stmt"/>
+        <line num="126" count="3" type="stmt"/>
+        <line num="127" count="3" type="stmt"/>
+        <line num="130" count="3" type="stmt"/>
+        <line num="131" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="132" count="1" type="stmt"/>
+        <line num="133" count="3" type="cond" truecount="3" falsecount="0"/>
+        <line num="134" count="5" type="stmt"/>
+        <line num="140" count="3" type="stmt"/>
+        <line num="141" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="142" count="0" type="stmt"/>
+        <line num="143" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="149" count="3" type="stmt"/>
+        <line num="150" count="3" type="stmt"/>
+        <line num="155" count="3" type="stmt"/>
+        <line num="156" count="0" type="stmt"/>
+        <line num="158" count="0" type="cond" truecount="0" falsecount="5"/>
+        <line num="159" count="0" type="stmt"/>
+        <line num="160" count="0" type="stmt"/>
+        <line num="163" count="0" type="stmt"/>
+        <line num="164" count="0" type="stmt"/>
+        <line num="166" count="0" type="stmt"/>
+        <line num="167" count="0" type="stmt"/>
+        <line num="168" count="0" type="stmt"/>
+        <line num="171" count="0" type="stmt"/>
+        <line num="172" count="0" type="stmt"/>
+        <line num="180" count="0" type="stmt"/>
+        <line num="181" count="0" type="stmt"/>
+        <line num="186" count="0" type="stmt"/>
+        <line num="187" count="0" type="stmt"/>
+        <line num="188" count="0" type="stmt"/>
+        <line num="192" count="3" type="stmt"/>
+        <line num="193" count="0" type="stmt"/>
+        <line num="194" count="0" type="stmt"/>
+        <line num="197" count="0" type="stmt"/>
+        <line num="201" count="3" type="stmt"/>
+        <line num="202" count="0" type="stmt"/>
+        <line num="203" count="0" type="stmt"/>
+        <line num="208" count="0" type="stmt"/>
+        <line num="211" count="3" type="stmt"/>
+        <line num="212" count="0" type="cond" truecount="0" falsecount="5"/>
+        <line num="213" count="0" type="stmt"/>
+        <line num="214" count="0" type="stmt"/>
+        <line num="217" count="0" type="stmt"/>
+        <line num="218" count="0" type="stmt"/>
+        <line num="221" count="0" type="stmt"/>
+        <line num="222" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="231" count="0" type="stmt"/>
+        <line num="232" count="0" type="stmt"/>
+        <line num="237" count="0" type="stmt"/>
+        <line num="240" count="3" type="stmt"/>
+        <line num="241" count="0" type="stmt"/>
+        <line num="244" count="3" type="cond" truecount="0" falsecount="1"/>
+        <line num="245" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="246" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="247" count="0" type="stmt"/>
+        <line num="250" count="0" type="stmt"/>
+        <line num="255" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="256" count="0" type="stmt"/>
+        <line num="259" count="0" type="stmt"/>
+        <line num="264" count="0" type="stmt"/>
+        <line num="267" count="3" type="stmt"/>
+        <line num="268" count="28" type="stmt"/>
+        <line num="274" count="28" type="cond" truecount="1" falsecount="1"/>
+        <line num="277" count="3" type="stmt"/>
+        <line num="278" count="14" type="stmt"/>
+        <line num="283" count="14" type="cond" truecount="1" falsecount="1"/>
+        <line num="286" count="3" type="stmt"/>
+        <line num="306" count="9" type="stmt"/>
+        <line num="318" count="9" type="stmt"/>
+        <line num="333" count="18" type="stmt"/>
+        <line num="348" count="9" type="cond" truecount="1" falsecount="1"/>
+        <line num="384" count="0" type="stmt"/>
+        <line num="385" count="0" type="stmt"/>
+        <line num="430" count="0" type="stmt"/>
+        <line num="431" count="0" type="stmt"/>
+        <line num="451" count="0" type="stmt"/>
+        <line num="464" count="12" type="stmt"/>
+        <line num="468" count="0" type="stmt"/>
+        <line num="522" count="1" type="stmt"/>
+        <line num="523" count="1" type="stmt"/>
+        <line num="546" count="7" type="stmt"/>
+        <line num="610" count="13" type="stmt"/>
+        <line num="642" count="0" type="stmt"/>
+        <line num="649" count="0" type="stmt"/>
+        <line num="668" count="0" type="stmt"/>
+        <line num="676" count="0" type="stmt"/>
+        <line num="677" count="0" type="stmt"/>
+        <line num="681" count="0" type="stmt"/>
+        <line num="692" count="0" type="stmt"/>
+      </file>
+      <file name="ProductosView.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ProductosView.tsx">
+        <metrics statements="144" coveredstatements="49" conditionals="71" coveredconditionals="20" methods="53" coveredmethods="13"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="9" count="1" type="stmt"/>
+        <line num="10" count="1" type="stmt"/>
+        <line num="47" count="1" type="stmt"/>
+        <line num="53" count="1" type="stmt"/>
+        <line num="62" count="1" type="stmt"/>
+        <line num="63" count="3" type="stmt"/>
+        <line num="96" count="3" type="stmt"/>
+        <line num="111" count="3" type="stmt"/>
+        <line num="112" count="3" type="stmt"/>
+        <line num="127" count="3" type="stmt"/>
+        <line num="128" count="3" type="stmt"/>
+        <line num="129" count="3" type="stmt"/>
+        <line num="130" count="3" type="stmt"/>
+        <line num="131" count="3" type="stmt"/>
+        <line num="132" count="3" type="stmt"/>
+        <line num="133" count="3" type="stmt"/>
+        <line num="136" count="3" type="stmt"/>
+        <line num="137" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="138" count="1" type="stmt"/>
+        <line num="139" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="145" count="3" type="stmt"/>
+        <line num="146" count="3" type="stmt"/>
+        <line num="152" count="3" type="stmt"/>
+        <line num="153" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="154" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="155" count="0" type="stmt"/>
+        <line num="158" count="3" type="stmt"/>
+        <line num="159" count="0" type="stmt"/>
+        <line num="161" count="0" type="stmt"/>
+        <line num="162" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="163" count="0" type="cond" truecount="0" falsecount="3"/>
+        <line num="165" count="0" type="stmt"/>
+        <line num="168" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="169" count="0" type="stmt"/>
+        <line num="170" count="0" type="stmt"/>
+        <line num="173" count="0" type="stmt"/>
+        <line num="174" count="0" type="stmt"/>
+        <line num="176" count="0" type="stmt"/>
+        <line num="177" count="0" type="stmt"/>
+        <line num="178" count="0" type="stmt"/>
+        <line num="196" count="0" type="stmt"/>
+        <line num="197" count="0" type="stmt"/>
+        <line num="211" count="0" type="stmt"/>
+        <line num="212" count="0" type="stmt"/>
+        <line num="213" count="0" type="stmt"/>
+        <line num="217" count="3" type="stmt"/>
+        <line num="218" count="0" type="stmt"/>
+        <line num="219" count="0" type="stmt"/>
+        <line num="235" count="3" type="stmt"/>
+        <line num="236" count="0" type="stmt"/>
+        <line num="237" count="0" type="stmt"/>
+        <line num="251" count="0" type="stmt"/>
+        <line num="254" count="3" type="stmt"/>
+        <line num="255" count="0" type="stmt"/>
+        <line num="256" count="0" type="cond" truecount="0" falsecount="5"/>
+        <line num="257" count="0" type="stmt"/>
+        <line num="259" count="0" type="stmt"/>
+        <line num="262" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="263" count="0" type="stmt"/>
+        <line num="264" count="0" type="stmt"/>
+        <line num="267" count="0" type="stmt"/>
+        <line num="268" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="288" count="0" type="stmt"/>
+        <line num="289" count="0" type="stmt"/>
+        <line num="303" count="0" type="stmt"/>
+        <line num="306" count="3" type="stmt"/>
+        <line num="307" count="0" type="stmt"/>
+        <line num="310" count="3" type="stmt"/>
+        <line num="311" count="0" type="stmt"/>
+        <line num="312" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="315" count="0" type="stmt"/>
+        <line num="316" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="317" count="0" type="stmt"/>
+        <line num="318" count="0" type="stmt"/>
+        <line num="321" count="0" type="stmt"/>
+        <line num="322" count="0" type="stmt"/>
+        <line num="325" count="0" type="stmt"/>
+        <line num="328" count="0" type="stmt"/>
+        <line num="330" count="0" type="stmt"/>
+        <line num="344" count="0" type="stmt"/>
+        <line num="361" count="0" type="stmt"/>
+        <line num="362" count="0" type="stmt"/>
+        <line num="364" count="0" type="stmt"/>
+        <line num="368" count="0" type="stmt"/>
+        <line num="371" count="3" type="stmt"/>
+        <line num="391" count="6" type="stmt"/>
+        <line num="405" count="6" type="stmt"/>
+        <line num="409" count="6" type="stmt"/>
+        <line num="413" count="6" type="stmt"/>
+        <line num="426" count="6" type="stmt"/>
+        <line num="441" count="6" type="stmt"/>
+        <line num="484" count="0" type="stmt"/>
+        <line num="485" count="0" type="stmt"/>
+        <line num="502" count="0" type="stmt"/>
+        <line num="503" count="0" type="stmt"/>
+        <line num="520" count="0" type="stmt"/>
+        <line num="521" count="0" type="stmt"/>
+        <line num="535" count="0" type="stmt"/>
+        <line num="536" count="0" type="stmt"/>
+        <line num="543" count="9" type="stmt"/>
+        <line num="554" count="0" type="stmt"/>
+        <line num="555" count="0" type="stmt"/>
+        <line num="562" count="36" type="stmt"/>
+        <line num="587" count="0" type="stmt"/>
+        <line num="588" count="0" type="stmt"/>
+        <line num="589" count="0" type="stmt"/>
+        <line num="594" count="0" type="stmt"/>
+        <line num="610" count="0" type="stmt"/>
+        <line num="611" count="0" type="stmt"/>
+        <line num="612" count="0" type="stmt"/>
+        <line num="617" count="0" type="stmt"/>
+        <line num="626" count="0" type="stmt"/>
+        <line num="627" count="0" type="stmt"/>
+        <line num="652" count="0" type="stmt"/>
+        <line num="653" count="0" type="stmt"/>
+        <line num="668" count="0" type="stmt"/>
+        <line num="673" count="0" type="stmt"/>
+        <line num="698" count="0" type="stmt"/>
+        <line num="699" count="0" type="stmt"/>
+        <line num="717" count="0" type="stmt"/>
+        <line num="718" count="0" type="stmt"/>
+        <line num="788" count="1" type="stmt"/>
+        <line num="789" count="1" type="stmt"/>
+        <line num="812" count="5" type="stmt"/>
+        <line num="819" count="0" type="stmt"/>
+        <line num="827" count="0" type="stmt"/>
+        <line num="834" count="0" type="stmt"/>
+        <line num="841" count="0" type="stmt"/>
+        <line num="851" count="0" type="stmt"/>
+        <line num="918" count="0" type="stmt"/>
+        <line num="925" count="0" type="stmt"/>
+        <line num="945" count="0" type="stmt"/>
+        <line num="953" count="0" type="stmt"/>
+        <line num="954" count="0" type="stmt"/>
+        <line num="958" count="0" type="stmt"/>
+        <line num="969" count="0" type="stmt"/>
+      </file>
+      <file name="ProveedoresView.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ProveedoresView.tsx">
+        <metrics statements="80" coveredstatements="36" conditionals="46" coveredconditionals="14" methods="28" coveredmethods="5"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="9" count="1" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="23" count="3" type="stmt"/>
+        <line num="50" count="3" type="stmt"/>
+        <line num="55" count="3" type="stmt"/>
+        <line num="56" count="3" type="stmt"/>
+        <line num="61" count="3" type="stmt"/>
+        <line num="62" count="3" type="stmt"/>
+        <line num="63" count="3" type="stmt"/>
+        <line num="64" count="3" type="stmt"/>
+        <line num="65" count="3" type="stmt"/>
+        <line num="66" count="3" type="stmt"/>
+        <line num="69" count="3" type="stmt"/>
+        <line num="70" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="71" count="1" type="stmt"/>
+        <line num="72" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="78" count="3" type="stmt"/>
+        <line num="79" count="3" type="stmt"/>
+        <line num="85" count="3" type="stmt"/>
+        <line num="86" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="89" count="3" type="stmt"/>
+        <line num="90" count="0" type="stmt"/>
+        <line num="91" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="94" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="95" count="0" type="stmt"/>
+        <line num="96" count="0" type="stmt"/>
+        <line num="99" count="0" type="stmt"/>
+        <line num="100" count="0" type="stmt"/>
+        <line num="103" count="0" type="stmt"/>
+        <line num="104" count="0" type="stmt"/>
+        <line num="105" count="0" type="stmt"/>
+        <line num="111" count="0" type="stmt"/>
+        <line num="112" count="0" type="stmt"/>
+        <line num="113" count="0" type="stmt"/>
+        <line num="114" count="0" type="stmt"/>
+        <line num="115" count="0" type="stmt"/>
+        <line num="119" count="3" type="stmt"/>
+        <line num="120" count="0" type="stmt"/>
+        <line num="121" count="0" type="stmt"/>
+        <line num="127" count="3" type="stmt"/>
+        <line num="128" count="0" type="stmt"/>
+        <line num="129" count="0" type="stmt"/>
+        <line num="132" count="3" type="stmt"/>
+        <line num="133" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="136" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="137" count="0" type="stmt"/>
+        <line num="138" count="0" type="stmt"/>
+        <line num="141" count="0" type="stmt"/>
+        <line num="142" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="150" count="0" type="stmt"/>
+        <line num="151" count="0" type="stmt"/>
+        <line num="152" count="0" type="stmt"/>
+        <line num="155" count="3" type="stmt"/>
+        <line num="156" count="0" type="stmt"/>
+        <line num="159" count="3" type="stmt"/>
+        <line num="243" count="0" type="stmt"/>
+        <line num="247" count="0" type="stmt"/>
+        <line num="265" count="0" type="stmt"/>
+        <line num="269" count="0" type="stmt"/>
+        <line num="304" count="1" type="stmt"/>
+        <line num="305" count="1" type="stmt"/>
+        <line num="328" count="9" type="stmt"/>
+        <line num="337" count="0" type="stmt"/>
+        <line num="350" count="0" type="stmt"/>
+        <line num="362" count="0" type="stmt"/>
+        <line num="401" count="0" type="stmt"/>
+        <line num="408" count="0" type="stmt"/>
+        <line num="428" count="0" type="stmt"/>
+        <line num="436" count="0" type="stmt"/>
+        <line num="437" count="0" type="stmt"/>
+        <line num="441" count="0" type="stmt"/>
+        <line num="452" count="0" type="stmt"/>
+      </file>
+      <file name="RutasEntregaView.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\RutasEntregaView.tsx">
+        <metrics statements="157" coveredstatements="67" conditionals="99" coveredconditionals="32" methods="59" coveredmethods="16"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="10" count="1" type="stmt"/>
+        <line num="11" count="1" type="stmt"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="14" count="1" type="stmt"/>
+        <line num="83" count="1" type="stmt"/>
+        <line num="85" count="4" type="stmt"/>
+        <line num="158" count="4" type="stmt"/>
+        <line num="236" count="3" type="stmt"/>
+        <line num="237" count="3" type="stmt"/>
+        <line num="249" count="3" type="stmt"/>
+        <line num="250" count="3" type="stmt"/>
+        <line num="261" count="3" type="stmt"/>
+        <line num="262" count="3" type="stmt"/>
+        <line num="263" count="3" type="stmt"/>
+        <line num="264" count="3" type="stmt"/>
+        <line num="265" count="3" type="stmt"/>
+        <line num="266" count="3" type="stmt"/>
+        <line num="267" count="3" type="stmt"/>
+        <line num="268" count="3" type="stmt"/>
+        <line num="271" count="3" type="stmt"/>
+        <line num="272" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="273" count="1" type="stmt"/>
+        <line num="274" count="2" type="cond" truecount="4" falsecount="0"/>
+        <line num="282" count="3" type="stmt"/>
+        <line num="283" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="284" count="0" type="stmt"/>
+        <line num="285" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="291" count="3" type="stmt"/>
+        <line num="292" count="3" type="stmt"/>
+        <line num="298" count="15" type="stmt"/>
+        <line num="299" count="3" type="stmt"/>
+        <line num="300" count="3" type="stmt"/>
+        <line num="301" count="3" type="stmt"/>
+        <line num="303" count="3" type="stmt"/>
+        <line num="304" count="0" type="stmt"/>
+        <line num="306" count="0" type="cond" truecount="0" falsecount="10"/>
+        <line num="310" count="0" type="stmt"/>
+        <line num="311" count="0" type="stmt"/>
+        <line num="315" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="316" count="0" type="stmt"/>
+        <line num="317" count="0" type="stmt"/>
+        <line num="320" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="321" count="0" type="stmt"/>
+        <line num="322" count="0" type="stmt"/>
+        <line num="325" count="0" type="stmt"/>
+        <line num="326" count="0" type="stmt"/>
+        <line num="328" count="0" type="stmt"/>
+        <line num="329" count="0" type="stmt"/>
+        <line num="330" count="0" type="stmt"/>
+        <line num="334" count="0" type="stmt"/>
+        <line num="335" count="0" type="stmt"/>
+        <line num="336" count="0" type="stmt"/>
+        <line num="346" count="0" type="stmt"/>
+        <line num="347" count="0" type="stmt"/>
+        <line num="363" count="0" type="stmt"/>
+        <line num="366" count="0" type="stmt"/>
+        <line num="368" count="0" type="stmt"/>
+        <line num="379" count="0" type="stmt"/>
+        <line num="383" count="3" type="stmt"/>
+        <line num="384" count="0" type="stmt"/>
+        <line num="385" count="0" type="stmt"/>
+        <line num="397" count="3" type="stmt"/>
+        <line num="398" count="0" type="stmt"/>
+        <line num="399" count="0" type="stmt"/>
+        <line num="409" count="0" type="stmt"/>
+        <line num="412" count="3" type="stmt"/>
+        <line num="413" count="0" type="cond" truecount="0" falsecount="9"/>
+        <line num="416" count="0" type="stmt"/>
+        <line num="417" count="0" type="stmt"/>
+        <line num="420" count="0" type="stmt"/>
+        <line num="421" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="435" count="0" type="stmt"/>
+        <line num="436" count="0" type="stmt"/>
+        <line num="446" count="0" type="stmt"/>
+        <line num="449" count="3" type="stmt"/>
+        <line num="450" count="0" type="stmt"/>
+        <line num="453" count="3" type="stmt"/>
+        <line num="454" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="455" count="0" type="stmt"/>
+        <line num="458" count="0" type="stmt"/>
+        <line num="462" count="0" type="stmt"/>
+        <line num="465" count="3" type="stmt"/>
+        <line num="466" count="0" type="cond" truecount="0" falsecount="5"/>
+        <line num="468" count="0" type="stmt"/>
+        <line num="470" count="0" type="stmt"/>
+        <line num="472" count="0" type="stmt"/>
+        <line num="474" count="0" type="stmt"/>
+        <line num="476" count="0" type="stmt"/>
+        <line num="480" count="3" type="stmt"/>
+        <line num="481" count="10" type="cond" truecount="2" falsecount="3"/>
+        <line num="483" count="0" type="stmt"/>
+        <line num="485" count="4" type="stmt"/>
+        <line num="487" count="6" type="stmt"/>
+        <line num="489" count="0" type="stmt"/>
+        <line num="491" count="0" type="stmt"/>
+        <line num="495" count="3" type="stmt"/>
+        <line num="496" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="498" count="0" type="stmt"/>
+        <line num="500" count="0" type="stmt"/>
+        <line num="502" count="0" type="stmt"/>
+        <line num="504" count="0" type="stmt"/>
+        <line num="508" count="3" type="stmt"/>
+        <line num="509" count="10" type="cond" truecount="2" falsecount="2"/>
+        <line num="511" count="0" type="stmt"/>
+        <line num="513" count="2" type="stmt"/>
+        <line num="515" count="8" type="stmt"/>
+        <line num="517" count="0" type="stmt"/>
+        <line num="522" count="3" type="stmt"/>
+        <line num="524" count="6" type="stmt"/>
+        <line num="525" count="6" type="stmt"/>
+        <line num="526" count="6" type="stmt"/>
+        <line num="527" count="6" type="stmt"/>
+        <line num="528" count="6" type="stmt"/>
+        <line num="532" count="3" type="stmt"/>
+        <line num="647" count="0" type="stmt"/>
+        <line num="648" count="0" type="stmt"/>
+        <line num="661" count="0" type="stmt"/>
+        <line num="662" count="0" type="stmt"/>
+        <line num="677" count="0" type="stmt"/>
+        <line num="678" count="0" type="stmt"/>
+        <line num="693" count="0" type="stmt"/>
+        <line num="694" count="0" type="stmt"/>
+        <line num="717" count="0" type="stmt"/>
+        <line num="718" count="0" type="stmt"/>
+        <line num="737" count="0" type="stmt"/>
+        <line num="738" count="0" type="stmt"/>
+        <line num="756" count="0" type="stmt"/>
+        <line num="757" count="0" type="stmt"/>
+        <line num="770" count="0" type="stmt"/>
+        <line num="771" count="0" type="stmt"/>
+        <line num="789" count="0" type="stmt"/>
+        <line num="802" count="15" type="stmt"/>
+        <line num="807" count="0" type="stmt"/>
+        <line num="908" count="1" type="stmt"/>
+        <line num="909" count="1" type="stmt"/>
+        <line num="932" count="5" type="stmt"/>
+        <line num="1075" count="10" type="stmt"/>
+        <line num="1126" count="0" type="stmt"/>
+        <line num="1143" count="0" type="stmt"/>
+        <line num="1151" count="0" type="stmt"/>
+        <line num="1169" count="0" type="stmt"/>
+        <line num="1177" count="0" type="stmt"/>
+        <line num="1187" count="0" type="stmt"/>
+        <line num="1196" count="0" type="stmt"/>
+        <line num="1215" count="0" type="stmt"/>
+        <line num="1223" count="0" type="stmt"/>
+        <line num="1224" count="0" type="stmt"/>
+        <line num="1228" count="0" type="stmt"/>
+        <line num="1239" count="0" type="stmt"/>
+      </file>
+      <file name="VendedoresView.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\VendedoresView.tsx">
+        <metrics statements="102" coveredstatements="48" conditionals="63" coveredconditionals="24" methods="39" coveredmethods="11"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="9" count="1" type="stmt"/>
+        <line num="40" count="1" type="stmt"/>
+        <line num="41" count="3" type="stmt"/>
+        <line num="65" count="3" type="stmt"/>
+        <line num="71" count="3" type="stmt"/>
+        <line num="72" count="3" type="stmt"/>
+        <line num="78" count="3" type="stmt"/>
+        <line num="79" count="3" type="stmt"/>
+        <line num="80" count="3" type="stmt"/>
+        <line num="81" count="3" type="stmt"/>
+        <line num="82" count="3" type="stmt"/>
+        <line num="83" count="3" type="stmt"/>
+        <line num="84" count="3" type="stmt"/>
+        <line num="85" count="3" type="stmt"/>
+        <line num="88" count="3" type="stmt"/>
+        <line num="89" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="90" count="1" type="stmt"/>
+        <line num="91" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="97" count="3" type="stmt"/>
+        <line num="98" count="3" type="stmt"/>
+        <line num="104" count="3" type="stmt"/>
+        <line num="105" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="108" count="3" type="stmt"/>
+        <line num="109" count="0" type="stmt"/>
+        <line num="110" count="0" type="cond" truecount="0" falsecount="5"/>
+        <line num="113" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="114" count="0" type="stmt"/>
+        <line num="115" count="0" type="stmt"/>
+        <line num="118" count="0" type="stmt"/>
+        <line num="119" count="0" type="stmt"/>
+        <line num="122" count="0" type="stmt"/>
+        <line num="123" count="0" type="stmt"/>
+        <line num="124" count="0" type="stmt"/>
+        <line num="131" count="0" type="stmt"/>
+        <line num="132" count="0" type="stmt"/>
+        <line num="133" count="0" type="stmt"/>
+        <line num="134" count="0" type="stmt"/>
+        <line num="135" count="0" type="stmt"/>
+        <line num="136" count="0" type="stmt"/>
+        <line num="140" count="3" type="stmt"/>
+        <line num="141" count="0" type="stmt"/>
+        <line num="142" count="0" type="stmt"/>
+        <line num="149" count="3" type="stmt"/>
+        <line num="150" count="0" type="stmt"/>
+        <line num="151" count="0" type="stmt"/>
+        <line num="152" count="0" type="stmt"/>
+        <line num="153" count="0" type="stmt"/>
+        <line num="156" count="3" type="stmt"/>
+        <line num="157" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="160" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="161" count="0" type="stmt"/>
+        <line num="162" count="0" type="stmt"/>
+        <line num="165" count="0" type="stmt"/>
+        <line num="166" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="174" count="0" type="stmt"/>
+        <line num="175" count="0" type="stmt"/>
+        <line num="176" count="0" type="stmt"/>
+        <line num="177" count="0" type="stmt"/>
+        <line num="180" count="3" type="stmt"/>
+        <line num="181" count="0" type="stmt"/>
+        <line num="184" count="3" type="stmt"/>
+        <line num="185" count="0" type="stmt"/>
+        <line num="186" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="190" count="3" type="stmt"/>
+        <line num="210" count="9" type="stmt"/>
+        <line num="222" count="9" type="stmt"/>
+        <line num="225" count="9" type="stmt"/>
+        <line num="237" count="9" type="stmt"/>
+        <line num="240" count="9" type="cond" truecount="1" falsecount="1"/>
+        <line num="253" count="9" type="stmt"/>
+        <line num="254" count="9" type="stmt"/>
+        <line num="255" count="9" type="stmt"/>
+        <line num="256" count="9" type="stmt"/>
+        <line num="299" count="0" type="stmt"/>
+        <line num="303" count="0" type="stmt"/>
+        <line num="321" count="0" type="stmt"/>
+        <line num="325" count="0" type="stmt"/>
+        <line num="343" count="0" type="stmt"/>
+        <line num="347" count="0" type="stmt"/>
+        <line num="354" count="0" type="stmt"/>
+        <line num="393" count="1" type="stmt"/>
+        <line num="394" count="1" type="stmt"/>
+        <line num="417" count="7" type="stmt"/>
+        <line num="432" count="0" type="stmt"/>
+        <line num="445" count="0" type="stmt"/>
+        <line num="457" count="0" type="stmt"/>
+        <line num="499" count="0" type="stmt"/>
+        <line num="506" count="0" type="stmt"/>
+        <line num="513" count="0" type="stmt"/>
+        <line num="533" count="0" type="stmt"/>
+        <line num="541" count="0" type="stmt"/>
+        <line num="542" count="0" type="stmt"/>
+        <line num="546" count="0" type="stmt"/>
+        <line num="557" count="0" type="stmt"/>
+      </file>
+    </package>
+    <package name="components.ui">
+      <metrics statements="117" coveredstatements="105" conditionals="12" coveredconditionals="10" methods="40" coveredmethods="28"/>
+      <file name="alert.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\alert.tsx">
+        <metrics statements="8" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="0"/>
+        <line num="1" count="5" type="stmt"/>
+        <line num="2" count="5" type="stmt"/>
+        <line num="4" count="5" type="stmt"/>
+        <line num="6" count="5" type="stmt"/>
+        <line num="27" count="0" type="stmt"/>
+        <line num="38" count="0" type="stmt"/>
+        <line num="54" count="0" type="stmt"/>
+        <line num="66" count="5" type="stmt"/>
+      </file>
+      <file name="badge.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\badge.tsx">
+        <metrics statements="8" coveredstatements="8" conditionals="3" coveredconditionals="2" methods="1" coveredmethods="1"/>
+        <line num="1" count="7" type="stmt"/>
+        <line num="2" count="7" type="stmt"/>
+        <line num="3" count="7" type="stmt"/>
+        <line num="5" count="7" type="stmt"/>
+        <line num="7" count="7" type="stmt"/>
+        <line num="35" count="145" type="cond" truecount="1" falsecount="1"/>
+        <line num="37" count="145" type="stmt"/>
+        <line num="46" count="7" type="stmt"/>
+      </file>
+      <file name="button.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\button.tsx">
+        <metrics statements="8" coveredstatements="8" conditionals="3" coveredconditionals="2" methods="1" coveredmethods="1"/>
+        <line num="1" count="9" type="stmt"/>
+        <line num="2" count="9" type="stmt"/>
+        <line num="3" count="9" type="stmt"/>
+        <line num="5" count="9" type="stmt"/>
+        <line num="7" count="9" type="stmt"/>
+        <line num="47" count="141" type="cond" truecount="1" falsecount="1"/>
+        <line num="49" count="141" type="stmt"/>
+        <line num="58" count="9" type="stmt"/>
+      </file>
+      <file name="card.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\card.tsx">
+        <metrics statements="16" coveredstatements="14" conditionals="0" coveredconditionals="0" methods="7" coveredmethods="5"/>
+        <line num="1" count="9" type="stmt"/>
+        <line num="3" count="9" type="stmt"/>
+        <line num="6" count="172" type="stmt"/>
+        <line num="19" count="160" type="stmt"/>
+        <line num="32" count="160" type="stmt"/>
+        <line num="42" count="88" type="stmt"/>
+        <line num="52" count="0" type="stmt"/>
+        <line num="65" count="157" type="stmt"/>
+        <line num="75" count="0" type="stmt"/>
+        <line num="85" count="9" type="stmt"/>
+        <line num="86" count="9" type="stmt"/>
+        <line num="87" count="9" type="stmt"/>
+        <line num="88" count="9" type="stmt"/>
+        <line num="89" count="9" type="stmt"/>
+        <line num="90" count="9" type="stmt"/>
+        <line num="91" count="9" type="stmt"/>
+      </file>
+      <file name="checkbox.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\checkbox.tsx">
+        <metrics statements="6" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="0"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="4" count="2" type="stmt"/>
+        <line num="5" count="2" type="stmt"/>
+        <line num="7" count="2" type="stmt"/>
+        <line num="13" count="0" type="stmt"/>
+        <line num="32" count="2" type="stmt"/>
+      </file>
+      <file name="collapsible.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\collapsible.tsx">
+        <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="3"/>
+        <line num="3" count="5" type="stmt"/>
+        <line num="8" count="15" type="stmt"/>
+        <line num="14" count="15" type="stmt"/>
+        <line num="25" count="15" type="stmt"/>
+        <line num="33" count="5" type="stmt"/>
+      </file>
+      <file name="dialog.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\dialog.tsx">
+        <metrics statements="24" coveredstatements="22" conditionals="0" coveredconditionals="0" methods="10" coveredmethods="8"/>
+        <line num="3" count="3" type="stmt"/>
+        <line num="4" count="3" type="stmt"/>
+        <line num="5" count="3" type="stmt"/>
+        <line num="7" count="3" type="stmt"/>
+        <line num="12" count="33" type="stmt"/>
+        <line num="18" count="33" type="stmt"/>
+        <line num="24" count="33" type="stmt"/>
+        <line num="30" count="0" type="stmt"/>
+        <line num="37" count="1" type="stmt"/>
+        <line num="54" count="33" type="stmt"/>
+        <line num="76" count="1" type="stmt"/>
+        <line num="86" count="0" type="stmt"/>
+        <line num="102" count="1" type="stmt"/>
+        <line num="115" count="1" type="stmt"/>
+        <line num="125" count="3" type="stmt"/>
+        <line num="126" count="3" type="stmt"/>
+        <line num="127" count="3" type="stmt"/>
+        <line num="128" count="3" type="stmt"/>
+        <line num="129" count="3" type="stmt"/>
+        <line num="130" count="3" type="stmt"/>
+        <line num="131" count="3" type="stmt"/>
+        <line num="132" count="3" type="stmt"/>
+        <line num="133" count="3" type="stmt"/>
+        <line num="134" count="3" type="stmt"/>
+      </file>
+      <file name="input.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\input.tsx">
+        <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="1" count="9" type="stmt"/>
+        <line num="3" count="9" type="stmt"/>
+        <line num="6" count="61" type="stmt"/>
+        <line num="21" count="9" type="stmt"/>
+      </file>
+      <file name="label.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\label.tsx">
+        <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="3" count="8" type="stmt"/>
+        <line num="4" count="8" type="stmt"/>
+        <line num="6" count="8" type="stmt"/>
+        <line num="12" count="52" type="stmt"/>
+        <line num="24" count="8" type="stmt"/>
+      </file>
+      <file name="select.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\select.tsx">
+        <metrics statements="24" coveredstatements="21" conditionals="6" coveredconditionals="6" methods="10" coveredmethods="7"/>
+        <line num="3" count="3" type="stmt"/>
+        <line num="4" count="3" type="stmt"/>
+        <line num="5" count="3" type="stmt"/>
+        <line num="11" count="3" type="stmt"/>
+        <line num="16" count="12" type="stmt"/>
+        <line num="22" count="0" type="stmt"/>
+        <line num="28" count="12" type="stmt"/>
+        <line num="39" count="12" type="stmt"/>
+        <line num="63" count="12" type="stmt"/>
+        <line num="96" count="0" type="stmt"/>
+        <line num="110" count="56" type="stmt"/>
+        <line num="133" count="0" type="stmt"/>
+        <line num="146" count="14" type="stmt"/>
+        <line num="164" count="14" type="stmt"/>
+        <line num="179" count="3" type="stmt"/>
+        <line num="180" count="3" type="stmt"/>
+        <line num="181" count="3" type="stmt"/>
+        <line num="182" count="3" type="stmt"/>
+        <line num="183" count="3" type="stmt"/>
+        <line num="184" count="3" type="stmt"/>
+        <line num="185" count="3" type="stmt"/>
+        <line num="186" count="3" type="stmt"/>
+        <line num="187" count="3" type="stmt"/>
+        <line num="188" count="3" type="stmt"/>
+      </file>
+      <file name="switch.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\switch.tsx">
+        <metrics statements="5" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="0"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="12" count="0" type="stmt"/>
+        <line num="31" count="1" type="stmt"/>
+      </file>
+      <file name="utils.ts" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\web\proyecto-1\MediSupply Web\src\components\ui\utils.ts">
+        <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="1" count="9" type="stmt"/>
+        <line num="2" count="9" type="stmt"/>
+        <line num="4" count="9" type="stmt"/>
+        <line num="5" count="1293" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>

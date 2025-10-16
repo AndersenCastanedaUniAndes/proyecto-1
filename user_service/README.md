@@ -84,7 +84,7 @@ user_service/
 python app/main.py
 ```
 
-El servicio estará disponible en `http://localhost:8000` (o el puerto configurado).
+El servicio estará disponible en `http://localhost:8001` (o el puerto configurado).
 
 ---
 
@@ -96,7 +96,7 @@ El servicio estará disponible en `http://localhost:8000` (o el puerto configura
 | GET    | /users/{id}      | Obtener usuario por ID     |
 | PUT    | /users/{id}      | Actualizar usuario         |
 | DELETE | /users/{id}      | Eliminar usuario           |
-
+| POST   | /token           | Obtener token              |
 ---
 
 ## Base de Datos
@@ -130,7 +130,7 @@ Para construir y correr el servicio en Docker:
 
 ```sh
 docker build -t user_service .
-docker run -p 8000:8000 user_service
+docker run -p 8001:8001 user_service
 ```
 
 ---
@@ -143,5 +143,5 @@ Los diagramas de clases, componentes y secuencia se encuentran en `Docs/Diagrama
 
 ## Autores
 
-- [Tu Nombre]
-- [Colaboradores]
+- [Proyecto Integrador 2  Grupo 1]
+- [Publio Diaz, Margarita Forero, Andersen Castañeda]
