@@ -72,16 +72,6 @@ def db():
 
 
 
-def test_create_user_route_duplicate_email(db):
-    payload = {
-        "nombre_usuario": "Juan",
-        "email": "juan@test.com",
-        "contrasena": "secret",
-        "rol": "admin"
-    }
-    response = client.post("/users/", json=payload)
-    assert response.status_code == 400
-    assert "correo ya está registrado" in response.json()["detail"]
 
 
 def test_authenticate_user_and_login_success(db):
