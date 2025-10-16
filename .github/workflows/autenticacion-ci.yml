@@ -31,9 +31,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r ExperimentoSeguridad/requirements.txt
 
-      - name: Generate RSA keys (si tu servicio los necesita)
-        run: |
-          python ExperimentoSeguridad/scripts/generate_keys.py
 
       - name: Run tests
         run: |
