@@ -1,6 +1,7 @@
 # Dependencias y módulos de Node.js
 node_modules/
 
+package-lock.json
 # Archivos de configuración local
 .env
 .env.local
