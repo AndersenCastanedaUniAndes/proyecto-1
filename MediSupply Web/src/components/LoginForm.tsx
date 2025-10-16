@@ -1,13 +1,10 @@
 import { useState } from "react";
+import config from "../config/config";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Eye, EyeOff, Mail, Lock, Pill } from "lucide-react";
-
-interface LoginFormProps {
-  onForgotPassword: () => void;
-}
 
 interface LoginFormProps {
   onForgotPassword: () => void;
@@ -19,17 +16,47 @@ export function LoginForm({ onForgotPassword, onLoginSuccess }: LoginFormProps) 
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate authentication
-    setTimeout(() => {
+    setErrorMessage("");
+
+    try {
+      // Llamada al microservicio de autenticación
+      //const response = await fetch(`${config.API_BASE_URL}/productos/proveedores`);
+      const response = await fetch(`${config.API_BASE_LOGIN_URL}/token`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          username: email,
+          password: password,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.detail || "Error al iniciar sesión");
+      }
+
+      const data = await response.json();
+      //console.log("Token recibido:", data);
+
+      // Guardar token en localStorage
+      localStorage.setItem("user", email);
+      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("token_type", data.token_type);
+
+      onLoginSuccess();
+    } catch (err: any) {
+      console.error(" Error de autenticación:", err);
+      setErrorMessage(err.message);
+    } finally {
       setIsLoading(false);
-      console.log("Login attempted with:", { email, password });
-      onLoginSuccess(); // Redirect to home after successful login
-    }, 1500);
+    }
   };
 
   return (
@@ -62,7 +89,7 @@ export function LoginForm({ onForgotPassword, onLoginSuccess }: LoginFormProps) 
               />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="password">Contraseña</Label>
             <div className="relative">
@@ -89,6 +116,10 @@ export function LoginForm({ onForgotPassword, onLoginSuccess }: LoginFormProps) 
               </button>
             </div>
           </div>
+
+          {errorMessage && (
+            <p className="text-sm text-red-600 text-center">{errorMessage}</p>
+          )}
 
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}

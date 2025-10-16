@@ -1,0 +1,43 @@
+name: Mobile CI (medisupply_movil)
+
+on:
+  push:
+    paths:
+      - 'medisupply_movil/**'
+      - '.github/workflows/movil-ci.yml'
+  pull_request:
+    paths:
+      - 'medisupply_movil/**'
+
+jobs:
+  test-flutter:
+    name: Run Flutter tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: medisupply_movil
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run tests with coverage
+        run: flutter test --coverage
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: medisupply_movil-coverage
+          path: medisupply_movil/coverage/**

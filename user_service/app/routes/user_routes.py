@@ -25,7 +25,7 @@ def create_user_route(user: UserCreate, db: Session = Depends(get_db)):
 # Obtener usuario por ID (protegido)
 @router.get("/users/{user_id}", response_model=User)
 def read_user(user_id: int, db: Session = Depends(get_db), current_user: DBUser = Depends(get_current_user)):
-    print("-----11111111-......1------")
+    #print("-----11111111-......1------")
    
     return get_user(user_id, db,current_user)
 
@@ -45,27 +45,15 @@ def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-    try:
-        user = authenticate_user(db, form_data.username, form_data.password)
-        #print("-----------")
-        #print(user)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect username or password",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        access_token = create_access_token(data={"sub": user.contrasena})
-        #print("-----------")
-        #print(access_token) 
-        
-
-    except Exception as e:
-        #print(f"----------Error en login: {str(e)}")
-        raise HTTPException(  
-            status_code=500,
-            detail=f"Error interno en autenticación: {str(e)}"
+    user = authenticate_user(db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Correo o contraseña incorrectos",
+            headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    access_token = create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
 # Autenticación interna

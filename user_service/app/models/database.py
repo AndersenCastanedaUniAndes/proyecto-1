@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # URL de conexión a la base de datos (ajústala según tu motor)
-SQLALCHEMY_DATABASE_URL = "sqlite:///./users.db"
+SQLALCHEMY_DATABASE_URL = "postgresql://postgres:postgres@136.112.245.46:5432/users"
 # Para PostgreSQL sería algo como:
 # SQLALCHEMY_DATABASE_URL = "postgresql://user:password@localhost/dbname"
 
