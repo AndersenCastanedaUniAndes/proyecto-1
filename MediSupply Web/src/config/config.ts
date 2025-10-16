@@ -8,4 +8,4 @@ const config: AppConfig = {
   API_BASE_LOGIN_URL: import.meta.env.VITE_API_BASE_LOGIN_URL || "http://localhost:8001",
 };
 
-export default config;  
+export default config;
