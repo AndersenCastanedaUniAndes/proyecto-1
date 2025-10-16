@@ -44,9 +44,9 @@ class HomeCard extends StatelessWidget {
                 ],
               ),
               Row(children: [
-                IconButton(onPressed: () {}, icon: Icon(AppIcons.notification, size: 18, color: Colors.white)),
+                // IconButton(onPressed: () {}, icon: Icon(AppIcons.notification, size: 18, color: Colors.white)),
                 IconButton(onPressed: onTap, icon: Icon(AppIcons.user, size: 18, color: Colors.white)),
-              ])
+              ]),
             ],
           ),
           const SizedBox(height: 12),

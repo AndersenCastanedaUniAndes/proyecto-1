@@ -94,52 +94,56 @@ class _VendorHome extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Menu grid
-          GridView(
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-            ),
-            children: [
-              _MenuCard(
-                color: AppStyles.menuCardBlue,
-                icon: AppIcons.clients,
-                title: 'Clientes',
-                description: 'Gestiona tu cartera de clientes',
-                badge: '24 clientes',
-                onTap: () => onTapCard(_VendorScreen.clientes),
-              ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const itemWidth = 190.0;
+              final crossAxisCount = (constraints.maxWidth / itemWidth).floor().clamp(1, 4);
 
-              _MenuCard(
-                color: AppStyles.menuCardGreen,
-                icon: AppIcons.pin,
-                title: 'Visitas',
-                description: 'Registra y revisa tus visitas',
-                badge: '8 hoy',
-                onTap: () => onTapCard(_VendorScreen.visitas),
-              ),
+              return GridView.count(
+                shrinkWrap: true,
+                crossAxisCount: crossAxisCount,
+                childAspectRatio: 1,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                children: [
+                  _MenuCard(
+                    color: AppStyles.menuCardBlue,
+                    icon: AppIcons.clients,
+                    title: 'Clientes',
+                    description: 'Gestiona tu cartera de clientes',
+                    badge: '24 clientes',
+                    onTap: () => onTapCard(_VendorScreen.clientes),
+                  ),
 
-              _MenuCard(
-                color: Color(0xFFFF6900),
-                icon: AppIcons.shoppingCart,
-                title: 'Pedidos',
-                description: 'Gestiona pedidos de clientes',
-                badge: '12 pendientes',
-                onTap: () => onTapCard(_VendorScreen.pedidos),
-              ),
+                  _MenuCard(
+                    color: AppStyles.menuCardGreen,
+                    icon: AppIcons.pin,
+                    title: 'Visitas',
+                    description: 'Registra y revisa tus visitas',
+                    badge: '8 hoy',
+                    onTap: () => onTapCard(_VendorScreen.visitas),
+                  ),
 
-              _MenuCard(
-                color: Color(0xFFad46ff),
-                icon: AppIcons.lightbulb,
-                title: 'Recomendaciones',
-                description: 'Generación de recomendaciones',
-                badge: 'Próximamente',
-                onTap: () => onTapCard(_VendorScreen.recomendaciones),
-              ),
-            ],
+                  _MenuCard(
+                    color: Color(0xFFFF6900),
+                    icon: AppIcons.shoppingCart,
+                    title: 'Pedidos',
+                    description: 'Gestiona pedidos de clientes',
+                    badge: '12 pendientes',
+                    onTap: () => onTapCard(_VendorScreen.pedidos),
+                  ),
+
+                  _MenuCard(
+                    color: Color(0xFFad46ff),
+                    icon: AppIcons.lightbulb,
+                    title: 'Recomendaciones',
+                    description: 'Generación de recomendaciones',
+                    badge: 'Próximamente',
+                    onTap: () => onTapCard(_VendorScreen.recomendaciones),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -246,32 +250,37 @@ class _ClientHome extends StatelessWidget {
           const _RecentActivity(),
           const SizedBox(height: 16),
 
-          GridView(
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-            ),
-            children: [
-              _MenuCard(
-                color: AppStyles.menuCardBlue,
-                icon: AppIcons.shoppingCart,
-                title: 'Pedidos',
-                description: 'Crear y gestionar tus pedidos',
-                badge: '$pendingOrders pendientes',
-                onTap: () => onTapCard(_ClientView.pedidos),
-              ),
-              _MenuCard(
-                color: AppStyles.menuCardGreen,
-                icon: AppIcons.shipping,
-                title: 'Entregas',
-                description: 'Consultar entregas programadas',
-                badge: '2 próximas',
-                onTap: () => onTapCard(_ClientView.entregas),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              const itemWidth = 190.0;
+              final crossAxisCount = (constraints.maxWidth / itemWidth).floor().clamp(1, 4);
+
+              return GridView.count(
+                shrinkWrap: true,
+                crossAxisCount: crossAxisCount,
+                childAspectRatio: 1,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                children: [
+                  _MenuCard(
+                    color: AppStyles.menuCardBlue,
+                    icon: AppIcons.shoppingCart,
+                    title: 'Pedidos',
+                    description: 'Crear y gestionar tus pedidos',
+                    badge: '$pendingOrders pendientes',
+                    onTap: () => onTapCard(_ClientView.pedidos),
+                  ),
+                  _MenuCard(
+                    color: AppStyles.menuCardGreen,
+                    icon: AppIcons.shipping,
+                    title: 'Entregas',
+                    description: 'Consultar entregas programadas',
+                    badge: '2 próximas',
+                    onTap: () => onTapCard(_ClientView.entregas),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -374,36 +383,38 @@ class _MenuCard extends StatelessWidget {
       child: Container(
         decoration: AppStyles.decoration,
         padding: const EdgeInsets.all(12),
-        child: SizedBox(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                height: 48,
-                width: 48,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                child: Icon(icon, size: 24, color: Colors.white,),
-              ),
-              const SizedBox(height: 8),
-          
-              Text(title, style: textTheme.labelLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 4),
-          
-              Text(
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              height: 48,
+              width: 48,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              child: Icon(icon, size: 24, color: Colors.white,),
+            ),
+            const SizedBox(height: 8),
+
+            Text(title, style: textTheme.labelLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 4),
+
+            Flexible(
+              child: Text(
                 description,
                 textAlign: TextAlign.center,
                 style: textTheme.bodySmall?.copyWith(fontSize: 12),
+                softWrap: true,
+                overflow: TextOverflow.fade,
               ),
-              const SizedBox(height: 6),
-          
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(10)),
-                child: Text(badge, style: textTheme.bodySmall?.copyWith(fontSize: 12, fontWeight: FontWeight.w500)),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 6),
+
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(10)),
+              child: Text(badge, style: textTheme.bodySmall?.copyWith(fontSize: 12, fontWeight: FontWeight.w500)),
+            ),
+          ],
         ),
       ),
     );

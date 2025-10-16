@@ -55,11 +55,13 @@ class _UserTypeWidgetState extends State<UserTypeWidget> {
                 color: widget.selectedType ? colorScheme.primary : unSelectedColor,
                 size: 24,
               ),
-              Text(
-                widget.label,
-                style: textTheme.labelLarge?.copyWith(
-                  color: widget.selectedType ? colorScheme.primary : unSelectedColor
-                )
+              Expanded(
+                child: Text(
+                  widget.label,
+                  style: textTheme.labelLarge?.copyWith(
+                    color: widget.selectedType ? colorScheme.primary : unSelectedColor
+                  )
+                ),
               ),
             ],
           ),

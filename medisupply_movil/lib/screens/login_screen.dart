@@ -76,25 +76,29 @@ class _LoginScreenState extends State<LoginScreen> {
                           spacing: 12,
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            UserTypeWidget(
-                              onTap: () {
-                                setState(() {
-                                  _selectedType = UserType.vendedor;
-                                });
-                              },
-                              selectedType: _selectedType == UserType.vendedor,
-                              iconData: AppIcons.user,
-                              label: 'Vendedor'
+                            Expanded(
+                              child: UserTypeWidget(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedType = UserType.vendedor;
+                                  });
+                                },
+                                selectedType: _selectedType == UserType.vendedor,
+                                iconData: AppIcons.user,
+                                label: 'Vendedor'
+                              ),
                             ),
-                            UserTypeWidget(
-                              onTap: () {
-                                setState(() {
-                                  _selectedType = UserType.cliente;
-                                });
-                              },
-                              selectedType: _selectedType == UserType.cliente,
-                              iconData: AppIcons.shoppingCart,
-                              label: 'Cliente'
+                            Expanded(
+                              child: UserTypeWidget(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedType = UserType.cliente;
+                                  });
+                                },
+                                selectedType: _selectedType == UserType.cliente,
+                                iconData: AppIcons.shoppingCart,
+                                label: 'Cliente'
+                              ),
                             )
                           ]
                         ),

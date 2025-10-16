@@ -35,12 +35,15 @@ class AppClickableText extends StatelessWidget {
           if (icon != null) ...[
             Icon(icon, size: iconSize, color: overrideColor ?? textTheme.bodySmall?.color),
           ],
-
-          Text(
-            label,
-            style: textTheme.bodySmall?.copyWith(
-              color: overrideColor ?? textTheme.bodySmall?.color,
-              fontWeight: overrideFontWeight ?? textTheme.bodySmall?.fontWeight,
+          Flexible(
+            child: Text(
+              label,
+              softWrap: true,
+              overflow: TextOverflow.clip,
+              style: textTheme.bodySmall?.copyWith(
+                color: overrideColor ?? textTheme.bodySmall?.color,
+                fontWeight: overrideFontWeight ?? textTheme.bodySmall?.fontWeight,
+              ),
             ),
           ),
         ],
