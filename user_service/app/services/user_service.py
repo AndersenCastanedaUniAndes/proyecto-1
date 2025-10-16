@@ -81,7 +81,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
-        print("-----11111111-......1------")
+        #print("-----11111111-......1------")
         print(payload)
 
         email: str = payload.get("sub")
@@ -90,9 +90,9 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     except JWTError:
         raise credentials_exception
 
-    user = db.query(DBUser).filter(DBUser.contrasena == email).first()
-
-    print("-----2222222222211111111-......1------"+email)
+    #user = db.query(DBUser).filter(DBUser.contrasena == email).first()
+    user = db.query(DBUser).filter(DBUser.email == email).first()
+    #print("-----2222222222211111111-......1------"+email)
     print(user)
     
     if user is None:
@@ -139,8 +139,8 @@ def login_user(email: str, password: str, db: Session):
 def get_user(user_id: int, db: Session, current_user: DBUser):
     try:
         user = db.query(DBUser).filter(DBUser.usuario_id == user_id).first()
-        print("-----3333333333------")
-        print(user)
+        #print("-----3333333333------")
+        #print(user)
         if not user:
             raise HTTPException(status_code=404, detail="Usuario no encontrado.")
         return user
@@ -151,6 +151,9 @@ def get_user(user_id: int, db: Session, current_user: DBUser):
 
 def update_user(user_id: int, user: UserUpdate, db: Session, current_user: DBUser):
     try:
+        if current_user.rol != "admin" and current_user.usuario_id != user_id:
+            raise HTTPException(status_code=403, detail="No tienes permisos para modificar otros usuarios")
+
         if not any([user.nombre_usuario, user.email, user.contrasena, user.rol]):
             raise HTTPException(status_code=422, detail="Debe proporcionar al menos un campo para actualizar.")
 
