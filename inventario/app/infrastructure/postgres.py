@@ -240,8 +240,8 @@ def build_uow_from_env() -> UnitOfWork | None:
     If INVENTARIO_DATABASE_URL is defined, return a PostgresUnitOfWork; otherwise None.
     """
 
-    DB_USER = os.getenv("DB_USER", "inventario")
-    DB_PASSWORD = os.getenv("DB_PASSWORD", "inventario")
+    DB_USER = os.getenv("DB_USER", "postgres")
+    DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
     DB_HOST = os.getenv("DB_HOST", "localhost")
     DB_PORT = os.getenv("DB_PORT", "5432")
     DB_NAME = os.getenv("DB_NAME", "inventario")

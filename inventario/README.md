@@ -26,7 +26,7 @@ Por defecto el servicio usa un repositorio en memoria con datos de ejemplo. Para
 
 3. Instala dependencias de base de datos y ejecuta la app:
 	pip install -r requirements.txt
-	uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+	uvicorn app.main:app --reload --host 0.0.0.0 --port 8002
 
 Endpoints:
 - GET /healthz
