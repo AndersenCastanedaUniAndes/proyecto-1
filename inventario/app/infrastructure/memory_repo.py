@@ -12,8 +12,10 @@ class InMemoryProductoRepo(ProductoInventarioRepository):
 
     def list(self, q: Optional[str] = None) -> List[ProductoInventario]:
         items = list(self._items.values())
+
         if q:
             q_lower = q.lower()
+
             items = [
                 p
                 for p in items
@@ -22,6 +24,7 @@ class InMemoryProductoRepo(ProductoInventarioRepository):
                 or q_lower in p.lote.lower()
                 or q_lower in p.proveedor.lower()
             ]
+
         return sorted(items, key=lambda p: p.id)
 
     def get(self, producto_id: int) -> Optional[ProductoInventario]:
@@ -31,6 +34,7 @@ class InMemoryProductoRepo(ProductoInventarioRepository):
         if producto.id is None:
             next_id = max(self._items.keys(), default=0) + 1
             producto.id = next_id
+
         self._items[producto.id] = producto
 
 

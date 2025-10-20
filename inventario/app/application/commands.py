@@ -6,7 +6,7 @@ from typing import List
 class AjustarStockCommand:
     producto_id: int
     bodega_id: int
-    delta: int  # positive for inbound, negative for outbound
+    delta: int
 
 
 @dataclass
