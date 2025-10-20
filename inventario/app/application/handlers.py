@@ -22,11 +22,14 @@ def handle_obtener_producto(uow: UnitOfWork, query: ObtenerProductoQuery) -> Pro
 def handle_ajustar_stock(uow: UnitOfWork, cmd: AjustarStockCommand) -> ProductoInventario:
     with uow:
         producto = uow.productos.get(cmd.producto_id)
+
         if not producto:
             raise ValueError("Producto no encontrado")
+
         producto.ajustar_stock_bodega(cmd.bodega_id, cmd.delta)
         uow.productos.save(producto)
         uow.commit()
+
         return producto
 
 
@@ -42,9 +45,11 @@ def handle_crear_producto(uow: UnitOfWork, cmd: CrearProductoCommand) -> Product
             )
             for b in cmd.bodegas
         ]
+
         stock_total = sum(b.cantidad_disponible for b in bodegas)
+
         producto = ProductoInventario(
-            id=None,  # allow repo to assign (Postgres) or we will set for in-memory
+            id=None,
             nombre=cmd.nombre,
             lote=cmd.lote,
             sku=cmd.sku,
@@ -56,10 +61,11 @@ def handle_crear_producto(uow: UnitOfWork, cmd: CrearProductoCommand) -> Product
             categoria=cmd.categoria,
             valor_unitario=cmd.valor_unitario,
         )
-        # If the repository needs an explicit ID (in-memory), compute it here
+
         if getattr(uow.productos, "_items", None) is not None and producto.id is None:
             next_id = max((p.id for p in uow.productos.list()), default=0) + 1
             producto.id = next_id
         uow.productos.save(producto)
         uow.commit()
+
         return producto

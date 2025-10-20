@@ -44,16 +44,19 @@ class ProductoInventario:
         return EstadoInventario.disponible
 
     def ajustar_stock_bodega(self, bodega_id: int, delta: int) -> None:
-        # Update stock in a specific warehouse and recompute totals
         found = False
+
         for b in self.bodegas:
             if b.id == bodega_id:
                 nueva = b.cantidad_disponible + delta
+
                 if nueva < 0:
                     raise ValueError("Stock en bodega no puede ser negativo")
+
                 b.cantidad_disponible = nueva
                 found = True
                 break
+
         if not found:
             raise ValueError("Bodega no encontrada para el producto")
 

@@ -88,11 +88,13 @@ def create_sql_engine(db_url: str):
 def create_session_factory(db_url: str) -> sessionmaker[Session]:
     engine = create_sql_engine(db_url)
     Base.metadata.create_all(engine)
+
     return sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False, class_=Session)
 
 
 def _to_domain(prod: ProductoORM) -> ProductoDomain:
     bodegas: list[BodegaDomain] = []
+
     for inv in prod.inventarios or []:
         bodegas.append(
             BodegaDomain(
@@ -103,7 +105,9 @@ def _to_domain(prod: ProductoORM) -> ProductoDomain:
                 estante=inv.estante or "",
             )
         )
+
     stock_total = sum(b.cantidad_disponible for b in bodegas)
+
     return ProductoDomain(
         id=prod.id,
         nombre=prod.nombre,
@@ -125,6 +129,7 @@ class SqlProductoRepo(ProductoInventarioRepository):
 
     def list(self, q: Optional[str] = None) -> List[ProductoDomain]:
         stmt = select(ProductoORM).options(joinedload(ProductoORM.inventarios).joinedload(InventarioBodegaORM.bodega))
+
         if q:
             like = f"%{q.lower()}%"
             stmt = stmt.where(
@@ -134,8 +139,10 @@ class SqlProductoRepo(ProductoInventarioRepository):
                 | func.lower(ProductoORM.proveedor).like(like)
                 | func.lower(ProductoORM.categoria).like(like)
             )
+
         stmt = stmt.order_by(ProductoORM.id.asc())
         productos = self.session.execute(stmt).scalars().unique().all()
+
         return [_to_domain(p) for p in productos]
 
     def get(self, producto_id: int) -> Optional[ProductoDomain]:
@@ -144,21 +151,22 @@ class SqlProductoRepo(ProductoInventarioRepository):
             .options(joinedload(ProductoORM.inventarios).joinedload(InventarioBodegaORM.bodega))
             .where(ProductoORM.id == producto_id)
         )
+
         prod = self.session.execute(stmt).scalars().first()
+
         return _to_domain(prod) if prod else None
 
     def save(self, producto: ProductoDomain) -> None:
-        # Upsert producto
         prod = self.session.get(ProductoORM, producto.id) if producto.id else None
+
         if not prod:
-            # If producto.id is None, let the DB autogenerate it by not setting id
             if producto.id is None:
                 prod = ProductoORM()
             else:
                 prod = ProductoORM(id=producto.id)
+
             self.session.add(prod)
 
-        # Update fields
         prod.nombre = producto.nombre
         prod.lote = producto.lote
         prod.sku = producto.sku
@@ -168,8 +176,6 @@ class SqlProductoRepo(ProductoInventarioRepository):
         prod.valor_unitario = float(producto.valor_unitario or 0.0)
         prod.fecha_ultima_actualizacion = producto.fecha_ultima_actualizacion or datetime.utcnow()
 
-        # Sync bodegas and inventory entries
-        # Ensure bodegas master exist
         bodega_ids = {b.id for b in producto.bodegas}
         if bodega_ids:
             existing = {
@@ -178,18 +184,17 @@ class SqlProductoRepo(ProductoInventarioRepository):
         else:
             existing = {}
 
-        # Create missing bodegas
         for b in producto.bodegas:
             if b.id not in existing:
                 self.session.add(BodegaORM(id=b.id, nombre=b.nombre))
 
-        # Replace inventory entries
-        # Flush to ensure prod.id is available
         self.session.flush()
-        # Sync generated id back to domain entity
+
         if not producto.id:
             producto.id = prod.id
+
         prod.inventarios.clear()
+
         for b in producto.bodegas:
             inv = InventarioBodegaORM(
                 producto_id=prod.id,
@@ -200,7 +205,6 @@ class SqlProductoRepo(ProductoInventarioRepository):
             )
             prod.inventarios.append(inv)
 
-        # Compute and persist stock_total
         prod.stock_total = sum(b.cantidad_disponible for b in producto.bodegas)
 
 
@@ -236,12 +240,8 @@ class PostgresUnitOfWork(UnitOfWork):
 
 
 def build_uow_from_env() -> UnitOfWork | None:
-    """
-    If INVENTARIO_DATABASE_URL is defined, return a PostgresUnitOfWork; otherwise None.
-    """
-
-    DB_USER = os.getenv("DB_USER", "postgres")
-    DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
+    DB_USER = os.getenv("DB_USER", "inventario")
+    DB_PASSWORD = os.getenv("DB_PASSWORD", "inventario")
     DB_HOST = os.getenv("DB_HOST", "localhost")
     DB_PORT = os.getenv("DB_PORT", "5432")
     DB_NAME = os.getenv("DB_NAME", "inventario")
@@ -249,5 +249,6 @@ def build_uow_from_env() -> UnitOfWork | None:
 
     if not db_url:
         return None
+
     SessionFactory = create_session_factory(db_url)
     return PostgresUnitOfWork(SessionFactory)
