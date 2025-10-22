@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo,useEffect } from "react";
+import config from "../config/config";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -11,7 +12,7 @@ import { Edit, Trash2, Save, X, Plus, Mail, User, Search, ChevronDown, AlertCirc
 interface Proveedor {
   id: number;
   nombre: string;
-  correo: string;
+  correoElectronico: string;
   fechaCreacion: string;
 }
 
@@ -20,44 +21,10 @@ interface ProveedoresViewProps {
 }  
 
 export function ProveedoresView({ onSuccess }: ProveedoresViewProps) {
-  const [proveedores, setProveedores] = useState<Proveedor[]>([
-    {
-      id: 1,
-      nombre: "Laboratorios Pharma Plus",
-      correo: "contacto@pharmaplus.com",
-      fechaCreacion: "2024-01-15"
-    },
-    {
-      id: 2,
-      nombre: "Distribuidora Médica Central",
-      correo: "ventas@medicacentral.com",
-      fechaCreacion: "2024-02-20"
-    },
-    {
-      id: 3,
-      nombre: "Farmacéutica del Valle",
-      correo: "info@farmavalle.com",
-      fechaCreacion: "2024-03-10"
-    },
-    {
-      id: 4,
-      nombre: "Clínica Las Vegas",
-      correo: "contacto@clinicalasvegas.com",
-      fechaCreacion: "2024-03-12"
-    }
-  ]);
-
-  const [nuevoProveedor, setNuevoProveedor] = useState({
-    nombre: "",
-    correo: ""
-  });
-
+const [proveedores, setProveedores] = useState<Proveedor[]>([]);
+  const [nuevoProveedor, setNuevoProveedor] = useState({ nombre: "", correo: "" });
   const [editandoId, setEditandoId] = useState<number | null>(null);
-  const [proveedorEditado, setProveedorEditado] = useState({
-    nombre: "",
-    correo: ""
-  });
-
+  const [proveedorEditado, setProveedorEditado] = useState({ nombre: "", correo: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [filtro, setFiltro] = useState("");
@@ -65,12 +32,32 @@ export function ProveedoresView({ onSuccess }: ProveedoresViewProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
+    //  Cargar proveedores desde el microservicio
+  useEffect(() => {
+    const cargarProveedores = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`${config.API_BASE_PROVEEDORES_URL}/proveedores/`);
+        if (!response.ok) throw new Error("Error al cargar los proveedores");
+        const data = await response.json();
+        setProveedores(data);
+      } catch (error) {
+        console.error("Error al cargar proveedores:", error);
+        setErrorMessage("No se pudieron cargar los proveedores desde el servidor.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    cargarProveedores();
+  }, []);
+
   // Filtrar proveedores
   const proveedoresFiltrados = useMemo(() => {
     if (!filtro.trim()) return proveedores;
-    return proveedores.filter(proveedor => 
-      proveedor.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
-      proveedor.correo.toLowerCase().includes(filtro.toLowerCase())
+    return proveedores.filter(
+      (proveedor) =>
+        proveedor.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
+        proveedor.correoElectronico.toLowerCase().includes(filtro.toLowerCase())
     );
   }, [proveedores, filtro]);
 
@@ -81,79 +68,110 @@ export function ProveedoresView({ onSuccess }: ProveedoresViewProps) {
     currentPage * itemsPerPage
   );
 
-  // Verificar si el correo ya existe
-  const correoExiste = (correo: string, excludeId?: number) => {
-    return proveedores.some(p => p.correo.toLowerCase() === correo.toLowerCase() && p.id !== excludeId);
-  };
-
+//  Crear proveedor (POST)
   const handleAgregarProveedor = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nuevoProveedor.nombre.trim() || !nuevoProveedor.correo.trim()) return;
 
-    // Verificar si el correo ya existe
-    if (correoExiste(nuevoProveedor.correo.trim())) {
-      setErrorMessage("Ya existe un proveedor registrado con este correo electrónico");
-      return;
-    }
-
     setIsLoading(true);
     setErrorMessage("");
-    
-    // Simular guardado
-    setTimeout(() => {
-      const nuevo: Proveedor = {
-        id: Math.max(...proveedores.map(p => p.id), 0) + 1,
-        nombre: nuevoProveedor.nombre.trim(),
-        correo: nuevoProveedor.correo.trim(),
-        fechaCreacion: new Date().toISOString().split('T')[0]
-      };
 
+    try {
+      const response = await fetch(`${config.API_BASE_PROVEEDORES_URL}/proveedores/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: nuevoProveedor.nombre.trim(),
+          correoElectronico: nuevoProveedor.correo.trim(),
+          estado: "activo"
+        }),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Error al agregar proveedor");
+      }
+
+      const nuevo = await response.json();
       setProveedores([...proveedores, nuevo]);
       setNuevoProveedor({ nombre: "", correo: "" });
-      setIsLoading(false);
       setIsFormOpen(false);
-      onSuccess?.(`Proveedor "${nuevo.nombre}" agregado exitosamente`);
-    }, 1000);
+      onSuccess?.(`Proveedor "${nuevo.nombre}" agregado exitosamente`, "success");
+    } catch (error: any) {
+      console.error(error);
+      setErrorMessage(error.message || "Error al agregar proveedor");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  // Iniciar edición
   const iniciarEdicion = (proveedor: Proveedor) => {
     setEditandoId(proveedor.id);
-    setProveedorEditado({
-      nombre: proveedor.nombre,
-      correo: proveedor.correo
-    });
+    setProveedorEditado({ nombre: proveedor.nombre, correo: proveedor.correoElectronico });
   };
 
+  // Cancelar edición
   const cancelarEdicion = () => {
     setEditandoId(null);
     setProveedorEditado({ nombre: "", correo: "" });
   };
 
-  const guardarEdicion = (id: number) => {
+  // 🔹 Guardar cambios (PUT)
+  const guardarEdicion = async (id: number) => {
     if (!proveedorEditado.nombre.trim() || !proveedorEditado.correo.trim()) return;
 
-    // Verificar si el correo ya existe (excluyendo el proveedor actual)
-    if (correoExiste(proveedorEditado.correo.trim(), id)) {
-      setErrorMessage("Ya existe un proveedor registrado con este correo electrónico");
-      return;
-    }
-
-    setProveedores(proveedores.map(p => 
-      p.id === id 
-        ? { 
-            ...p, 
-            nombre: proveedorEditado.nombre.trim(), 
-            correo: proveedorEditado.correo.trim() 
-          }
-        : p
-    ));
-    setEditandoId(null);
-    setProveedorEditado({ nombre: "", correo: "" });
+    setIsLoading(true);
     setErrorMessage("");
+
+    try {
+      const response = await fetch(`${config.API_BASE_PROVEEDORES_URL}/proveedores/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: proveedorEditado.nombre.trim(),
+          correoElectronico: proveedorEditado.correo.trim(),
+          estado: "activo"
+        }),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Error al actualizar proveedor");
+      }
+
+      const actualizado = await response.json();
+      setProveedores(
+        proveedores.map((p) => (p.id === id ? actualizado : p))
+      );
+      setEditandoId(null);
+      setProveedorEditado({ nombre: "", correo: "" });
+      onSuccess?.(`Proveedor "${actualizado.nombre}" actualizado correctamente`, "info");
+    } catch (error: any) {
+      console.error(error);
+      setErrorMessage(error.message || "Error al actualizar proveedor");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const eliminarProveedor = (id: number) => {
-    setProveedores(proveedores.filter(p => p.id !== id));
+  // 🔹 Eliminar proveedor (DELETE)
+  const eliminarProveedor = async (id: number) => {
+    if (!confirm("¿Seguro que deseas eliminar este proveedor?")) return;
+
+    try {
+      const response = await fetch(`${config.API_BASE_PROVEEDORES_URL}/proveedores/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Error al eliminar proveedor");
+
+      setProveedores(proveedores.filter((p) => p.id !== id));
+      onSuccess?.(`Proveedor eliminado correctamente`, "warning");
+    } catch (error: any) {
+      console.error(error);
+      setErrorMessage(error.message || "Error al eliminar proveedor");
+    }
   };
 
   return (
@@ -387,7 +405,7 @@ export function ProveedoresView({ onSuccess }: ProveedoresViewProps) {
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Mail className="h-4 w-4" />
-                          {proveedor.correo}
+                          {proveedor.correoElectronico}
                         </div>
                         <p className="text-xs text-muted-foreground">
                           Registrado: {new Date(proveedor.fechaCreacion).toLocaleDateString('es-ES')}
