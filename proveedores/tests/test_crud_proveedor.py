@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine,text
 from sqlalchemy.orm import sessionmaker
 from app.models.databases import Base
 from app.models import models
@@ -11,23 +11,21 @@ from app.models.proveedor import ProveedorUpdate
 # ---------------------------------------------------------------------
 # FIXTURES
 # ---------------------------------------------------------------------
+
 @pytest.fixture(scope="module")
 def test_db():
-    """
-    Crea una base de datos PostgreSQL temporal para pruebas.
-    Usa las variables de entorno o la cadena de conexión local.
-    """
     DATABASE_URL = "postgresql+psycopg2://postgres:postgres@localhost:5432/proveedores"
-
-    # Crear engine PostgreSQL
     engine = create_engine(DATABASE_URL, echo=False)
 
-    # Crear las tablas
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    # 🔹 Reiniciar secuencia del campo id (importante)
+    with engine.connect() as conn:
+        conn.execute(text("delete from proveedor where id>=100; ALTER SEQUENCE proveedor_id_seq RESTART WITH 100; "))
+        conn.commit()
 
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = TestingSessionLocal()
     yield db
 
@@ -40,7 +38,7 @@ def test_db():
 def proveedor_data():
     """Datos base para las pruebas."""
     return {
-        "id":1,
+        #"id":1,
         "nombre": "Proveedor Test",
         "correoElectronico": "test@mail.com",
         "estado": "Activo",
