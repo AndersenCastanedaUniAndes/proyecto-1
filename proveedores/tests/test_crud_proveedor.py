@@ -22,7 +22,8 @@ def test_db():
 
     # 🔹 Reiniciar secuencia del campo id (importante)
     with engine.connect() as conn:
-        conn.execute(text("delete from proveedor where id>=100; ALTER SEQUENCE proveedor_id_seq RESTART WITH 100; "))
+        conn.execute(text("DELETE FROM proveedor where id>=100;"))  # elimina todos los registros
+        conn.execute(text("ALTER SEQUENCE proveedor_id_seq RESTART WITH 100;"))  # reinicia IDs desde 100
         conn.commit()
 
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
