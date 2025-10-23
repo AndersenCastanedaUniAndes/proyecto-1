@@ -1,12 +1,12 @@
 import os
 import pytest
-from datetime import datetime
-from sqlalchemy import create_engine,text
+from datetime import date, datetime
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from app.models.databases import Base
-from app.models.models import Proveedor
-from app.models import models
+from app.models.models import Proveedor  # 👈 Importa el modelo explícitamente
 from app.services import crud
+from app.models import models
 from app.models.proveedor import ProveedorUpdate
 
 
@@ -16,32 +16,23 @@ from app.models.proveedor import ProveedorUpdate
 
 @pytest.fixture(scope="module")
 def test_db():
-    """Crea una base temporal de pruebas (local o CI)."""
-    from app.models import models  # asegura el registro de tablas
-
+    """Crea la base temporal de pruebas, asegurando la creación de tablas."""
     running_in_ci = os.getenv("GITHUB_ACTIONS", "false") == "true"
     host = "127.0.0.1" if running_in_ci else "localhost"
 
-    DATABASE_URL = os.getenv(
-        "DATABASE_URL",
-        f"postgresql+psycopg2://postgres:postgres@{host}:5432/proveedores"
-    )
+    DATABASE_URL = f"postgresql+psycopg2://postgres:postgres@{host}:5432/proveedores"
+    engine = create_engine(DATABASE_URL, echo=True)
 
-    engine = create_engine(DATABASE_URL, echo=False)
-
-    # 🟢 Forzar creación de tablas y sincronización
+    # 🟢 Crear todas las tablas registradas en Base.metadata
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
-    with engine.begin() as conn:
-        conn.execute(text("SELECT 1"))  # sincroniza el schema
 
-    # 🔹 Reiniciar secuencia e inicializar datos
+    # 🧹 Limpiar tabla proveedor y reiniciar secuencia
     with engine.begin() as conn:
-        conn.execute(text("DROP TABLE IF EXISTS proveedor CASCADE;"))
-        Base.metadata.create_all(bind=engine)
         conn.execute(text("DELETE FROM proveedor;"))
         conn.execute(text("ALTER SEQUENCE IF EXISTS proveedor_id_seq RESTART WITH 100;"))
 
+    # Crear sesión
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = TestingSessionLocal()
 
@@ -75,7 +66,7 @@ def test_create_proveedor(test_db, proveedor_data):
     assert result.nombre == proveedor_data["nombre"]
     assert result.correoElectronico == proveedor_data["correoElectronico"]
     assert result.estado == "Activo"
-    assert isinstance(result.fechaCreacion, datetime)
+    assert isinstance(result.fechaCreacion, (datetime, date))
 
 
 def test_get_proveedor(test_db, proveedor_data):

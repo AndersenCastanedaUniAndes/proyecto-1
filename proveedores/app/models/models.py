@@ -1,7 +1,5 @@
 from sqlalchemy import Column, Integer, String, Date, func
-from sqlalchemy.ext.declarative import declarative_base
-
-Base = declarative_base()
+from app.models.databases import Base  # 👈 Importa el Base compartido
 
 class Proveedor(Base):
     __tablename__ = 'proveedor'
@@ -9,6 +7,5 @@ class Proveedor(Base):
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(255), nullable=False)
     correoElectronico = Column(String(100), nullable=False)
-    estado = Column(String(200), nullable=False, unique=True)
+    estado = Column(String(200), nullable=False)
     fechaCreacion = Column(Date, nullable=False, server_default=func.now())
-    
