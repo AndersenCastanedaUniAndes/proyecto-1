@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy import create_engine,text
 from sqlalchemy.orm import sessionmaker
 from app.models.databases import Base
+from app.models.proveedor import Proveedor
 from app.models import models
 from app.services import crud
 from app.models.proveedor import ProveedorUpdate
