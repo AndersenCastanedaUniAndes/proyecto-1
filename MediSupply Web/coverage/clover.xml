@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1760837342668" clover="3.2.0">
-  <project timestamp="1760837342668" name="All files">
-    <metrics statements="103" coveredstatements="94" conditionals="50" coveredconditionals="41" methods="33" coveredmethods="27" elements="186" coveredelements="162" complexity="0" loc="103" ncloc="103" packages="2" files="4" classes="4"/>
+<coverage generated="1761201593429" clover="3.2.0">
+  <project timestamp="1761201593429" name="All files">
+    <metrics statements="115" coveredstatements="106" conditionals="56" coveredconditionals="46" methods="32" coveredmethods="26" elements="203" coveredelements="178" complexity="0" loc="115" ncloc="115" packages="2" files="4" classes="4"/>
     <package name="components">
-      <metrics statements="95" coveredstatements="86" conditionals="46" coveredconditionals="37" methods="31" coveredmethods="25"/>
-      <file name="ForgotPasswordForm.tsx" path="C:\Users\inger\OneDrive\Documentos\maestria\Semana 6\REPO\proyecto-desde-cero\proyecto-1\MediSupply Web\src\components\ForgotPasswordForm.tsx">
+      <metrics statements="107" coveredstatements="98" conditionals="52" coveredconditionals="42" methods="30" coveredmethods="24"/>
+      <file name="ForgotPasswordForm.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\back\proyecto-1\MediSupply Web\src\components\ForgotPasswordForm.tsx">
         <metrics statements="24" coveredstatements="22" conditionals="4" coveredconditionals="4" methods="5" coveredmethods="4"/>
         <line num="1" count="1" type="stmt"/>
         <line num="2" count="1" type="stmt"/>
@@ -31,7 +31,7 @@
         <line num="78" count="4" type="stmt"/>
         <line num="102" count="1" type="stmt"/>
       </file>
-      <file name="InventarioView.tsx" path="C:\Users\inger\OneDrive\Documentos\maestria\Semana 6\REPO\proyecto-desde-cero\proyecto-1\MediSupply Web\src\components\InventarioView.tsx">
+      <file name="InventarioView.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\back\proyecto-1\MediSupply Web\src\components\InventarioView.tsx">
         <metrics statements="49" coveredstatements="42" conditionals="36" coveredconditionals="27" methods="20" coveredmethods="15"/>
         <line num="1" count="1" type="stmt"/>
         <line num="2" count="1" type="stmt"/>
@@ -83,35 +83,47 @@
         <line num="564" count="0" type="stmt"/>
         <line num="575" count="0" type="stmt"/>
       </file>
-      <file name="LoginForm.tsx" path="C:\Users\inger\OneDrive\Documentos\maestria\Semana 6\REPO\proyecto-desde-cero\proyecto-1\MediSupply Web\src\components\LoginForm.tsx">
-        <metrics statements="22" coveredstatements="22" conditionals="6" coveredconditionals="6" methods="6" coveredmethods="6"/>
+      <file name="LoginForm.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\back\proyecto-1\MediSupply Web\src\components\LoginForm.tsx">
+        <metrics statements="34" coveredstatements="34" conditionals="12" coveredconditionals="11" methods="5" coveredmethods="5"/>
         <line num="1" count="1" type="stmt"/>
         <line num="2" count="1" type="stmt"/>
         <line num="3" count="1" type="stmt"/>
         <line num="4" count="1" type="stmt"/>
         <line num="5" count="1" type="stmt"/>
         <line num="6" count="1" type="stmt"/>
-        <line num="17" count="1" type="stmt"/>
-        <line num="18" count="13" type="stmt"/>
-        <line num="19" count="13" type="stmt"/>
-        <line num="20" count="13" type="stmt"/>
-        <line num="21" count="13" type="stmt"/>
-        <line num="23" count="13" type="stmt"/>
-        <line num="24" count="2" type="stmt"/>
-        <line num="25" count="2" type="stmt"/>
-        <line num="28" count="2" type="stmt"/>
-        <line num="29" count="2" type="stmt"/>
-        <line num="30" count="2" type="stmt"/>
-        <line num="31" count="2" type="stmt"/>
-        <line num="35" count="13" type="stmt"/>
-        <line num="59" count="2" type="stmt"/>
-        <line num="75" count="2" type="stmt"/>
-        <line num="81" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="14" count="1" type="stmt"/>
+        <line num="15" count="18" type="stmt"/>
+        <line num="16" count="18" type="stmt"/>
+        <line num="17" count="18" type="stmt"/>
+        <line num="18" count="18" type="stmt"/>
+        <line num="19" count="18" type="stmt"/>
+        <line num="21" count="18" type="stmt"/>
+        <line num="22" count="3" type="stmt"/>
+        <line num="23" count="3" type="stmt"/>
+        <line num="24" count="3" type="stmt"/>
+        <line num="26" count="3" type="stmt"/>
+        <line num="29" count="3" type="stmt"/>
+        <line num="40" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="41" count="1" type="stmt"/>
+        <line num="42" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="45" count="1" type="stmt"/>
+        <line num="49" count="1" type="stmt"/>
+        <line num="50" count="1" type="stmt"/>
+        <line num="51" count="1" type="stmt"/>
+        <line num="53" count="1" type="stmt"/>
+        <line num="55" count="2" type="stmt"/>
+        <line num="56" count="2" type="stmt"/>
+        <line num="58" count="3" type="stmt"/>
+        <line num="62" count="18" type="stmt"/>
+        <line num="86" count="3" type="stmt"/>
+        <line num="102" count="3" type="stmt"/>
+        <line num="108" count="1" type="stmt"/>
       </file>
     </package>
     <package name="components.figma">
       <metrics statements="8" coveredstatements="8" conditionals="4" coveredconditionals="4" methods="2" coveredmethods="2"/>
-      <file name="ImageWithFallback.tsx" path="C:\Users\inger\OneDrive\Documentos\maestria\Semana 6\REPO\proyecto-desde-cero\proyecto-1\MediSupply Web\src\components\figma\ImageWithFallback.tsx">
+      <file name="ImageWithFallback.tsx" path="D:\backup_documentos\MISO\2025\ProyectoIntegrador 2\back\proyecto-1\MediSupply Web\src\components\figma\ImageWithFallback.tsx">
         <metrics statements="8" coveredstatements="8" conditionals="4" coveredconditionals="4" methods="2" coveredmethods="2"/>
         <line num="1" count="1" type="stmt"/>
         <line num="4" count="1" type="stmt"/>

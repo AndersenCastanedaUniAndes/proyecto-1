@@ -60,16 +60,13 @@
             "jest": "^30.2.0",
             "jest-environment-jsdom": "^30.2.0",
             "ts-jest": "^29.4.4",
-            "vite": "6.3.5"
+            "vite": "6.3.5",
+            "whatwg-fetch": "^3.6.20"
       },
       "scripts": {
-        "dev": "vite",
-        "build": "vite build",
-        "test": "jest --runInBand",
-        "test:watch": "jest --watch",
-        "cypress:open": "cypress open",
-        "cypress:run": "cypress run",
-        "cypress:run:headed": "cypress run --headed",
-        "test:e2e": "cypress run --spec 'cypress/e2e/**/*.cy.js'"
+            "dev": "vite",
+            "build": "vite build",
+            "test": "jest --runInBand",
+            "test:watch": "jest --watch"
       }
 }
