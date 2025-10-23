@@ -13,3 +13,4 @@ XlsxWriter
 pytest
 pytest-asyncio
 pytest-cov
+requests
