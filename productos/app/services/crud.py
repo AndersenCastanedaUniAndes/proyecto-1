@@ -19,6 +19,8 @@
  * <p><b>Fecha:</b> 2025-10-15</p>
  */
 """
+import os
+import requests
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import SQLAlchemyError
@@ -180,17 +182,30 @@ def get_uom() -> List[str]:
     # Ordena la lista alfabéticamente ignorando mayúsculas y tildes
     return sorted(uoms, key=lambda p: p.lower())
 
-def get_proveedores() -> List[str]:
+def get_proveedores():
     """
-    /**
-     * @brief Retorna una lista de proveedores disponibles.
-     * @return List[str] Lista de proveedores.
-     */
+    Obtiene la lista de proveedores desde un servicio externo configurado por variable de entorno.
+    Retorna los nombres ordenados alfabéticamente.
     """
-    proveedores = [ "Laboratorios Pharma Plus",  "Distribuidora Médica Central",  "Farmacéutica del Valle"]
-    
-    # Ordena la lista alfabéticamente ignorando mayúsculas y tildes
-    return sorted(proveedores, key=lambda p: p.lower())
+    base_url = os.getenv("PROVEEDOR_API_BASE_URL", "http://136.112.245.46:8003/")
+    url = f"{base_url.rstrip('/')}/proveedores/?skip=0&limit=100"
+
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+
+        # Crear la lista con los nombres de los proveedores
+        proveedores = [p["nombre"] for p in data if "nombre" in p]
+
+        # Ordenar alfabéticamente (ignorando mayúsculas/minúsculas)
+        proveedores = sorted(proveedores, key=lambda x: x.lower())
+
+        return proveedores
+
+    except requests.exceptions.RequestException as e:
+        print(f"⚠️ Error al obtener proveedores desde {url}: {e}")
+        return []
 
 
 

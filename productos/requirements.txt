@@ -26,3 +26,4 @@ pytest-cov
 coverage
 requests
 httpx
+requests
