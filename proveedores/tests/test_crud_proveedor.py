@@ -1,3 +1,4 @@
+import os
 import pytest
 from datetime import datetime
 from sqlalchemy import create_engine,text
@@ -15,26 +16,32 @@ from app.models.proveedor import ProveedorUpdate
 
 @pytest.fixture(scope="module")
 def test_db():
-    DATABASE_URL = "postgresql+psycopg2://postgres:postgres@localhost:5432/proveedores"
+    """Crea una base temporal de pruebas (local o CI)."""
+    DATABASE_URL = os.getenv(
+        "DATABASE_URL",
+        "postgresql+psycopg2://postgres:postgres@localhost:5432/proveedores"
+    )
+
     engine = create_engine(DATABASE_URL, echo=False)
 
+    # Crear las tablas
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 
-    # 🔹 Reiniciar secuencia del campo id (importante)
+    # 🔹 Reiniciar secuencia e inicializar datos
     with engine.connect() as conn:
-        conn.execute(text("DELETE FROM proveedor;"))  # elimina todos los registros
-        conn.execute(text("ALTER SEQUENCE proveedor_id_seq RESTART WITH 100;"))  # reinicia IDs desde 100
+        conn.execute(text("DELETE FROM proveedor;"))
+        conn.execute(text("ALTER SEQUENCE proveedor_id_seq RESTART WITH 100;"))
         conn.commit()
 
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = TestingSessionLocal()
+
     yield db
 
     db.rollback()
     db.close()
     Base.metadata.drop_all(bind=engine)
-
 
 @pytest.fixture
 def proveedor_data():
