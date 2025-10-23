@@ -17,14 +17,9 @@ from app.models.proveedor import ProveedorUpdate
 @pytest.fixture(scope="module")
 def test_db():
     """Crea una base temporal de pruebas (local o CI)."""
-    import socket
-    from app.models import models  # 👈 Asegura el registro de las tablas
+    from app.models import models  # asegura el registro de tablas
 
-    # Detectar si estamos en GitHub Actions
     running_in_ci = os.getenv("GITHUB_ACTIONS", "false") == "true"
-
-    # En local: usar localhost
-    # En GitHub Actions: usar 127.0.0.1 (porque postgres está en el mismo contenedor)
     host = "127.0.0.1" if running_in_ci else "localhost"
 
     DATABASE_URL = os.getenv(
@@ -34,15 +29,18 @@ def test_db():
 
     engine = create_engine(DATABASE_URL, echo=False)
 
-    # 🟢 Registrar los modelos antes de crear las tablas
+    # 🟢 Forzar creación de tablas y sincronización
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+    with engine.begin() as conn:
+        conn.execute(text("SELECT 1"))  # sincroniza el schema
 
     # 🔹 Reiniciar secuencia e inicializar datos
-    with engine.connect() as conn:
+    with engine.begin() as conn:
+        conn.execute(text("DROP TABLE IF EXISTS proveedor CASCADE;"))
+        Base.metadata.create_all(bind=engine)
         conn.execute(text("DELETE FROM proveedor;"))
-        conn.execute(text("ALTER SEQUENCE proveedor_id_seq RESTART WITH 100;"))
-        conn.commit()
+        conn.execute(text("ALTER SEQUENCE IF EXISTS proveedor_id_seq RESTART WITH 100;"))
 
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = TestingSessionLocal()
