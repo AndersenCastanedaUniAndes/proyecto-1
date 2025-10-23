@@ -17,9 +17,18 @@ from app.models.proveedor import ProveedorUpdate
 @pytest.fixture(scope="module")
 def test_db():
     """Crea una base temporal de pruebas (local o CI)."""
+    import socket
+
+    # Detectar si estamos en GitHub Actions
+    running_in_ci = os.getenv("GITHUB_ACTIONS", "false") == "true"
+
+    # En local: usar localhost
+    # En GitHub Actions: usar postgres o 127.0.0.1 según el CI
+    host = "127.0.0.1" if running_in_ci else "localhost"
+
     DATABASE_URL = os.getenv(
         "DATABASE_URL",
-        "postgresql+psycopg2://postgres:postgres@localhost:5432/proveedores"
+        f"postgresql+psycopg2://postgres:postgres@{host}:5432/proveedores"
     )
 
     engine = create_engine(DATABASE_URL, echo=False)
@@ -42,7 +51,7 @@ def test_db():
     db.rollback()
     db.close()
     Base.metadata.drop_all(bind=engine)
-
+    
 @pytest.fixture
 def proveedor_data():
     """Datos base para las pruebas."""
