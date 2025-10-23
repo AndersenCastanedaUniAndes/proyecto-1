@@ -47,4 +47,5 @@ jobs:
       - name: Run tests with coverage
         run: | 
            python -m pytest productos/tests -v --maxfail=1 --disable-warnings
+           coverage run -m pytest
            coverage report -m
