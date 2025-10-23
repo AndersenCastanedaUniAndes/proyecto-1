@@ -30,6 +30,7 @@ jobs:
       JWT_SECRET: super-secret-change-me
       JWT_ALGORITHM: HS256
       ACCESS_TOKEN_EXPIRE_MINUTES: 1440
+      PROVEEDOR_API_BASE_URL: http://136.112.245.46:8003/
 
     steps:
       - name: Checkout repo
