@@ -18,12 +18,13 @@ from app.models.proveedor import ProveedorUpdate
 def test_db():
     """Crea una base temporal de pruebas (local o CI)."""
     import socket
+    from app.models import models  # 👈 Asegura el registro de las tablas
 
     # Detectar si estamos en GitHub Actions
     running_in_ci = os.getenv("GITHUB_ACTIONS", "false") == "true"
 
     # En local: usar localhost
-    # En GitHub Actions: usar postgres o 127.0.0.1 según el CI
+    # En GitHub Actions: usar 127.0.0.1 (porque postgres está en el mismo contenedor)
     host = "127.0.0.1" if running_in_ci else "localhost"
 
     DATABASE_URL = os.getenv(
@@ -33,7 +34,7 @@ def test_db():
 
     engine = create_engine(DATABASE_URL, echo=False)
 
-    # Crear las tablas
+    # 🟢 Registrar los modelos antes de crear las tablas
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 
