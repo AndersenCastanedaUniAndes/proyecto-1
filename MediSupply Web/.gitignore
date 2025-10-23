@@ -62,3 +62,13 @@ vite.config.ts
 
 # Archivos de Docker (si los tienes)
 .dockerignore  
+
+
+# Cypress
+cypress/screenshots/
+cypress/videos/
+cypress/downloads/
+cypress/reports/
+
+# Archivos temporales de ejecución
+*.tmp
