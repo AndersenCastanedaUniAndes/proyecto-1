@@ -45,13 +45,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r productos/requirements.txt
 
-      - name: Wait for PostgreSQL
-        run: |
-          until pg_isready -h postgres -p 5432 -U postgres; do
-            echo "Waiting for PostgreSQL..."
-            sleep 2
-          done
-
       - name: Run tests with coverage
         run: |
           coverage run -m pytest proveedores/tests -v --maxfail=1 --disable-warnings
