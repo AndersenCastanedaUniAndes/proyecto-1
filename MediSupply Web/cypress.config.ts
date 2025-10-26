@@ -1,24 +1,21 @@
-const { defineConfig } = require('cypress')
+// cypress.config.ts
+import { defineConfig } from 'cypress'
 
-module.exports = defineConfig({
+export default defineConfig({
   e2e: {
-    baseUrl: 'http://localhost:3000', // ✅ Asegúrate de que sea exactamente esto
+    baseUrl: 'http://136.112.245.46',
+    specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
+    supportFile: 'cypress/support/e2e.ts',
+    chromeWebSecurity: false,          // ← importante para cross-origin
     viewportWidth: 1280,
     viewportHeight: 720,
-    video: true,
-    screenshotOnRunFailure: true,
     defaultCommandTimeout: 15000,
+    pageLoadTimeout: 30000,
     requestTimeout: 15000,
     responseTimeout: 15000,
-    pageLoadTimeout: 30000,
-    setupNodeEvents(on, config) {
-      // implement node event listeners here
-    },
-  },
-  component: {
-    devServer: {
-      framework: 'react',
-      bundler: 'vite',
+    env: {
+      AUTH_8000: 'http://136.112.245.46:8000',
+      WRONG_AUTH_8001: 'http://136.112.245.46:8001',
     },
   },
 })
