@@ -139,6 +139,8 @@ def update_vendedor(user_id: int, user: UserUpdate, db: Session, current_user: D
         #    db_user.contrasena = hash_password(user.contrasena)
         #if user.rol is not None:
         #    db_user.rol = user.rol
+        if user.estado is not None:
+           db_user.estado = user.estado
 
         db.commit()
         db.refresh(db_user)
