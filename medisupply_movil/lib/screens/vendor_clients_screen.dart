@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:medisupply_movil/styles/styles.dart';
+import 'package:medisupply_movil/widgets/widgets.dart';
 
 class _Pedido {
   final int id;
@@ -111,6 +112,14 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
         .toList();
   }
 
+  String _getPendingOrders() {
+    return '11';
+  }
+
+  String _getTotalValue() {
+    return '\$1250000';
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -188,93 +197,86 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
             ])
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 28),
 
-        TextField(
-          decoration: const InputDecoration(
-            hintText: 'Buscar por nombre o dirección...',
-            prefixIcon: Icon(Icons.search),
-          ),
+        AppInputField(
+          label: 'Buscar por nombre o dirección...',
+          prefixIconData: AppIcons.search,
           onChanged: (v) => setState(() => _filtro = v),
         ),
         const SizedBox(height: 12),
 
-        Row(children: [
-          Expanded(
-            child: _CardStat(
-              color: Colors.blue,
-              value: _clientes.fold<int>(0, (a, c) => a + c.pedidosPendientes).toString(),
-              caption: 'Pedidos Pendientes',
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: _CardStat(
-              color: Colors.green,
-              value: '\$${_clientes.fold<int>(0, (a, c) => a + c.valorTotal)}',
-              caption: 'Valor Total',
-            ),
-          ),
-        ]),
+        QuickStats(
+          stat1Color: AppStyles.blue1,
+          stat1Title: 'Pedidos Pendientes',
+          stat1Value: _getPendingOrders(),
+          stat2Color: AppStyles.green1,
+          stat2Title: 'Valor Total',
+          stat2Value: _getTotalValue(),
+        ),
         const SizedBox(height: 12),
 
-        Expanded(
-          child: _filtrados.isEmpty
-              ? Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.inventory_2_outlined, size: 48, color: Colors.grey),
-                        SizedBox(height: 8),
-                        Text('No se encontraron clientes', style: TextStyle(color: Colors.grey)),
+        if (_filtrados.isEmpty)
+          NotFoundSection(
+            iconData: AppIcons.package,
+            label: 'No se encontraron clientes',
+          )
+        else
+          Expanded(
+            child: ListView.separated(
+              itemCount: _filtrados.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              itemBuilder: (context, i) {
+                final c = _filtrados[i];
+                return GestureDetector(
+                  onTap: () => setState(() => _seleccionado = c),
+                  child: Container(
+                    decoration: AppStyles.decoration,
+                    padding: const EdgeInsets.all(12.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            spacing: 6,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(c.nombre, style: textTheme.titleSmall),
+                                  if (c.pedidosPendientes > 0)
+                                    _Badge(
+                                      label: '${c.pedidosPendientes} pendientes',
+                                      color: AppStyles.red2,
+                                      textStyle: textTheme.bodySmall?.copyWith(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white),
+                                    ),
+                                ],
+                              ),
+                              Row(
+                                spacing: 4,
+                                children: [
+                                  Icon(AppIcons.pin, size: 14, color: AppStyles.grey1),
+                                  Text(c.direccion, style: textTheme.labelMedium?.copyWith(color: AppStyles.grey1, fontWeight: FontWeight.w400)),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text('Última visita: ${c.ultimaVisita}', style: textTheme.labelMedium?.copyWith(color: AppStyles.grey1, fontWeight: FontWeight.w400)),
+                                  Text('\$${c.valorTotal}', style: textTheme.labelMedium?.copyWith(fontSize: 12, color: AppStyles.green1)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Icon(AppIcons.chevronRight, size: 18,),
                       ],
                     ),
                   ),
-                )
-              : ListView.separated(
-                  itemCount: _filtrados.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (context, i) {
-                    final c = _filtrados[i];
-                    return Card(
-                      child: ListTile(
-                        title: Text(c.nombre, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 4),
-                            Row(children: [
-                              const Icon(Icons.location_on_outlined, size: 14, color: Colors.grey),
-                              const SizedBox(width: 4),
-                              Expanded(child: Text(c.direccion, style: const TextStyle(fontSize: 12, color: Colors.grey)))
-                            ]),
-                            const SizedBox(height: 4),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Última visita: ${c.ultimaVisita}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                Text('\$${c.valorTotal}', style: const TextStyle(fontSize: 12, color: Colors.green)),
-                              ],
-                            )
-                          ],
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (c.pedidosPendientes > 0)
-                              _Badge(text: '${c.pedidosPendientes} pendientes', color: Colors.red.shade50, textColor: Colors.red),
-                            const Icon(Icons.chevron_right),
-                          ],
-                        ),
-                        onTap: () => setState(() => _seleccionado = c),
-                      ),
-                    );
-                  },
-                ),
-        ),
+                );
+              },
+            ),
+          ),
       ],
     );
   }
@@ -348,18 +350,22 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
 }
 
 class _Badge extends StatelessWidget {
-  final String text;
+  const _Badge({
+    required this.label,
+    required this.color,
+    this.textStyle
+  });
+
+  final String label;
   final Color color;
-  final Color textColor;
-  const _Badge({required this.text, required this.color, required this.textColor});
+  final TextStyle? textStyle;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(12)),
-      child: Text(text, style: TextStyle(fontSize: 11, color: textColor)),
+      padding: const EdgeInsets.only(left: 10, right: 10, top: 0, bottom: 4),
+      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
+      child: Text(label, style: textStyle),
     );
   }
 }

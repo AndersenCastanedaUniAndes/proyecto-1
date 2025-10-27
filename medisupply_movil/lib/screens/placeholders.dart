@@ -3,6 +3,7 @@ import 'package:medisupply_movil/screens/screens.dart';
 import 'package:medisupply_movil/styles/styles.dart';
 import 'package:medisupply_movil/widgets/widgets.dart';
 import 'package:provider/provider.dart';
+import 'package:medisupply_movil/data/data.dart';
 import '../state/app_state.dart';
 
 enum _VendorScreen { home, clientes, visitas, pedidos, recomendaciones }
@@ -15,7 +16,7 @@ class VendorScreen extends StatefulWidget {
 }
 
 class _VendorScreenState extends State<VendorScreen> {
-  _VendorScreen _current = _VendorScreen.home;
+  _VendorScreen _current = _VendorScreen.pedidos;
   bool _showUserMenu = false;
 
   void _goHome() => setState(() => _current = _VendorScreen.home);
@@ -32,7 +33,7 @@ class _VendorScreenState extends State<VendorScreen> {
               child: switch (_current) {
                 _VendorScreen.clientes => VendorClientsScreen(onBack: _goHome),
                 _VendorScreen.visitas => VendorVisitsView(onBack: _goHome),
-                _VendorScreen.pedidos => VendorOrdersView(onBack: _goHome),
+                _VendorScreen.pedidos => VendorOrderScreen(onBack: _goHome),
                 _VendorScreen.recomendaciones => _SimpleSubView(title: 'Recomendaciones', onBack: _goHome, child: const Text('Generación de recomendaciones próximamente...')),
                 _VendorScreen.home => _VendorHome(onOpenMenu: () => setState(() => _showUserMenu = true), onTapCard: (view) => setState(() => _current = view)),
               },
@@ -956,464 +957,6 @@ class _Visita {
 }
 
 // =================== VENDEDOR - PEDIDOS VIEW ===================
-class VendorOrdersView extends StatefulWidget {
-  final VoidCallback onBack;
-  const VendorOrdersView({super.key, required this.onBack});
-
-  @override
-  State<VendorOrdersView> createState() => _VendorOrdersViewState();
-}
-
-class _VendorOrdersViewState extends State<VendorOrdersView>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabController = TabController(length: 2, vsync: this);
-
-  // Nuevo pedido
-  String? _clienteSel;
-  final _fechaCtrl = TextEditingController();
-  bool _isLoading = false;
-  final Map<int, int> _cantidades = {}; // productoId -> cantidad
-
-  // Filtros historial
-  final _filtroFechaCtrl = TextEditingController();
-  final _filtroClienteCtrl = TextEditingController();
-
-  final List<String> _clientes = const [
-    'Farmacia Central',
-    'Droguería La Salud',
-    'Hospital Nacional',
-    'Red Farmacias Unidos',
-    'Clínica San Juan',
-  ];
-
-  final List<_Producto> _productos = [
-    _Producto(id: 1, nombre: 'Paracetamol 500mg', precio: 250, stock: 1000, categoria: 'Analgésicos'),
-    _Producto(id: 2, nombre: 'Ibuprofeno 600mg', precio: 350, stock: 800, categoria: 'Analgésicos'),
-    _Producto(id: 3, nombre: 'Amoxicilina 875mg', precio: 450, stock: 600, categoria: 'Antibióticos'),
-    _Producto(id: 4, nombre: 'Insulina Rápida', precio: 15000, stock: 200, categoria: 'Diabetes'),
-    _Producto(id: 5, nombre: 'Vacuna COVID-19', precio: 25000, stock: 150, categoria: 'Vacunas'),
-    _Producto(id: 6, nombre: 'Vitamina C', precio: 180, stock: 500, categoria: 'Vitaminas'),
-    _Producto(id: 7, nombre: 'Multivitamínico', precio: 320, stock: 400, categoria: 'Vitaminas'),
-    _Producto(id: 8, nombre: 'Glucómetro', precio: 45000, stock: 50, categoria: 'Diabetes'),
-  ];
-
-  final List<_PedidoOrden> _pedidos = [
-    _PedidoOrden(
-      id: 1,
-      cliente: 'Farmacia Central',
-      fecha: '2024-03-20',
-      estado: 'pendiente',
-      items: [
-        _PedidoItemOrden(productoId: 1, nombre: 'Paracetamol 500mg', cantidad: 100, precio: 250),
-        _PedidoItemOrden(productoId: 2, nombre: 'Ibuprofeno 600mg', cantidad: 50, precio: 350),
-      ],
-      total: 42500,
-      fechaCreacion: '2024-03-20',
-    ),
-    _PedidoOrden(
-      id: 2,
-      cliente: 'Hospital Nacional',
-      fecha: '2024-03-19',
-      estado: 'procesando',
-      items: [
-        _PedidoItemOrden(productoId: 3, nombre: 'Amoxicilina 875mg', cantidad: 200, precio: 450),
-        _PedidoItemOrden(productoId: 4, nombre: 'Insulina Rápida', cantidad: 10, precio: 15000),
-      ],
-      total: 240000,
-      fechaCreacion: '2024-03-19',
-    ),
-    _PedidoOrden(
-      id: 3,
-      cliente: 'Droguería La Salud',
-      fecha: '2024-03-18',
-      estado: 'enviado',
-      items: [
-        _PedidoItemOrden(productoId: 4, nombre: 'Insulina Rápida', cantidad: 5, precio: 15000),
-        _PedidoItemOrden(productoId: 8, nombre: 'Glucómetro', cantidad: 2, precio: 45000),
-      ],
-      total: 165000,
-      fechaCreacion: '2024-03-18',
-    ),
-  ];
-
-  List<_PedidoOrden> get _pedidosFiltrados {
-    final fFecha = _filtroFechaCtrl.text.trim();
-    final fCli = _filtroClienteCtrl.text.trim().toLowerCase();
-    return _pedidos.where((p) {
-      final fechaOk = fFecha.isEmpty || p.fecha.contains(fFecha);
-      final clienteOk = fCli.isEmpty || p.cliente.toLowerCase().contains(fCli);
-      return fechaOk && clienteOk;
-    }).toList();
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    _fechaCtrl.dispose();
-    _filtroFechaCtrl.dispose();
-    _filtroClienteCtrl.dispose();
-    super.dispose();
-  }
-
-  int _calcularTotal() {
-    int total = 0;
-    _cantidades.forEach((prodId, cant) {
-      final prod = _productos.firstWhere((p) => p.id == prodId);
-      total += prod.precio * cant;
-    });
-    return total;
-  }
-
-  void _setCantidad(int productoId, int cantidad) {
-    setState(() {
-      if (cantidad <= 0) {
-        _cantidades.remove(productoId);
-      } else {
-        _cantidades[productoId] = cantidad;
-      }
-    });
-  }
-
-  Future<void> _pickDate() async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: now,
-      firstDate: DateTime(now.year - 1),
-      lastDate: DateTime(now.year + 2),
-    );
-    if (picked != null) {
-      _fechaCtrl.text = picked.toIso8601String().substring(0, 10);
-      setState(() {});
-    }
-  }
-
-  Future<void> _submit() async {
-    if (_clienteSel == null || _clienteSel!.isEmpty || _fechaCtrl.text.isEmpty || _cantidades.isEmpty) {
-      return;
-    }
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
-
-    final items = _cantidades.entries.map((e) {
-      final prod = _productos.firstWhere((p) => p.id == e.key);
-      return _PedidoItemOrden(productoId: prod.id, nombre: prod.nombre, cantidad: e.value, precio: prod.precio);
-    }).toList();
-
-    setState(() {
-      _pedidos.add(
-        _PedidoOrden(
-          id: _pedidos.length + 1,
-          cliente: _clienteSel!,
-          fecha: _fechaCtrl.text,
-          estado: 'pendiente',
-          items: items,
-          total: _calcularTotal(),
-          fechaCreacion: DateTime.now().toIso8601String().substring(0, 10),
-        ),
-      );
-      _clienteSel = null;
-      _fechaCtrl.clear();
-      _cantidades.clear();
-      _isLoading = false;
-      _tabController.index = 1; // ir a historial
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            IconButton(onPressed: widget.onBack, icon: const Icon(Icons.arrow_back)),
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Pedidos', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-              Text('${_pedidosFiltrados.length} pedidos', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-            ])
-          ],
-        ),
-        const SizedBox(height: 8),
-        TabBar(
-          controller: _tabController,
-          indicatorColor: Theme.of(context).colorScheme.primary,
-          tabs: const [
-            Tab(icon: Icon(Icons.add), text: 'Nuevo'),
-            Tab(icon: Icon(Icons.shopping_cart_outlined), text: 'Historial'),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildNuevo(context),
-              _buildHistorial(context),
-            ],
-          ),
-        )
-      ],
-    );
-  }
-
-  Widget _buildNuevo(BuildContext context) {
-    return SingleChildScrollView(
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text('Nuevo Pedido', style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: 12),
-              Row(children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _clienteSel,
-                    items: _clientes.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-                    onChanged: (v) => setState(() => _clienteSel = v),
-                    decoration: const InputDecoration(labelText: 'Cliente'),
-                    validator: (v) => (v == null || v.isEmpty) ? 'Selecciona un cliente' : null,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _fechaCtrl,
-                    readOnly: true,
-                    decoration: const InputDecoration(labelText: 'Fecha', prefixIcon: Icon(Icons.calendar_today)),
-                    onTap: _pickDate,
-                  ),
-                ),
-              ]),
-              const SizedBox(height: 12),
-              Text('Productos', style: Theme.of(context).textTheme.labelLarge),
-              const SizedBox(height: 8),
-              Container(
-                constraints: const BoxConstraints(maxHeight: 300),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: _productos.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, i) {
-                    final p = _productos[i];
-                    final cantidad = _cantidades[p.id] ?? 0;
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(p.nombre, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                                const SizedBox(height: 2),
-                                Text('\$${p.precio.toString()} • Stock: ${p.stock}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                              ],
-                            ),
-                          ),
-                          SizedBox(
-                            width: 70,
-                            child: TextFormField(
-                              initialValue: cantidad == 0 ? '' : cantidad.toString(),
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(labelText: 'Cant'),
-                              onChanged: (v) => _setCantidad(p.id, int.tryParse(v) ?? 0),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 12),
-              if (_cantidades.isNotEmpty)
-                Card(
-                  color: Colors.grey.shade100,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Total del pedido:'),
-                        Text('\$${_calcularTotal()}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
-                      ],
-                    ),
-                  ),
-                ),
-              const SizedBox(height: 8),
-              ConfirmationButton(
-                isLoading: _isLoading,
-                onTap: _submit,
-                idleLabel: 'Registrar Pedido',
-                onTapLabel: 'Registrando...'
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHistorial(BuildContext context) {
-    final pedidos = _pedidosFiltrados;
-    return Column(
-      children: [
-        Row(children: [
-          Expanded(
-            child: TextField(
-              controller: _filtroFechaCtrl,
-              decoration: const InputDecoration(labelText: 'Filtrar por fecha (YYYY-MM-DD)', prefixIcon: Icon(Icons.calendar_today)),
-              onChanged: (_) => setState(() {}),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              controller: _filtroClienteCtrl,
-              decoration: const InputDecoration(labelText: 'Filtrar por cliente', prefixIcon: Icon(Icons.search)),
-              onChanged: (_) => setState(() {}),
-            ),
-          ),
-        ]),
-        const SizedBox(height: 12),
-        Expanded(
-          child: pedidos.isEmpty
-              ? Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.remove_shopping_cart_outlined, size: 48, color: Colors.grey),
-                        SizedBox(height: 8),
-                        Text('No se encontraron pedidos', style: TextStyle(color: Colors.grey)),
-                      ],
-                    ),
-                  ),
-                )
-              : ListView.separated(
-                  itemCount: pedidos.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (context, i) {
-                    final p = pedidos[i];
-                    return Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                  Text(p.cliente, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                                  Text('#${p.id}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                ]),
-                                _estadoPedidoBadge(p.estado),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(children: [
-                                  const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
-                                  const SizedBox(width: 4),
-                                  Text(p.fecha, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                ]),
-                                Row(children: [
-                                  const Icon(Icons.inventory_2_outlined, size: 14, color: Colors.grey),
-                                  const SizedBox(width: 4),
-                                  Text('${p.items.length} productos', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                ]),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            ...p.items.map((it) => Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(child: Text(it.nombre, overflow: TextOverflow.ellipsis)),
-                                    Text('${it.cantidad} × \$${it.precio}', style: const TextStyle(color: Colors.grey)),
-                                  ],
-                                )),
-                            const Divider(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text('Total:'),
-                                Text('\$${p.total}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-        ),
-      ],
-    );
-  }
-
-  Widget _estadoPedidoBadge(String estado) {
-    Color bg;
-    Color fg = Colors.white;
-    switch (estado) {
-      case 'pendiente':
-        bg = Colors.grey; break;
-      case 'procesando':
-        bg = Colors.orange; break;
-      case 'enviado':
-        bg = Colors.blue; break;
-      case 'entregado':
-        bg = Colors.green; break;
-      case 'cancelado':
-        bg = Colors.red; break;
-      default:
-        bg = Colors.black54; break;
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
-      child: Text(estado[0].toUpperCase() + estado.substring(1), style: TextStyle(fontSize: 11, color: fg)),
-    );
-  }
-}
-
-class _Producto {
-  final int id;
-  final String nombre;
-  final int precio;
-  final int stock;
-  final String categoria;
-  _Producto({required this.id, required this.nombre, required this.precio, required this.stock, required this.categoria});
-}
-
-class _PedidoItemOrden {
-  final int productoId;
-  final String nombre;
-  final int cantidad;
-  final int precio;
-  _PedidoItemOrden({required this.productoId, required this.nombre, required this.cantidad, required this.precio});
-}
-
-class _PedidoOrden {
-  final int id;
-  final String cliente;
-  final String fecha;
-  final String estado; // pendiente | procesando | enviado | entregado | cancelado
-  final List<_PedidoItemOrden> items;
-  final int total;
-  final String fechaCreacion;
-  _PedidoOrden({required this.id, required this.cliente, required this.fecha, required this.estado, required this.items, required this.total, required this.fechaCreacion});
-}
 
 // =================== CLIENTE - PEDIDOS VIEW ===================
 class ClientOrdersView extends StatefulWidget {
@@ -1733,45 +1276,45 @@ class _ClientOrdersViewState extends State<ClientOrdersView>
   // Filtros historial
   final _filtroFechaCtrl = TextEditingController();
 
-  final List<_Producto> _productos = [
-    _Producto(id: 1, nombre: 'Paracetamol 500mg', precio: 250, stock: 1000, categoria: 'Analgésicos'),
-    _Producto(id: 2, nombre: 'Ibuprofeno 600mg', precio: 350, stock: 800, categoria: 'Analgésicos'),
-    _Producto(id: 3, nombre: 'Amoxicilina 875mg', precio: 450, stock: 600, categoria: 'Antibióticos'),
-    _Producto(id: 4, nombre: 'Insulina Rápida', precio: 15000, stock: 200, categoria: 'Diabetes'),
-    _Producto(id: 5, nombre: 'Vacuna COVID-19', precio: 25000, stock: 150, categoria: 'Vacunas'),
-    _Producto(id: 6, nombre: 'Vitamina C', precio: 180, stock: 500, categoria: 'Vitaminas'),
-    _Producto(id: 7, nombre: 'Multivitamínico', precio: 320, stock: 400, categoria: 'Vitaminas'),
-    _Producto(id: 8, nombre: 'Glucómetro', precio: 45000, stock: 50, categoria: 'Diabetes'),
+  final List<Product> _productos = [
+    Product(id: 1, nombre: 'Paracetamol 500mg', precio: 250, stock: 1000, categoria: 'Analgésicos'),
+    Product(id: 2, nombre: 'Ibuprofeno 600mg', precio: 350, stock: 800, categoria: 'Analgésicos'),
+    Product(id: 3, nombre: 'Amoxicilina 875mg', precio: 450, stock: 600, categoria: 'Antibióticos'),
+    Product(id: 4, nombre: 'Insulina Rápida', precio: 15000, stock: 200, categoria: 'Diabetes'),
+    Product(id: 5, nombre: 'Vacuna COVID-19', precio: 25000, stock: 150, categoria: 'Vacunas'),
+    Product(id: 6, nombre: 'Vitamina C', precio: 180, stock: 500, categoria: 'Vitaminas'),
+    Product(id: 7, nombre: 'Multivitamínico', precio: 320, stock: 400, categoria: 'Vitaminas'),
+    Product(id: 8, nombre: 'Glucómetro', precio: 45000, stock: 50, categoria: 'Diabetes'),
   ];
 
-  final List<_PedidoOrden> _pedidos = [
-    _PedidoOrden(
+  final List<Order> _pedidos = [
+    Order(
       id: 1,
       cliente: 'Farmacia Central',
       fecha: '2024-03-20',
       estado: 'pendiente',
       items: [
-        _PedidoItemOrden(productoId: 1, nombre: 'Paracetamol 500mg', cantidad: 100, precio: 250),
-        _PedidoItemOrden(productoId: 2, nombre: 'Ibuprofeno 600mg', cantidad: 50, precio: 350),
+        OrderItem(productoId: 1, nombre: 'Paracetamol 500mg', cantidad: 100, precio: 250),
+        OrderItem(productoId: 2, nombre: 'Ibuprofeno 600mg', cantidad: 50, precio: 350),
       ],
       total: 42500,
       fechaCreacion: '2024-03-20',
     ),
-    _PedidoOrden(
+    Order(
       id: 2,
       cliente: 'Farmacia Central',
       fecha: '2024-03-19',
       estado: 'procesando',
       items: [
-        _PedidoItemOrden(productoId: 3, nombre: 'Amoxicilina 875mg', cantidad: 200, precio: 450),
-        _PedidoItemOrden(productoId: 4, nombre: 'Insulina Rápida', cantidad: 10, precio: 15000),
+        OrderItem(productoId: 3, nombre: 'Amoxicilina 875mg', cantidad: 200, precio: 450),
+        OrderItem(productoId: 4, nombre: 'Insulina Rápida', cantidad: 10, precio: 15000),
       ],
       total: 240000,
       fechaCreacion: '2024-03-19',
     ),
   ];
 
-  List<_PedidoOrden> get _pedidosFiltrados {
+  List<Order> get _pedidosFiltrados {
     final fFecha = _filtroFechaCtrl.text.trim();
     return _pedidos.where((p) {
       final mismoCliente = p.cliente == _clienteActual;
@@ -1830,12 +1373,12 @@ class _ClientOrdersViewState extends State<ClientOrdersView>
 
     final items = _cantidades.entries.map((e) {
       final prod = _productos.firstWhere((p) => p.id == e.key);
-      return _PedidoItemOrden(productoId: prod.id, nombre: prod.nombre, cantidad: e.value, precio: prod.precio);
+      return OrderItem(productoId: prod.id, nombre: prod.nombre, cantidad: e.value, precio: prod.precio);
     }).toList();
 
     setState(() {
       _pedidos.add(
-        _PedidoOrden(
+        Order(
           id: _pedidos.length + 1,
           cliente: _clienteActual,
           fecha: _fechaCtrl.text,
