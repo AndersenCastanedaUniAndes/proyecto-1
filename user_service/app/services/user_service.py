@@ -1,7 +1,11 @@
 from sqlalchemy import create_engine
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, Depends
+from typing import List, Optional
 from pydantic import ValidationError
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -53,6 +57,184 @@ def hash_password(password: str):
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
+
+
+def send_forgot_password(email: str, db: Session):
+    try:
+        # 1️⃣ Buscar el usuario en la base de datos
+        user = db.query(DBUser).filter(DBUser.email == email).first()
+
+        # 2️⃣ Si no existe el usuario, no enviamos correo (por seguridad)
+        if not user:
+            return {"message": "Si el correo existe, se enviarán las instrucciones de recuperación."}
+
+        # 3️⃣ Generar un token JWT temporal para el restablecimiento de contraseña
+        expire = timedelta(minutes=15)
+        reset_token = create_access_token(
+            data={"sub": user.email, "scope": "password_reset"},
+            expires_delta=expire
+        )
+
+        # 4️⃣ Crear el enlace de restablecimiento
+        reset_link = f"https://tuapp.com/reset-password?token={reset_token}"
+
+        # 5️⃣ Preparar el contenido del correo
+        subject = "Recuperación de contraseña"
+        body = f"""
+        Hola {user.nombre_usuario},
+
+        Hemos recibido una solicitud para restablecer tu contraseña.
+        Puedes hacerlo usando el siguiente enlace (válido por 15 minutos):
+
+        {reset_link}
+
+        Si no realizaste esta solicitud, ignora este mensaje.
+
+        Saludos,
+        El equipo de soporte mediSupply
+        """
+
+        # 6️⃣ Configurar el correo
+        sender_email = "noreply@tuapp.com"
+        msg = MIMEMultipart()
+        msg["From"] = sender_email
+        msg["To"] = email
+        msg["Subject"] = subject
+        msg.attach(MIMEText(body, "plain"))
+
+        # 7️⃣ Enviar el correo usando SMTP (ajusta los valores reales)
+        smtp_server = "smtp.gmail.com"
+        smtp_port = 587
+        smtp_user = "medisupply1234@gmail.com"
+        smtp_password = "kfyihajpvrutgtkt"  # Usa clave de aplicación, no tu contraseña real
+
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.sendmail(sender_email, email, msg.as_string())
+
+        return {"message": "Si el correo existe, se enviaron las instrucciones de recuperación."}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al enviar correo: {str(e)}")
+
+def create_vendedor(user: UserCreate, db: Session, current_user: DBUser):
+    try:
+        if not all([user.nombre_usuario, user.email, user.contrasena, user.rol]):
+            raise HTTPException(status_code=422, detail="Faltan campos obligatorios.")
+
+        existing_user = db.query(DBUser).filter(DBUser.email == user.email).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="El correo ya está registrado.")
+
+        db_user = DBUser(
+            nombre_usuario=user.nombre_usuario,
+            email=user.email,
+            contrasena=hash_password(user.contrasena),
+            rol="vendedor"
+        )
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+
+    except HTTPException:
+        raise
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=f"Error de validación: {e.errors()}")
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al crear usuario: {str(e)}")
+
+
+
+def read_vendedores(db: Session, skip: int, limit: int, current_user: DBUser):
+    try:
+        vendedores = (
+            db.query(DBUser)
+            .filter(DBUser.rol == "vendedor")  
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+        return vendedores
+
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener los vendedores: {str(e)}")
+
+
+def read_vendedor(user_id: int, db: Session, current_user: DBUser):
+    try:
+        user = db.query(DBUser).filter(DBUser.usuario_id == user_id).first()
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+        return user
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener usuario: {str(e)}")
+
+
+
+
+def update_vendedor(user_id: int, user: UserUpdate, db: Session, current_user: DBUser):
+    try:
+        #if current_user.rol != "admin" and current_user.usuario_id != user_id:
+        #    raise HTTPException(status_code=403, detail="No tienes permisos para modificar otros usuarios")
+
+        #if not any([user.nombre_usuario, user.email, user.contrasena, user.rol]):
+        #    raise HTTPException(status_code=422, detail="Debe proporcionar al menos un campo para actualizar.")
+
+        db_user = db.query(DBUser).filter(DBUser.usuario_id == user_id).first()
+        if not db_user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+
+        if user.nombre_usuario is not None:
+            db_user.nombre_usuario = user.nombre_usuario
+        if user.email is not None:
+            db_user.email = user.email
+        #if user.contrasena is not None:
+        #    db_user.contrasena = hash_password(user.contrasena)
+        #if user.rol is not None:
+        #    db_user.rol = user.rol
+        if user.estado is not None:
+           db_user.estado = user.estado
+
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+
+    except HTTPException:
+        raise
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=f"Error de validación: {e.errors()}")
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al actualizar usuario: {str(e)}")
+
+
+def delete_vendedor(user_id: int, db: Session, current_user: DBUser):
+    try:
+        #if current_user.rol != "admin":
+        #    raise HTTPException(status_code=403, detail="No tiene permisos para eliminar usuarios.")
+
+        db_user = db.query(DBUser).filter(DBUser.usuario_id == user_id).first()
+        if not db_user:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado.")
+
+        db.delete(db_user)
+        db.commit()
+        return {"message": "Usuario eliminado con éxito."}
+
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al eliminar usuario: {str(e)}")
+
 
 # Crear token JWT
 def create_access_token(data: dict, expires_delta: timedelta = None):

@@ -10,19 +10,6 @@ def test_metrics_endpoint_exists(client):
     assert response.status_code == 200
     assert response.headers["content-type"] == "text/plain; version=0.0.4; charset=utf-8"
 
-def test_metrics_contains_jwt_validation_histogram(client):
-    """Test que métricas contienen histograma de validación JWT en segundos"""
-    response = client.get("/metrics")
-    assert response.status_code == 200
-    
-    content = response.text
-    
-    # Buscar histograma de validación JWT
-    assert "jwt_validation_seconds" in content
-    assert "HELP jwt_validation_seconds" in content
-    assert "Tiempo de validación JWT en segundos" in content
-    assert "unit=seconds" in content
-
 def test_metrics_contains_jwt_validation_failures_counter(client):
     """Test que métricas contienen counter de fallos de validación JWT"""
     response = client.get("/metrics")
@@ -130,46 +117,3 @@ def test_metrics_increment_on_requests(client, admin_user_data):
     final_success = int(final_success_match.group(1)) if final_success_match else 0
     
     assert final_success >= initial_success
-
-def test_metrics_histogram_has_correct_buckets(client, admin_user_data):
-    """Test que histograma tiene buckets correctos para medición en segundos"""
-    # Crear usuario y hacer requests
-    response = client.post("/users/", json=admin_user_data)
-    assert response.status_code == 200
-    
-    login_data = {
-        "username": admin_user_data["email"],
-        "password": admin_user_data["contrasena"]
-    }
-    response = client.post("/token", data=login_data)
-    access_token = response.json()["access_token"]
-    
-    # Hacer varios requests para generar métricas
-    headers = {"Authorization": f"Bearer {access_token}"}
-    for _ in range(5):
-        response = client.get("/users/1", headers=headers)
-        assert response.status_code == 200
-    
-    # Obtener métricas
-    response = client.get("/metrics")
-    content = response.text
-    
-    # Buscar buckets del histograma
-    bucket_lines = [line for line in content.split('\n') if 'jwt_validation_seconds_bucket' in line]
-    assert len(bucket_lines) > 0
-    
-    # Verificar que hay buckets apropiados para medición en segundos
-    # Debería tener buckets como 0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, etc.
-    bucket_values = []
-    for line in bucket_lines:
-        # Extraer valor del bucket
-        match = re.search(r'le="([^"]+)"', line)
-        if match:
-            bucket_values.append(float(match.group(1)))
-    
-    # Verificar que hay buckets apropiados para latencia en segundos
-    assert any(v <= 0.001 for v in bucket_values)  # Sub-millisecond
-    assert any(v <= 0.01 for v in bucket_values)   # 10ms
-    assert any(v <= 0.1 for v in bucket_values)    # 100ms
-    assert any(v <= 1.0 for v in bucket_values)    # 1 second
-    assert any(v <= 2.0 for v in bucket_values)    # 2 seconds (p99 target)

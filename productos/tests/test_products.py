@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import patch
 from unittest.mock import MagicMock, AsyncMock
 from datetime import timedelta, datetime
 from fastapi import HTTPException, UploadFile
@@ -110,11 +111,22 @@ def test_get_uom_ordered():
     assert "unidad" in uoms
 
 
-def test_get_proveedores_ordered():
-    proveedores = crud.get_proveedores()
+def test_get_proveedores_ordered(monkeypatch):
+    mock_data = [
+        {"id": 1, "nombre": "Laboratorios Pharma Plus"},
+        {"id": 2, "nombre": "Distribuidora Médica Central"},
+    ]
+
+    class MockResponse:
+        def json(self):
+            return mock_data
+        def raise_for_status(self): pass
+
+    with patch("app.services.crud.requests.get", return_value=MockResponse()):
+        proveedores = crud.get_proveedores()
+
     assert proveedores == sorted(proveedores, key=lambda p: p.lower())
     assert "Laboratorios Pharma Plus" in proveedores
-
 
 def test_get_tipo_almacenamiento_ordered():
     tipos = crud.get_tipo_almacenamiento()

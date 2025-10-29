@@ -1,10 +1,13 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 from typing import Optional
+from datetime import datetime, date
 
 class UserBase(BaseModel):
     nombre_usuario: str
     email: str
     rol: str
+    estado: Optional[bool] = True
+    created_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
 
 # Modelo de respuesta (sin contraseña)
 class User(UserBase):
@@ -23,6 +26,7 @@ class UserUpdate(BaseModel):
     email: Optional[str] = None
     contrasena: Optional[str] = None
     rol: Optional[str] = None
+    estado: Optional[bool] = None
 
 # Modelo interno de DB (incluye contraseña)
 class UserInDB(UserBase):

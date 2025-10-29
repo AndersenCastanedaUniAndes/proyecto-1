@@ -4,6 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.models.user import User, UserCreate, UserUpdate
 from app.models.db_models import DBUser
+from typing import List
 from app.services.user_service import (
     create_user, 
     get_user, 
@@ -12,10 +13,54 @@ from app.services.user_service import (
     get_db, 
     verify_password, 
     create_access_token,
-    get_current_user
+    get_current_user,
+    create_vendedor,
+    read_vendedor,
+    update_vendedor,
+    delete_vendedor,
+    read_vendedores,
+    send_forgot_password
+
 )
 
 router = APIRouter()
+
+# Creacion de vendedores
+
+# Recuperar contraseña  
+@router.post("/forgotPassword/")
+def forgot_password(email, db: Session = Depends(get_db)):
+    return send_forgot_password(email, db)
+
+
+# Crear usuario vendedor (registro)
+@router.post("/vendedor/", response_model=User)
+def create_user_vendedor(user: UserCreate, db: Session = Depends(get_db),current_user: DBUser = Depends(get_current_user)):
+    return create_vendedor(user, db,current_user)
+
+# Obtener usuario vendedor por ID (protegido)
+@router.get("/vendedor/{user_id}", response_model=User)
+def read_user_vendedor(user_id: int, db: Session = Depends(get_db), current_user: DBUser = Depends(get_current_user)):
+     
+    return read_vendedor(user_id, db,current_user)
+
+# Obtener los usuarios vendedores (protegido)
+@router.get("/vendedores",response_model=List[User])
+def read_users_vendedores( db: Session = Depends(get_db),skip: int = 0, limit: int = 100, current_user: DBUser = Depends(get_current_user)):
+     return read_vendedores( db,skip,limit,current_user)
+
+
+# Actualizar usuario vendedor por ID (protegido)
+@router.put("/vendedor/{user_id}", response_model=User)
+def update_user_vendedor(user_id: int, user: UserUpdate, db: Session = Depends(get_db), current_user: DBUser = Depends(get_current_user)):
+    return update_vendedor(user_id, user, db,current_user)
+
+# Eliminar usuario vendedor por ID (protegido)
+@router.delete("/vendedor/{user_id}")
+def delete_user_vendedor(user_id: int, db: Session = Depends(get_db), current_user: DBUser = Depends(get_current_user)):
+    return delete_vendedor(user_id, db,current_user)
+
+
 
 # Crear usuario (registro)
 @router.post("/users/", response_model=User)
