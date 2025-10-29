@@ -18,13 +18,20 @@ from app.services.user_service import (
     read_vendedor,
     update_vendedor,
     delete_vendedor,
-    read_vendedores
+    read_vendedores,
+    send_forgot_password
 
 )
 
 router = APIRouter()
 
 # Creacion de vendedores
+
+# Recuperar contraseña  
+@router.post("/forgotPassword/")
+def forgot_password(email, db: Session = Depends(get_db)):
+    return send_forgot_password(email, db)
+
 
 # Crear usuario vendedor (registro)
 @router.post("/vendedor/", response_model=User)

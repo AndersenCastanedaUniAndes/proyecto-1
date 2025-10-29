@@ -1,4 +1,7 @@
 from sqlalchemy import create_engine
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, Depends
@@ -56,6 +59,64 @@ def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 
+def send_forgot_password(email: str, db: Session):
+    try:
+        # 1️⃣ Buscar el usuario en la base de datos
+        user = db.query(DBUser).filter(DBUser.email == email).first()
+
+        # 2️⃣ Si no existe el usuario, no enviamos correo (por seguridad)
+        if not user:
+            return {"message": "Si el correo existe, se enviarán las instrucciones de recuperación."}
+
+        # 3️⃣ Generar un token JWT temporal para el restablecimiento de contraseña
+        expire = timedelta(minutes=15)
+        reset_token = create_access_token(
+            data={"sub": user.email, "scope": "password_reset"},
+            expires_delta=expire
+        )
+
+        # 4️⃣ Crear el enlace de restablecimiento
+        reset_link = f"https://tuapp.com/reset-password?token={reset_token}"
+
+        # 5️⃣ Preparar el contenido del correo
+        subject = "Recuperación de contraseña"
+        body = f"""
+        Hola {user.nombre_usuario},
+
+        Hemos recibido una solicitud para restablecer tu contraseña.
+        Puedes hacerlo usando el siguiente enlace (válido por 15 minutos):
+
+        {reset_link}
+
+        Si no realizaste esta solicitud, ignora este mensaje.
+
+        Saludos,
+        El equipo de soporte mediSupply
+        """
+
+        # 6️⃣ Configurar el correo
+        sender_email = "noreply@tuapp.com"
+        msg = MIMEMultipart()
+        msg["From"] = sender_email
+        msg["To"] = email
+        msg["Subject"] = subject
+        msg.attach(MIMEText(body, "plain"))
+
+        # 7️⃣ Enviar el correo usando SMTP (ajusta los valores reales)
+        smtp_server = "smtp.gmail.com"
+        smtp_port = 587
+        smtp_user = "medisupply1234@gmail.com"
+        smtp_password = "kfyihajpvrutgtkt"  # Usa clave de aplicación, no tu contraseña real
+
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.sendmail(sender_email, email, msg.as_string())
+
+        return {"message": "Si el correo existe, se enviaron las instrucciones de recuperación."}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al enviar correo: {str(e)}")
 
 def create_vendedor(user: UserCreate, db: Session, current_user: DBUser):
     try:
