@@ -240,12 +240,14 @@ class PostgresUnitOfWork(UnitOfWork):
 
 
 def build_uow_from_env() -> UnitOfWork | None:
-    DB_USER = os.getenv("DB_USER", "inventario")
-    DB_PASSWORD = os.getenv("DB_PASSWORD", "inventario")
-    DB_HOST = os.getenv("DB_HOST", "localhost")
+    DB_USER = os.getenv("DB_USER", "postgres")
+    DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
+    DB_HOST = os.getenv("DB_HOST", "34.58.178.152")
     DB_PORT = os.getenv("DB_PORT", "5432")
-    DB_NAME = os.getenv("DB_NAME", "inventario")
-    db_url = f"postgresql+psycopg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    DB_NAME = os.getenv("DB_NAME", "postgres")
+    db_url = f"postgresql+psycopg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?sslmode=require"
+
+    print(f"Connecting to {db_url}")
 
     if not db_url:
         return None
