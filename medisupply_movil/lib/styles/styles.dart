@@ -24,6 +24,7 @@ class AppIcons {
   static IconData search = LucideIcons.search;
   static IconData chevronRight = LucideIcons.chevronRight;
   static IconData chevronDown = LucideIcons.chevronDown;
+  static IconData calendar = LucideIcons.calendar;
 }
 
 class AppStyles {
@@ -38,9 +39,11 @@ class AppStyles {
   static Color blue2 = Color(0xFF1447E6);
   static Color red1 = Color(0xFFe7000b);
   static Color red2 = Color(0xFFd4183d);
+  static Color orange = Color(0xFFff6900);
 
   static Color menuCardBlue = Color(0xFF2b7fff);
   static Color menuCardGreen = Color(0xFF00c951);
 
   static Color grey1 = Color(0xFF717182);
+  static Color grey2 = Color(0xFFeceef2);
 }

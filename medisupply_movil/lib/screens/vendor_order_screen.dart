@@ -13,7 +13,10 @@ class VendorOrderScreen extends StatefulWidget {
 
 class _VendorOrderScreenState extends State<VendorOrderScreen>
     with SingleTickerProviderStateMixin {
-  late final TabController _tabController = TabController(length: 2, vsync: this);
+  late final TabController _tabController = TabController(
+    length: 2,
+    vsync: this,
+  );
 
   // Nuevo pedido
   String? _clienteSel;
@@ -34,19 +37,97 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
   ];
 
   final List<Product> _productos = [
-    Product(id: 1, nombre: 'Paracetamol 500mg', precio: 250, stock: 1000, categoria: 'Analgésicos'),
-    Product(id: 2, nombre: 'Ibuprofeno 600mg', precio: 350, stock: 800, categoria: 'Analgésicos'),
-    Product(id: 3, nombre: 'Amoxicilina 875mg', precio: 450, stock: 600, categoria: 'Antibióticos'),
-    Product(id: 4, nombre: 'Insulina Rápida', precio: 15000, stock: 200, categoria: 'Diabetes'),
-    Product(id: 5, nombre: 'Vacuna COVID-19', precio: 25000, stock: 150, categoria: 'Vacunas'),
-    Product(id: 6, nombre: 'Vitamina C', precio: 180, stock: 500, categoria: 'Vitaminas'),
-    Product(id: 7, nombre: 'Multivitamínico', precio: 320, stock: 400, categoria: 'Vitaminas'),
-    Product(id: 8, nombre: 'Glucómetro', precio: 45000, stock: 50, categoria: 'Diabetes'),
-    Product(id: 9, nombre: 'Insulina Rápida', precio: 15000, stock: 200, categoria: 'Diabetes'),
-    Product(id: 10, nombre: 'Vacuna COVID-19', precio: 25000, stock: 150, categoria: 'Vacunas'),
-    Product(id: 11, nombre: 'Vitamina C', precio: 180, stock: 500, categoria: 'Vitaminas'),
-    Product(id: 12, nombre: 'Multivitamínico', precio: 320, stock: 400, categoria: 'Vitaminas'),
-    Product(id: 13, nombre: 'Glucómetro', precio: 45000, stock: 50, categoria: 'Diabetes'),
+    Product(
+      id: 1,
+      nombre: 'Paracetamol 500mg',
+      precio: 250,
+      stock: 1000,
+      categoria: 'Analgésicos',
+    ),
+    Product(
+      id: 2,
+      nombre: 'Ibuprofeno 600mg',
+      precio: 350,
+      stock: 800,
+      categoria: 'Analgésicos',
+    ),
+    Product(
+      id: 3,
+      nombre: 'Amoxicilina 875mg',
+      precio: 450,
+      stock: 600,
+      categoria: 'Antibióticos',
+    ),
+    Product(
+      id: 4,
+      nombre: 'Insulina Rápida',
+      precio: 15000,
+      stock: 200,
+      categoria: 'Diabetes',
+    ),
+    Product(
+      id: 5,
+      nombre: 'Vacuna COVID-19',
+      precio: 25000,
+      stock: 150,
+      categoria: 'Vacunas',
+    ),
+    Product(
+      id: 6,
+      nombre: 'Vitamina C',
+      precio: 180,
+      stock: 500,
+      categoria: 'Vitaminas',
+    ),
+    Product(
+      id: 7,
+      nombre: 'Multivitamínico',
+      precio: 320,
+      stock: 400,
+      categoria: 'Vitaminas',
+    ),
+    Product(
+      id: 8,
+      nombre: 'Glucómetro',
+      precio: 45000,
+      stock: 50,
+      categoria: 'Diabetes',
+    ),
+    Product(
+      id: 9,
+      nombre: 'Insulina Rápida',
+      precio: 15000,
+      stock: 200,
+      categoria: 'Diabetes',
+    ),
+    Product(
+      id: 10,
+      nombre: 'Vacuna COVID-19',
+      precio: 25000,
+      stock: 150,
+      categoria: 'Vacunas',
+    ),
+    Product(
+      id: 11,
+      nombre: 'Vitamina C',
+      precio: 180,
+      stock: 500,
+      categoria: 'Vitaminas',
+    ),
+    Product(
+      id: 12,
+      nombre: 'Multivitamínico',
+      precio: 320,
+      stock: 400,
+      categoria: 'Vitaminas',
+    ),
+    Product(
+      id: 13,
+      nombre: 'Glucómetro',
+      precio: 45000,
+      stock: 50,
+      categoria: 'Diabetes',
+    ),
   ];
 
   final List<Order> _pedidos = [
@@ -54,10 +135,20 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
       id: 1,
       cliente: 'Farmacia Central',
       fecha: '2024-03-20',
-      estado: 'pendiente',
+      estado: 'Pendiente',
       items: [
-        OrderItem(productoId: 1, nombre: 'Paracetamol 500mg', cantidad: 100, precio: 250),
-        OrderItem(productoId: 2, nombre: 'Ibuprofeno 600mg', cantidad: 50, precio: 350),
+        OrderItem(
+          productoId: 1,
+          nombre: 'Paracetamol 500mg',
+          cantidad: 100,
+          precio: 250,
+        ),
+        OrderItem(
+          productoId: 2,
+          nombre: 'Ibuprofeno 600mg',
+          cantidad: 50,
+          precio: 350,
+        ),
       ],
       total: 42500,
       fechaCreacion: '2024-03-20',
@@ -66,10 +157,20 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
       id: 2,
       cliente: 'Hospital Nacional',
       fecha: '2024-03-19',
-      estado: 'procesando',
+      estado: 'Procesando',
       items: [
-        OrderItem(productoId: 3, nombre: 'Amoxicilina 875mg', cantidad: 200, precio: 450),
-        OrderItem(productoId: 4, nombre: 'Insulina Rápida', cantidad: 10, precio: 15000),
+        OrderItem(
+          productoId: 3,
+          nombre: 'Amoxicilina 875mg',
+          cantidad: 200,
+          precio: 450,
+        ),
+        OrderItem(
+          productoId: 4,
+          nombre: 'Insulina Rápida',
+          cantidad: 10,
+          precio: 15000,
+        ),
       ],
       total: 240000,
       fechaCreacion: '2024-03-19',
@@ -78,10 +179,20 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
       id: 3,
       cliente: 'Droguería La Salud',
       fecha: '2024-03-18',
-      estado: 'enviado',
+      estado: 'Enviado',
       items: [
-        OrderItem(productoId: 4, nombre: 'Insulina Rápida', cantidad: 5, precio: 15000),
-        OrderItem(productoId: 8, nombre: 'Glucómetro', cantidad: 2, precio: 45000),
+        OrderItem(
+          productoId: 4,
+          nombre: 'Insulina Rápida',
+          cantidad: 5,
+          precio: 15000,
+        ),
+        OrderItem(
+          productoId: 8,
+          nombre: 'Glucómetro',
+          cantidad: 2,
+          precio: 45000,
+        ),
       ],
       total: 165000,
       fechaCreacion: '2024-03-18',
@@ -136,12 +247,17 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
     );
     if (picked != null) {
       _fechaCtrl.text = picked.toIso8601String().substring(0, 10);
-      setState(() {});
+    } else {
+      _fechaCtrl.clear();
     }
+    setState(() {});
   }
 
   Future<void> _submit() async {
-    if (_clienteSel == null || _clienteSel!.isEmpty || _fechaCtrl.text.isEmpty || _cantidades.isEmpty) {
+    if (_clienteSel == null ||
+        _clienteSel!.isEmpty ||
+        _fechaCtrl.text.isEmpty ||
+        _cantidades.isEmpty) {
       return;
     }
     setState(() => _isLoading = true);
@@ -149,7 +265,12 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
 
     final items = _cantidades.entries.map((e) {
       final prod = _productos.firstWhere((p) => p.id == e.key);
-      return OrderItem(productoId: prod.id, nombre: prod.nombre, cantidad: e.value, precio: prod.precio);
+      return OrderItem(
+        productoId: prod.id,
+        nombre: prod.nombre,
+        cantidad: e.value,
+        precio: prod.precio,
+      );
     }).toList();
 
     setState(() {
@@ -158,7 +279,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
           id: _pedidos.length + 1,
           cliente: _clienteSel!,
           fecha: _fechaCtrl.text,
-          estado: 'pendiente',
+          estado: 'Pendiente',
           items: items,
           total: _calculateTotal(),
           fechaCreacion: DateTime.now().toIso8601String().substring(0, 10),
@@ -172,6 +293,22 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
     });
   }
 
+  Future<void> _filterDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 2),
+    );
+    if (picked != null) {
+      _filtroFechaCtrl.text = picked.toIso8601String().substring(0, 10);
+    } else {
+      _filtroFechaCtrl.clear();
+    }
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -179,16 +316,13 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            IconButton(onPressed: widget.onBack, icon: const Icon(Icons.arrow_back)),
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Pedidos', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-              Text('${_pedidosFiltrados.length} pedidos', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-            ])
-          ],
+        ScreenTitleAndBackNavigation(
+          title: 'Pedidos',
+          subtitle: '${_pedidosFiltrados.length} pedidos',
+          textTheme: textTheme,
+          onBack: widget.onBack,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 18),
 
         Container(
           height: 36,
@@ -216,7 +350,10 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
                   spacing: 8,
                   children: [
                     Icon(AppIcons.add, size: 16, color: Colors.black),
-                    Text("Nuevo", style: textTheme.labelMedium?.copyWith(fontSize: 13)),
+                    Text(
+                      "Nuevo",
+                      style: textTheme.labelMedium?.copyWith(fontSize: 13),
+                    ),
                   ],
                 ),
               ),
@@ -226,7 +363,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   spacing: 8,
                   children: [
-                    Icon(AppIcons.shoppingCart, size: 16, color: Colors.black,),
+                    Icon(AppIcons.shoppingCart, size: 16, color: Colors.black),
                     Text("Historial", style: textTheme.labelMedium),
                   ],
                 ),
@@ -234,7 +371,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
             ],
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 18),
 
         Expanded(
           child: TabBarView(
@@ -244,7 +381,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
               _buildHistory(context),
             ],
           ),
-        )
+        ),
       ],
     );
   }
@@ -258,65 +395,52 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Nuevo Pedido', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 16)),
+              Text(
+                'Nuevo Pedido',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontSize: 16),
+              ),
               const SizedBox(height: 18),
 
               Row(
                 spacing: 12,
                 children: [
-                  Expanded(
-                    child: Text('Cliente', style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w600)),
-                  ),
-                  Expanded(
-                    child: Text('Fecha', style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w600)),
-                  ),
+                  Expanded(child: Text('Cliente', style: Theme.of(context).textTheme.titleMedium)),
+                  Expanded(child: Text('Fecha', style: Theme.of(context).textTheme.titleMedium))
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 2),
 
-              SizedBox(
-                height: 36,
-                child: Row(
-                  spacing: 12,
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        value: _clienteSel,
-                        items: _clientes.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-                        onChanged: (v) => setState(() => _clienteSel = v),
-                        decoration: InputDecoration(
+              Row(
+                spacing: 12,
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      icon: const SizedBox.shrink(),
+                      value: _clienteSel,
+                      items: _clientes.map((c) => DropdownMenuItem(value: c, child: Text(c)),).toList(),
+                      onChanged: (v) => setState(() => _clienteSel = v),
+                      decoration: _baseInputDecoration().copyWith(
+                        hintText: 'Seleccionar',
+                        suffixIcon: Icon(AppIcons.chevronDown, size: 16),
+                      ),
+                      validator: (v) => (v == null || v.isEmpty) ? 'Selecciona un cliente' : null,
+                    ),
+                  ),
 
-                          filled: true,
-                          fillColor: AppStyles.grey1.withAlpha(30),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                          hintText: 'Seleccionar',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                        validator: (v) => (v == null || v.isEmpty) ? 'Selecciona un cliente' : null,
+                  Expanded(
+                    child: TextFormField(
+                      controller: _fechaCtrl,
+                      readOnly: true,
+                      decoration: _baseInputDecoration().copyWith(
+                        hintText: 'mm/dd/yyyy'
                       ),
+                      onTap: _pickDate,
                     ),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _fechaCtrl,
-                        readOnly: true,
-                        decoration: InputDecoration(
-                          hintText: 'mm/dd/yyyy',
-                          contentPadding: EdgeInsets.only(left: 12),
-                          filled: true,
-                          fillColor: AppStyles.grey1.withAlpha(30),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                        onTap: _pickDate,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
 
@@ -334,9 +458,16 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
                     final p = _productos[i];
                     final cantidad = _cantidades[p.id] ?? 0;
                     return Padding(
-                      padding: EdgeInsets.only(left: 12, right: 12, bottom: 8, top: i == 0 ? 12 : 0),
+                      padding: EdgeInsets.only(
+                        left: 12,
+                        right: 12,
+                        bottom: 8,
+                        top: i == 0 ? 12 : 0,
+                      ),
                       child: Container(
-                        decoration: AppStyles.decoration.copyWith(borderRadius: BorderRadius.all(Radius.circular(4))),
+                        decoration: AppStyles.decoration.copyWith(
+                          borderRadius: BorderRadius.all(Radius.circular(4)),
+                        ),
                         padding: const EdgeInsets.all(8),
                         child: Row(
                           children: [
@@ -344,16 +475,30 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(p.nombre, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                                  Text(
+                                    p.nombre,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                   const SizedBox(height: 2),
-                                  Text('\$${p.precio.toString()} • Stock: ${p.stock}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                  Text(
+                                    '\$${p.precio.toString()} • Stock: ${p.stock}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
                             SizedBox(
                               width: 70,
                               child: TextFormField(
-                                initialValue: cantidad == 0 ? '' : cantidad.toString(),
+                                initialValue: cantidad == 0
+                                    ? ''
+                                    : cantidad.toString(),
                                 keyboardType: TextInputType.number,
                                 decoration: InputDecoration(
                                   hintText: '0',
@@ -365,7 +510,8 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
                                     borderSide: BorderSide.none,
                                   ),
                                 ),
-                                onChanged: (v) => _setQuantity(p.id, int.tryParse(v) ?? 0),
+                                onChanged: (v) =>
+                                    _setQuantity(p.id, int.tryParse(v) ?? 0),
                               ),
                             ),
                           ],
@@ -385,7 +531,13 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text('Total del pedido:'),
-                        Text('\$${_calculateTotal()}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                        Text(
+                          '\$${_calculateTotal()}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -395,7 +547,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
                 isLoading: _isLoading,
                 onTap: _submit,
                 idleLabel: 'Registrar Pedido',
-                onTapLabel: 'Registrando...'
+                onTapLabel: 'Registrando...',
               ),
             ],
           ),
@@ -405,127 +557,242 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
   }
 
   Widget _buildHistory(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     final pedidos = _pedidosFiltrados;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(children: [
-          Expanded(
-            child: TextField(
-              controller: _filtroFechaCtrl,
-              decoration: const InputDecoration(labelText: 'Filtrar por fecha (YYYY-MM-DD)', prefixIcon: Icon(Icons.calendar_today)),
-              onChanged: (_) => setState(() {}),
+        Row(
+          spacing: 12,
+          children: [
+            Expanded(child: Text('Filtrar por fecha', style: textTheme.titleMedium)),
+            Expanded(child: Text('Filtrar por cliente', style: textTheme.titleMedium,))
+          ],
+        ),
+        const SizedBox(height: 2),
+
+        Row(
+          spacing: 12,
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _filtroFechaCtrl,
+                readOnly: true,
+                decoration: _baseInputDecoration().copyWith(
+                  hintText: 'mm/dd/yyyy',
+                ),
+                onTap: _filterDate,
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              controller: _filtroClienteCtrl,
-              decoration: const InputDecoration(labelText: 'Filtrar por cliente', prefixIcon: Icon(Icons.search)),
-              onChanged: (_) => setState(() {}),
+
+            Expanded(
+              child: TextField(
+                controller: _filtroClienteCtrl,
+                decoration: _baseInputDecoration().copyWith(
+                  hintText: 'Cliente...',
+                  prefixIcon: Icon(AppIcons.search, size: 16)
+                ),
+                onChanged: (_) => setState(() {}),
+              ),
             ),
-          ),
-        ]),
+          ],
+        ),
         const SizedBox(height: 12),
-        Expanded(
-          child: pedidos.isEmpty
-              ? Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.remove_shopping_cart_outlined, size: 48, color: Colors.grey),
-                        SizedBox(height: 8),
-                        Text('No se encontraron pedidos', style: TextStyle(color: Colors.grey)),
-                      ],
-                    ),
+
+        if (pedidos.isEmpty) ...[
+          Container(
+            decoration: AppStyles.decoration,
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(AppIcons.shoppingCart, size: 48, color: AppStyles.grey1),
+                  SizedBox(height: 8),
+                  Text(
+                    'No se encontraron pedidos',
+                    style: TextStyle(color: AppStyles.grey1),
                   ),
-                )
-              : ListView.separated(
-                  itemCount: pedidos.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (context, i) {
-                    final p = pedidos[i];
-                    return Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                ],
+              ),
+            ),
+          ),
+        ] else
+          Expanded(
+            child: ListView.separated(
+              itemCount: pedidos.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, i) {
+                final p = pedidos[i];
+                return Container(
+                  decoration: AppStyles.decoration,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 16, top: 18, right: 16, bottom: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  p.cliente,
+                                  style: textTheme.titleSmall?.copyWith(fontSize: 15),
+                                ),
+                                Text(
+                                  '#${p.id}',
+                                  style: textTheme.bodySmall?.copyWith(fontSize: 12),
+                                ),
+                              ],
+                            ),
+                            _orderStateBadge(p.estado),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                  Text(p.cliente, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                                  Text('#${p.id}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                ]),
-                                _orderStateBadge(p.estado),
+                                Icon(
+                                  AppIcons.calendar,
+                                  size: 14,
+                                  color: AppStyles.grey1,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  p.fecha,
+                                  style: textTheme.bodySmall?.copyWith(fontSize: 12.5, color: AppStyles.grey1),
+                                ),
                               ],
                             ),
-                            const SizedBox(height: 8),
+
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Row(children: [
-                                  const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
-                                  const SizedBox(width: 4),
-                                  Text(p.fecha, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                ]),
-                                Row(children: [
-                                  const Icon(Icons.inventory_2_outlined, size: 14, color: Colors.grey),
-                                  const SizedBox(width: 4),
-                                  Text('${p.items.length} productos', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                ]),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            ...p.items.map((it) => Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(child: Text(it.nombre, overflow: TextOverflow.ellipsis)),
-                                    Text('${it.cantidad} × \$${it.precio}', style: const TextStyle(color: Colors.grey)),
-                                  ],
-                                )),
-                            const Divider(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text('Total:'),
-                                Text('\$${p.total}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                                Icon(
+                                  AppIcons.package,
+                                  size: 14,
+                                  color: AppStyles.grey1,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${p.items.length} productos',
+                                  style: textTheme.bodySmall?.copyWith(fontSize: 12.5, color: AppStyles.grey1),
+                                ),
                               ],
                             ),
                           ],
                         ),
-                      ),
-                    );
-                  },
-                ),
-        ),
+                        const SizedBox(height: 8),
+
+                        ...p.items.map(
+                          (it) => Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  it.nombre,
+                                  style: textTheme.bodySmall?.copyWith(fontSize: 12, fontWeight: FontWeight.w500),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Text(
+                                '${it.cantidad} × \$${it.precio}',
+                                style: textTheme.bodySmall?.copyWith(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Divider(height: 16),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Total:', style: textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700)),
+                            Text(
+                              // total price with comma separation
+                              '\$${p.total.toString().replaceAllMapped(
+                                RegExp(r'(\d+)(\d{3})'),
+                                (Match m) => '${m[1]},${m[2]}',
+                              )}',
+                              style: textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppStyles.green1,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
       ],
     );
   }
 
   Widget _orderStateBadge(String estado) {
+    final textTheme = Theme.of(context).textTheme;
+
     Color bg;
     Color fg = Colors.white;
     switch (estado) {
-      case 'pendiente':
-        bg = Colors.grey; break;
-      case 'procesando':
-        bg = Colors.orange; break;
-      case 'enviado':
-        bg = Colors.blue; break;
-      case 'entregado':
-        bg = Colors.green; break;
-      case 'cancelado':
-        bg = Colors.red; break;
+      case 'Pendiente':
+        bg = Color(0xffeceef2);
+        fg = Colors.black;
+        break;
+      case 'Procesando':
+        bg = AppStyles.orange;
+        break;
+      case 'Enviado':
+        bg = Colors.blue;
+        break;
+      case 'Entregado':
+        bg = Colors.green;
+        break;
+      case 'Cancelado':
+        bg = Colors.red;
+        break;
       default:
-        bg = Colors.black54; break;
+        bg = Colors.black54;
+        break;
     }
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
-      child: Text(estado[0].toUpperCase() + estado.substring(1), style: TextStyle(fontSize: 11, color: fg)),
+      padding: const EdgeInsets.only(left: 10, right: 10, top: 1, bottom: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(9),
+      ),
+      child: Text(
+        estado,
+        style: textTheme.bodySmall?.copyWith(
+          color: fg,
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+
+  InputDecoration _baseInputDecoration() {
+    return InputDecoration(
+      constraints: BoxConstraints.expand(height: 36),
+      filled: true,
+      fillColor: AppStyles.grey1.withAlpha(30),
+      contentPadding: const EdgeInsets.symmetric(
+        vertical: 12,
+        horizontal: 12,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8.0),
+        borderSide: BorderSide.none,
+      ),
     );
   }
 }

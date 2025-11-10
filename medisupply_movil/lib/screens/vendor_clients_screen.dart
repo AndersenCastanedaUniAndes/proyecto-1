@@ -5,7 +5,7 @@ import 'package:medisupply_movil/widgets/widgets.dart';
 class _Pedido {
   final int id;
   final String fecha;
-  final String estado; // pendiente | procesando | enviado | entregado
+  final String estado; // Pendiente | Procesando | Enviado | Entregado
   final List<String> productos;
   final int valor;
   _Pedido({required this.id, required this.fecha, required this.estado, required this.productos, required this.valor});
@@ -57,8 +57,8 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
       ultimaVisita: '2024-03-15',
       valorTotal: 850000,
       pedidos: [
-        _Pedido(id: 101, fecha: '2024-03-20', estado: 'pendiente', productos: ['Paracetamol 500mg', 'Ibuprofeno 600mg'], valor: 250000),
-        _Pedido(id: 102, fecha: '2024-03-18', estado: 'procesando', productos: ['Amoxicilina 875mg'], valor: 180000),
+        _Pedido(id: 101, fecha: '2024-03-20', estado: 'Pendiente', productos: ['Paracetamol 500mg', 'Ibuprofeno 600mg'], valor: 250000),
+        _Pedido(id: 102, fecha: '2024-03-18', estado: 'Procesando', productos: ['Amoxicilina 875mg'], valor: 180000),
       ],
     ),
     _Cliente(
@@ -71,7 +71,7 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
       ultimaVisita: '2024-03-18',
       valorTotal: 420000,
       pedidos: [
-        _Pedido(id: 201, fecha: '2024-03-19', estado: 'pendiente', productos: ['Insulina Rápida', 'Glucómetro'], valor: 420000),
+        _Pedido(id: 201, fecha: '2024-03-19', estado: 'Pendiente', productos: ['Insulina Rápida', 'Glucómetro'], valor: 420000),
       ],
     ),
     _Cliente(
@@ -84,8 +84,8 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
       ultimaVisita: '2024-03-10',
       valorTotal: 1250000,
       pedidos: [
-        _Pedido(id: 301, fecha: '2024-03-21', estado: 'pendiente', productos: ['Antibióticos varios', 'Material quirúrgico'], valor: 750000),
-        _Pedido(id: 302, fecha: '2024-03-20', estado: 'pendiente', productos: ['Vacunas', 'Jeringas'], valor: 500000),
+        _Pedido(id: 301, fecha: '2024-03-21', estado: 'Pendiente', productos: ['Antibióticos varios', 'Material quirúrgico'], valor: 750000),
+        _Pedido(id: 302, fecha: '2024-03-20', estado: 'Pendiente', productos: ['Vacunas', 'Jeringas'], valor: 500000),
       ],
     ),
     _Cliente(
@@ -98,8 +98,8 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
       ultimaVisita: '2024-03-17',
       valorTotal: 320000,
       pedidos: [
-        _Pedido(id: 401, fecha: '2024-03-19', estado: 'pendiente', productos: ['Analgésicos', 'Antigripales'], valor: 180000),
-        _Pedido(id: 402, fecha: '2024-03-17', estado: 'pendiente', productos: ['Vitaminas', 'Suplementos'], valor: 140000),
+        _Pedido(id: 401, fecha: '2024-03-19', estado: 'Pendiente', productos: ['Analgésicos', 'Antigripales'], valor: 180000),
+        _Pedido(id: 402, fecha: '2024-03-17', estado: 'Pendiente', productos: ['Vitaminas', 'Suplementos'], valor: 140000),
       ],
     ),
   ];
@@ -129,51 +129,60 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              IconButton(onPressed: () => setState(() => _seleccionado = null), icon: const Icon(Icons.arrow_back)),
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(c.nombre, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 2),
-                const Text('Información detallada del cliente', style: TextStyle(fontSize: 12, color: Colors.grey)),
-              ])
-            ],
+          ScreenTitleAndBackNavigation(
+            title: c.nombre,
+            subtitle: 'Información detallada del cliente',
+            textTheme: textTheme,
+            onBack: () => setState(() => _seleccionado = null),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 20),
+
           Expanded(
             child: SingleChildScrollView(
               child: Column(
+                spacing: 4,
                 children: [
-                  Card(
+                  Container(
+                    decoration: AppStyles.decoration,
                     child: Padding(
-                      padding: const EdgeInsets.all(12.0),
+                      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Información de Contacto', style: Theme.of(context).textTheme.titleSmall),
-                          const SizedBox(height: 8),
-                          _iconRow(Icons.location_on_outlined, c.direccion),
-                          _iconRow(Icons.phone_outlined, c.telefono),
-                          _iconRow(Icons.mail_outline, c.correo, isEmail: true),
+                          Text('Información de Contacto', style: textTheme.labelLarge),
+                          const SizedBox(height: 20),
+                          _iconRow(AppIcons.pin, c.direccion),
+                          _iconRow(AppIcons.phone, c.telefono),
+                          _iconRow(AppIcons.mail, c.correo),
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Row(children: [
-                    Expanded(child: _CardStat(color: Colors.orange, value: c.pedidosPendientes.toString(), caption: 'Pedidos Pendientes')),
-                    const SizedBox(width: 12),
-                    Expanded(child: _CardStat(color: Colors.green, value: '${c.valorTotal}', caption: 'Valor Total')),
-                  ]),
+
+                  QuickStats(
+                    stat1Color: AppStyles.orange,
+                    stat1Title: 'Pedidos Pendientes',
+                    stat1Value: c.pedidosPendientes.toString(),
+                    stat2Color: AppStyles.green1,
+                    stat2Title: 'Valor Total',
+                    stat2Value: '\$${c.valorTotal}',
+                  ),
                   const SizedBox(height: 8),
-                  Card(
+
+                  Container(
+                    decoration: AppStyles.decoration,
                     child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('Pedidos Recientes', style: Theme.of(context).textTheme.titleSmall),
-                        const SizedBox(height: 8),
-                        ...c.pedidos.map((p) => _pedidoTile(p)).toList(),
-                      ]),
+                      padding: const EdgeInsets.all(22),
+                      child: Column(
+                        spacing: 4,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Pedidos Recientes', style: textTheme.titleSmall),
+                          const SizedBox(height: 18),
+                          ...c.pedidos.map((p) => _pedidoTile(p)),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -188,16 +197,13 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            IconButton(onPressed: widget.onBack, icon: Icon(AppIcons.arrowLeft)),
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Mis Clientes', style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
-              Text('${_filtrados.length} clientes', style: textTheme.bodySmall),
-            ])
-          ],
+        ScreenTitleAndBackNavigation(
+          title: 'Mis Clientes',
+          subtitle: '${_filtrados.length} clientes',
+          textTheme: textTheme,
+          onBack: widget.onBack,
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 18),
 
         AppInputField(
           label: 'Buscar por nombre o dirección...',
@@ -281,7 +287,7 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
     );
   }
 
-  Widget _iconRow(IconData icon, String text, {bool isEmail = false}) {
+  Widget _iconRow(IconData icon, String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -291,7 +297,7 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
           Expanded(
             child: Text(
               text,
-              style: TextStyle(fontSize: 13, color: isEmail ? Colors.blue : Colors.black87),
+              style: TextStyle(fontSize: 13, color: Colors.black87),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -300,7 +306,36 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
     );
   }
 
+  (Color background, Color foreground) _estadoBadge(String estado) {
+    Color backgroundColor;
+    Color foregroundColor = Colors.white;
+    switch (estado) {
+      case 'Pendiente':
+        backgroundColor = AppStyles.grey2;
+        foregroundColor = Colors.black;
+        break;
+      case 'Procesando':
+        backgroundColor = AppStyles.orange;
+        break;
+      case 'Enviado':
+        backgroundColor = AppStyles.blue1;
+        break;
+      case 'Entregado':
+        backgroundColor = AppStyles.green1;
+        break;
+      default:
+        backgroundColor = Colors.black54;
+        break;
+    }
+
+    return (backgroundColor, foregroundColor);
+  }
+
   Widget _pedidoTile(_Pedido p) {
+    final textTheme = Theme.of(context).textTheme;
+
+    final estadoBadge = _estadoBadge(p.estado);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
@@ -313,38 +348,24 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('Pedido #${p.id}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-            _estadoBadge(p.estado),
+            Tag(
+              title: p.estado,
+              textTheme: textTheme.labelMedium!,
+              backgroundColor: estadoBadge.$1,
+              foregroundColor: estadoBadge.$2,
+            ),
           ],
         ),
         const SizedBox(height: 4),
+
         Text(p.fecha, style: const TextStyle(fontSize: 11, color: Colors.grey)),
         const SizedBox(height: 4),
+
         Text(p.productos.join(', '), style: const TextStyle(fontSize: 12, color: Colors.grey)),
         const SizedBox(height: 6),
+
         Text('\$${p.valor}', style: const TextStyle(fontSize: 12, color: Colors.green)),
       ]),
-    );
-  }
-
-  Widget _estadoBadge(String estado) {
-    Color bg;
-    Color fg = Colors.white;
-    switch (estado) {
-      case 'pendiente':
-        bg = Colors.grey; fg = Colors.white; break;
-      case 'procesando':
-        bg = Colors.orange; break;
-      case 'enviado':
-        bg = Colors.blue; break;
-      case 'entregado':
-        bg = Colors.green; break;
-      default:
-        bg = Colors.black54; break;
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
-      child: Text(estado[0].toUpperCase() + estado.substring(1), style: TextStyle(fontSize: 11, color: fg)),
     );
   }
 }

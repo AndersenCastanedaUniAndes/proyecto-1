@@ -16,7 +16,7 @@ class VendorScreen extends StatefulWidget {
 }
 
 class _VendorScreenState extends State<VendorScreen> {
-  _VendorScreen _current = _VendorScreen.pedidos;
+  _VendorScreen _current = _VendorScreen.home;
   bool _showUserMenu = false;
 
   void _goHome() => setState(() => _current = _VendorScreen.home);
@@ -1292,7 +1292,7 @@ class _ClientOrdersViewState extends State<ClientOrdersView>
       id: 1,
       cliente: 'Farmacia Central',
       fecha: '2024-03-20',
-      estado: 'pendiente',
+      estado: 'Pendiente',
       items: [
         OrderItem(productoId: 1, nombre: 'Paracetamol 500mg', cantidad: 100, precio: 250),
         OrderItem(productoId: 2, nombre: 'Ibuprofeno 600mg', cantidad: 50, precio: 350),
@@ -1304,7 +1304,7 @@ class _ClientOrdersViewState extends State<ClientOrdersView>
       id: 2,
       cliente: 'Farmacia Central',
       fecha: '2024-03-19',
-      estado: 'procesando',
+      estado: 'Procesando',
       items: [
         OrderItem(productoId: 3, nombre: 'Amoxicilina 875mg', cantidad: 200, precio: 450),
         OrderItem(productoId: 4, nombre: 'Insulina Rápida', cantidad: 10, precio: 15000),
@@ -1382,7 +1382,7 @@ class _ClientOrdersViewState extends State<ClientOrdersView>
           id: _pedidos.length + 1,
           cliente: _clienteActual,
           fecha: _fechaCtrl.text,
-          estado: 'pendiente',
+          estado: 'Pendiente',
           items: items,
           total: _calcularTotal(),
           fechaCreacion: DateTime.now().toIso8601String().substring(0, 10),

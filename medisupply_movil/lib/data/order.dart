@@ -4,7 +4,7 @@ class Order {
   final int id;
   final String cliente;
   final String fecha;
-  final String estado; // pendiente | procesando | enviado | entregado | cancelado
+  final String estado; // Pendiente | Procesando | Enviado | Entregado | Cancelado
   final List<OrderItem> items;
   final int total;
   final String fechaCreacion;
