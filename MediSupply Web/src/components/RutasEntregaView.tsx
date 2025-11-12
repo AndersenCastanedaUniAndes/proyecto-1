@@ -81,7 +81,10 @@ interface RutaEntrega {
   tiempoEstimado: number; // minutos
 }
 
-export function RutasEntregaView() {
+interface RutasEntregaViewProps {
+  onSuccess: (mensaje: string, tipo?: "success" | "info" | "warning") => void;
+}
+export function RutasEntregaView({ onSuccess }: RutasEntregaViewProps) {
   // Datos de ejemplo de pedidos listos para despacho
   const API_URL = import.meta.env.VITE_API_BASE_RUTAS_URL || "http://localhost:8005";
   const pedidosDisponibles: Pedido[] = [];
@@ -245,10 +248,10 @@ export function RutasEntregaView() {
           latitud: pedido.latitud,
           longitud: pedido.longitud,
           estado: "pendiente",
-          horaEstimada: nuevaRuta.horaInicio,  
+          horaEstimada: nuevaRuta.horaInicio,
           horaReal: nuevaRuta.horaInicio,
-          observaciones: ""   
-        }));   
+          observaciones: ""
+        }));
 
       // 🧱 Construir el JSON en formato correcto para el backend
       const nuevaRutaPayload = {
@@ -266,7 +269,7 @@ export function RutasEntregaView() {
         puntosEntrega: puntosEntrega
       };
 
-      console.log("Payload de nueva ruta:", nuevaRutaPayload);
+      //console.log("Payload de nueva ruta:", nuevaRutaPayload);
       // 🚀 Enviar la nueva ruta al backend
       const response = await axios.post(`${API_URL}/rutas/rutas-entrega`, nuevaRutaPayload);
 
@@ -306,6 +309,10 @@ export function RutasEntregaView() {
         horaInicio: "",
         pedidosSeleccionados: [],
       });
+
+      setIsFormOpen(false);
+
+      onSuccess?.(`Ruta "${rutaCreada.nombre}" agregado exitosamente`, "success");
 
     } catch (error) {
       console.error("Error al crear la ruta:", error);
@@ -936,7 +943,9 @@ export function RutasEntregaView() {
                               <Eye className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
+
                           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+
                             <DialogHeader>
                               <DialogTitle>Detalle de Ruta - {ruta.nombre}</DialogTitle>
                               <DialogDescription>
@@ -1057,7 +1066,9 @@ export function RutasEntregaView() {
                                 Ruta creada el {new Date(ruta.fechaCreacion).toLocaleDateString('es-ES')}
                               </div>
                             </div>
+
                           </DialogContent>
+
                         </Dialog>
 
                         {editandoId === ruta.id ? (
