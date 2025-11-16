@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app.models.user import User, UserCreate, UserUpdate
-from app.models.db_models import DBUser
+from app.models.user import PlanVentaUpdate, User, UserCreate, UserUpdate
+from app.models.db_models import DBUser,    PlanVenta, PlanVendedor
 from typing import List
 from app.services.user_service import (
     create_user, 
@@ -19,7 +19,12 @@ from app.services.user_service import (
     update_vendedor,
     delete_vendedor,
     read_vendedores,
-    send_forgot_password
+    send_forgot_password,
+    crear_plan_venta,
+    listar_planes_venta,
+    obtener_plan_venta_por_id,
+    actualizar_plan_de_venta,
+    eliminar_plan_de_venta
 
 )
 
@@ -31,6 +36,53 @@ router = APIRouter()
 @router.post("/forgotPassword/")
 def forgot_password(email, db: Session = Depends(get_db)):
     return send_forgot_password(email, db)
+
+
+@router.post("/planes_venta/", status_code=201)
+def plan_venta(  periodo: str, valor_ventas: float, vendedores_ids: List[int],  db: Session = Depends(get_db),  current_user: DBUser = Depends(get_current_user)):
+    return crear_plan_venta(periodo, valor_ventas, vendedores_ids, db)
+
+
+# ============================================================
+#  Obtener todos los planes de venta
+# ============================================================
+@router.get("/planes_venta/", response_model=list)
+def planes_venta( db: Session = Depends(get_db), current_user: DBUser = Depends(get_current_user)):
+    return listar_planes_venta(db,current_user)
+
+# ============================================================
+#  Obtener un plan de venta por ID
+# ============================================================
+@router.get("/planes_venta/{plan_id}")
+def obtener_plan_venta( plan_id: int, db: Session = Depends(get_db), current_user: DBUser = Depends(get_current_user)):
+    return obtener_plan_venta_por_id(plan_id, db,current_user)
+
+
+# ============================================================
+#  Actualizar un plan de venta
+# ============================================================
+@router.put("/planes_venta/{plan_id}")
+def actualizar_plan_venta( plan_id: int,  plan_data: PlanVentaUpdate, db: Session = Depends(get_db),  current_user: DBUser = Depends(get_current_user)):
+     return actualizar_plan_de_venta(
+        plan_id,
+        plan_data.periodo,
+        plan_data.valor_ventas,
+        plan_data.estado,
+        plan_data.vendedores_ids,
+        db,
+        current_user
+    )
+
+# ============================================================
+#  Eliminar un plan de venta
+# ============================================================
+@router.delete("/planes_venta/{plan_id}")
+def eliminar_plan_venta(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    current_user: DBUser = Depends(get_current_user)
+):
+    return eliminar_plan_de_venta(plan_id, db, current_user)
 
 
 # Crear usuario vendedor (registro)

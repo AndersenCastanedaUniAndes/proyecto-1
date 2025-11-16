@@ -1,5 +1,5 @@
 from pydantic import BaseModel,Field
-from typing import Optional
+from typing import Optional,List
 from datetime import datetime, date
 
 class UserBase(BaseModel):
@@ -35,3 +35,9 @@ class UserInDB(UserBase):
 
     class Config:
         from_attributes = True
+
+class PlanVentaUpdate(BaseModel):
+    periodo: Optional[str] = None
+    valor_ventas: Optional[float] = None
+    estado: Optional[str] = None
+    vendedores_ids: Optional[List[int]] = None

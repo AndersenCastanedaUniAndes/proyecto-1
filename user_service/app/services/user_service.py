@@ -11,7 +11,7 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer
-from app.models.db_models import Base, DBUser
+from app.models.db_models import Base, DBUser, PlanVendedor, PlanVenta
 from app.models.user import UserCreate, UserUpdate
 from config.config import DATABASE_URL, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
@@ -118,6 +118,64 @@ def send_forgot_password(email: str, db: Session):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al enviar correo: {str(e)}")
 
+def crear_plan_venta(periodo, valor_ventas, vendedores_ids, db):
+    try:
+        # Validar campos obligatorios
+        if periodo not in ("mensual", "trimestral", "semestral", "anual"):
+            raise HTTPException(status_code=400, detail="Período inválido")
+        if valor_ventas < 0:
+            raise HTTPException(status_code=400, detail="El valor de ventas no puede ser negativo")
+        if not vendedores_ids:
+            raise HTTPException(status_code=400, detail="Debe asignar al menos un vendedor")
+
+        # Crear plan de venta
+        nuevo_plan = PlanVenta(periodo=periodo, valor_ventas=valor_ventas)
+        db.add(nuevo_plan)
+        db.flush()  # Para obtener el ID del plan antes del commit
+
+        # Asignar vendedores al plan
+        for vendedor_id in vendedores_ids:
+            vendedor = db.query(DBUser).filter(DBUser.usuario_id == vendedor_id, DBUser.rol == "vendedor").first()
+            if not vendedor:
+                raise HTTPException(status_code=404, detail=f"Vendedor con ID {vendedor_id} no encontrado")
+            asignacion = PlanVendedor(plan_id=nuevo_plan.id, vendedor_id=vendedor_id)
+            db.add(asignacion)
+
+        db.commit()
+        db.refresh(nuevo_plan)
+        return {"message": "Plan de venta creado exitosamente", "plan_id": nuevo_plan.id}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al crear plan: {str(e)}")
+
+
+def listar_planes_venta(db: Session, current_user: DBUser):
+    try:
+        planes = db.query(PlanVenta).all()
+        resultado = []
+        for plan in planes:
+            vendedores = [
+                {
+                    "usuario_id": pv.vendedor.usuario_id,
+                    "nombre_usuario": pv.vendedor.nombre_usuario,
+                    "email": pv.vendedor.email,
+                    "estado": pv.vendedor.estado,
+                }
+                for pv in plan.vendedores_asignados
+            ]
+            resultado.append({
+                "id": plan.id,
+                "periodo": plan.periodo,
+                "valor_ventas": float(plan.valor_ventas),
+                "fecha_creacion": plan.fecha_creacion,
+                "estado": plan.estado,
+                "vendedores": vendedores
+            })
+        return resultado
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al listar planes: {str(e)}")
+
+
 def create_vendedor(user: UserCreate, db: Session, current_user: DBUser):
     try:
         if not all([user.nombre_usuario, user.email, user.contrasena, user.rol]):
@@ -145,6 +203,77 @@ def create_vendedor(user: UserCreate, db: Session, current_user: DBUser):
     except SQLAlchemyError as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error al crear usuario: {str(e)}")
+
+def actualizar_plan_de_venta(plan_id: int, periodo: Optional[str], valor_ventas: Optional[float], estado: Optional[str], vendedores_ids: Optional[List[int]], db: Session, current_user: DBUser):
+    plan = db.query(PlanVenta).filter(PlanVenta.id == plan_id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan no encontrado")
+
+    try:
+        if periodo:
+            if periodo not in ("mensual", "trimestral", "semestral", "anual"):
+                raise HTTPException(status_code=400, detail="Período inválido")
+            plan.periodo = periodo
+        if valor_ventas is not None:
+            if valor_ventas < 0:
+                raise HTTPException(status_code=400, detail="El valor de ventas no puede ser negativo")
+            plan.valor_ventas = valor_ventas
+        if estado:
+            if estado not in ("activo", "completado", "pausado"):
+                raise HTTPException(status_code=400, detail="Estado inválido")
+            plan.estado = estado
+        if vendedores_ids is not None:
+            # Borrar asignaciones anteriores
+            db.query(PlanVendedor).filter(PlanVendedor.plan_id == plan_id).delete()
+            for vendedor_id in vendedores_ids:
+                vendedor = db.query(DBUser).filter(DBUser.usuario_id == vendedor_id, DBUser.rol == "vendedor").first()
+                if not vendedor:
+                    raise HTTPException(status_code=404, detail=f"Vendedor {vendedor_id} no encontrado")
+                db.add(PlanVendedor(plan_id=plan.id, vendedor_id=vendedor_id))
+
+        db.commit()
+        db.refresh(plan)
+        return {"message": "Plan actualizado exitosamente"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al actualizar plan: {str(e)}")
+
+def eliminar_plan_de_venta(plan_id: int, db: Session, current_user: DBUser):
+    plan = db.query(PlanVenta).filter(PlanVenta.id == plan_id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan no encontrado")
+
+    try:
+        db.delete(plan)
+        db.commit()
+        return {"message": "Plan eliminado correctamente"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al eliminar plan: {str(e)}")
+
+def obtener_plan_venta_por_id(plan_id: int, db: Session, current_user: DBUser):
+    plan = db.query(PlanVenta).filter(PlanVenta.id == plan_id).first()
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan no encontrado")
+
+    vendedores = [
+        {
+            "usuario_id": pv.vendedor.usuario_id,
+            "nombre_usuario": pv.vendedor.nombre_usuario,
+            "email": pv.vendedor.email,
+            "estado": pv.vendedor.estado,
+        }
+        for pv in plan.vendedores_asignados
+    ]
+
+    return {
+        "id": plan.id,
+        "periodo": plan.periodo,
+        "valor_ventas": float(plan.valor_ventas),
+        "fecha_creacion": plan.fecha_creacion,
+        "estado": plan.estado,
+        "vendedores": vendedores
+    }
 
 
 

@@ -9,7 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from fastapi import HTTPException
 from jose import jwt
 
-from app.models.db_models import Base, DBUser
+from app.models.db_models import Base, DBUser, PlanVenta, PlanVendedor
 from app.models.user import UserCreate, UserUpdate
 from app.services.user_service import (
     get_db, hash_password, verify_password,
@@ -18,7 +18,11 @@ from app.services.user_service import (
     read_vendedores,
     read_vendedor,
     update_vendedor,
-    delete_vendedor, init_db,get_current_user
+    delete_vendedor, init_db,get_current_user,  crear_plan_venta,
+    listar_planes_venta,
+    actualizar_plan_de_venta,
+    eliminar_plan_de_venta,
+    obtener_plan_venta_por_id
 )
 from config.config import SECRET_KEY, ALGORITHM
 
@@ -412,3 +416,150 @@ def test_update_user_as_non_admin(test_db):
     with pytest.raises(HTTPException) as exc:
         update_user(1, UserUpdate(nombre_usuario="Hack"), test_db, created_user)
     assert exc.value.status_code == 403
+
+
+# ============================================================
+# 🔧 FIXTURES AUXILIARES
+# ============================================================
+
+@pytest.fixture
+def vendedor_test(test_db):
+    test_db.query(DBUser).filter(DBUser.email == "pedro@test.com").delete()
+    test_db.commit()
+
+    vendedor = DBUser(
+        nombre_usuario="Pedro Perez",
+        email="pedro@test.com",
+        contrasena="hash",
+        rol="vendedor",
+        estado=True
+    )
+    test_db.add(vendedor)
+    test_db.commit()
+    test_db.refresh(vendedor)
+    return vendedor
+
+@pytest.fixture
+def plan_existente(test_db, vendedor_test):
+    """Crea un plan base para pruebas"""
+    plan = PlanVenta(periodo="mensual", valor_ventas=10000, estado="activo")
+    test_db.add(plan)
+    test_db.flush()
+    asignacion = PlanVendedor(plan_id=plan.id, vendedor_id=vendedor_test.usuario_id)
+    test_db.add(asignacion)
+    test_db.commit()
+    test_db.refresh(plan)
+    return plan
+
+
+# ============================================================
+# 🧪 CREAR PLAN DE VENTA
+# ============================================================
+
+def test_crear_plan_venta_success(test_db, vendedor_test):
+    result = crear_plan_venta("trimestral", 50000, [vendedor_test.usuario_id], test_db)
+    assert "plan_id" in result
+    plan = test_db.query(PlanVenta).get(result["plan_id"])
+    assert plan.periodo == "trimestral"
+    assert float(plan.valor_ventas) == 50000
+
+
+ 
+
+def test_crear_plan_venta_sin_vendedores(test_db):
+    with pytest.raises(HTTPException) as exc:
+        crear_plan_venta("mensual", 1000, [], test_db)
+    assert exc.value.status_code == 500
+    assert "Debe asignar al menos un vendedor" in exc.value.detail
+
+
+def test_crear_plan_venta_valor_negativo(test_db, vendedor_test):
+    with pytest.raises(HTTPException) as exc:
+        crear_plan_venta("anual", -50, [vendedor_test.usuario_id], test_db)
+    assert exc.value.status_code == 500
+    assert "no puede ser negativo" in exc.value.detail
+
+
+# ============================================================
+# 📋 LISTAR PLANES DE VENTA
+# ============================================================
+
+def test_listar_planes_venta(test_db, plan_existente):
+    result = listar_planes_venta(test_db, None)
+    assert isinstance(result, list)
+    assert any(plan["periodo"] == "mensual" for plan in result)
+    assert "vendedores" in result[0]
+
+
+# ============================================================
+# 🔍 OBTENER PLAN POR ID
+# ============================================================
+
+def test_obtener_plan_venta_por_id_success(test_db, plan_existente):
+    result = obtener_plan_venta_por_id(plan_existente.id, test_db, None)
+    assert result["id"] == plan_existente.id
+    assert result["periodo"] == "mensual"
+    assert len(result["vendedores"]) == 1
+
+
+def test_obtener_plan_venta_por_id_not_found(test_db):
+    with pytest.raises(HTTPException) as exc:
+        obtener_plan_venta_por_id(99999, test_db, None)
+    assert exc.value.status_code == 404
+
+
+# ============================================================
+# ✏️ ACTUALIZAR PLAN DE VENTA
+# ============================================================
+
+def test_actualizar_plan_de_venta_success(test_db, plan_existente, vendedor_test):
+    result = actualizar_plan_de_venta(
+        plan_existente.id,
+        "anual",
+        80000.0,
+        "completado",
+        [vendedor_test.usuario_id],
+        test_db,
+        None
+    )
+    assert "Plan actualizado" in result["message"]
+
+    actualizado = test_db.query(PlanVenta).get(plan_existente.id)
+    assert actualizado.periodo == "anual"
+    assert actualizado.estado == "completado"
+    assert float(actualizado.valor_ventas) == 80000.0
+
+
+def test_actualizar_plan_de_venta_inexistente(test_db):
+    with pytest.raises(HTTPException) as exc:
+        actualizar_plan_de_venta(9999, "mensual", 1000, "activo", [], test_db, None)
+    assert exc.value.status_code == 404
+
+
+def test_actualizar_plan_de_venta_estado_invalido(test_db, plan_existente):
+    with pytest.raises(HTTPException) as exc:
+        actualizar_plan_de_venta(plan_existente.id, None, None, "cerrado", None, test_db, None)
+    assert exc.value.status_code == 500
+    assert "Estado inválido" in exc.value.detail
+
+
+def test_actualizar_plan_de_venta_valor_negativo(test_db, plan_existente):
+    with pytest.raises(HTTPException) as exc:
+        actualizar_plan_de_venta(plan_existente.id, None, -10, None, None, test_db, None)
+    assert exc.value.status_code == 500
+    assert "no puede ser negativo" in exc.value.detail
+
+
+# ============================================================
+# 🗑️ ELIMINAR PLAN DE VENTA
+# ============================================================
+
+def test_eliminar_plan_de_venta_success(test_db, plan_existente):
+    result = eliminar_plan_de_venta(plan_existente.id, test_db, None)
+    assert "eliminado" in result["message"]
+
+
+def test_eliminar_plan_de_venta_not_found(test_db):
+    with pytest.raises(HTTPException) as exc:
+        eliminar_plan_de_venta(88888, test_db, None)
+    assert exc.value.status_code == 404
