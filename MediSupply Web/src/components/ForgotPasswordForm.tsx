@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
+import config from "../config/config";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -13,17 +14,33 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isEmailSent, setIsEmailSent] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate sending recovery email
-    setTimeout(() => {
+    setErrorMessage(null);
+
+    try {
+      const response = await fetch(`${config.API_BASE_LOGIN_URL}/forgotPassword?email=${email}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        setIsEmailSent(true);
+      } else {
+        const errorData = await response.json();
+        setErrorMessage(errorData.detail || "No se pudo enviar el correo de recuperación.");
+      }
+    } catch (error) {
+      console.error("Error al enviar solicitud:", error);
+      setErrorMessage("Error de conexión con el servidor.");
+    } finally {
       setIsLoading(false);
-      setIsEmailSent(true);
-      console.log("Recovery email sent to:", email);
-    }, 2000);
+    }
   };
 
   const handleSendAnother = () => {
@@ -51,21 +68,13 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
               Revisa tu bandeja de entrada y la carpeta de spam. El correo puede tardar algunos minutos en llegar.
             </p>
           </div>
-          
+
           <div className="space-y-3">
-            <Button 
-              onClick={handleSendAnother}
-              variant="outline" 
-              className="w-full"
-            >
+            <Button onClick={handleSendAnother} variant="outline" className="w-full">
               Enviar otro correo
             </Button>
-            
-            <Button 
-              onClick={onBackToLogin}
-              variant="ghost" 
-              className="w-full"
-            >
+
+            <Button onClick={onBackToLogin} variant="ghost" className="w-full">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Volver al inicio de sesión
             </Button>
@@ -105,6 +114,10 @@ export function ForgotPasswordForm({ onBackToLogin }: ForgotPasswordFormProps) {
               />
             </div>
           </div>
+
+          {errorMessage && (
+            <p className="text-red-500 text-sm text-center">{errorMessage}</p>
+          )}
 
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "Enviando..." : "Enviar Instrucciones"}
