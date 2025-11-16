@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: inventario-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: inventario
+
+# PodDisruptionBudget ensures at least one pod remains available during voluntary disruptions
+# (e.g., node drain) which helps maintain availability during failover/maintenance events.
