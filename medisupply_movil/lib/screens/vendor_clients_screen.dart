@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:medisupply_movil/state/app_state.dart';
 import 'package:medisupply_movil/styles/styles.dart';
 import 'package:medisupply_movil/widgets/widgets.dart';
+import 'dart:convert';
+import 'package:medisupply_movil/utils/utils.dart';
+import 'package:medisupply_movil/utils/requests.dart';
+import 'package:provider/provider.dart';
 
 class _Pedido {
   final int id;
@@ -45,245 +50,260 @@ class VendorClientsScreen extends StatefulWidget {
 class _VendorClientsScreenState extends State<VendorClientsScreen> {
   String _filtro = '';
   _Cliente? _seleccionado;
+  late Future<List<_Cliente>> _futureClientes;
 
-  late final List<_Cliente> _clientes = [
-    _Cliente(
-      id: 1,
-      nombre: 'Farmacia Central',
-      direccion: 'Av. Principal 123, Centro',
-      telefono: '+57 1 234-5678',
-      correo: 'contacto@farmaciacentral.com',
-      pedidosPendientes: 3,
-      ultimaVisita: '2024-03-15',
-      valorTotal: 850000,
-      pedidos: [
-        _Pedido(id: 101, fecha: '2024-03-20', estado: 'Pendiente', productos: ['Paracetamol 500mg', 'Ibuprofeno 600mg'], valor: 250000),
-        _Pedido(id: 102, fecha: '2024-03-18', estado: 'Procesando', productos: ['Amoxicilina 875mg'], valor: 180000),
-      ],
-    ),
-    _Cliente(
-      id: 2,
-      nombre: 'Droguería La Salud',
-      direccion: 'Calle 85 #15-20, Zona Norte',
-      telefono: '+57 1 345-6789',
-      correo: 'ventas@lasalud.com',
-      pedidosPendientes: 1,
-      ultimaVisita: '2024-03-18',
-      valorTotal: 420000,
-      pedidos: [
-        _Pedido(id: 201, fecha: '2024-03-19', estado: 'Pendiente', productos: ['Insulina Rápida', 'Glucómetro'], valor: 420000),
-      ],
-    ),
-    _Cliente(
-      id: 3,
-      nombre: 'Hospital Nacional',
-      direccion: 'Carrera 30 #45-67, Sur',
-      telefono: '+57 1 456-7890',
-      correo: 'compras@hospitalnacional.gov.co',
-      pedidosPendientes: 5,
-      ultimaVisita: '2024-03-10',
-      valorTotal: 1250000,
-      pedidos: [
-        _Pedido(id: 301, fecha: '2024-03-21', estado: 'Pendiente', productos: ['Antibióticos varios', 'Material quirúrgico'], valor: 750000),
-        _Pedido(id: 302, fecha: '2024-03-20', estado: 'Pendiente', productos: ['Vacunas', 'Jeringas'], valor: 500000),
-      ],
-    ),
-    _Cliente(
-      id: 4,
-      nombre: 'Red Farmacias Unidos',
-      direccion: 'Av. Caracas #78-45, Occidente',
-      telefono: '+57 1 567-8901',
-      correo: 'pedidos@unidos.com',
-      pedidosPendientes: 2,
-      ultimaVisita: '2024-03-17',
-      valorTotal: 320000,
-      pedidos: [
-        _Pedido(id: 401, fecha: '2024-03-19', estado: 'Pendiente', productos: ['Analgésicos', 'Antigripales'], valor: 180000),
-        _Pedido(id: 402, fecha: '2024-03-17', estado: 'Pendiente', productos: ['Vitaminas', 'Suplementos'], valor: 140000),
-      ],
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _futureClientes = _fetchClientes();
+  }
 
-  List<_Cliente> get _filtrados {
+  Future<List<_Cliente>> _fetchClientes() async {
+    final state = context.read<AppState>();
+
+    final response = await getClients(state.id, state.token);
+
+    if (response.statusCode != 200) {
+      throw Exception('Error al obtener clientes (${response.statusCode})');
+    }
+
+    final data = jsonDecode(response.body) as List<dynamic>;
+
+    return data.map<_Cliente>((raw) {
+      final json = raw as Map<String, dynamic>;
+
+      // Por ahora los pedidos siguen siendo estáticos
+      final pedidosEstaticos = <_Pedido>[
+        _Pedido(
+          id: 1,
+          fecha: '2024-03-20',
+          estado: 'Pendiente',
+          productos: ['Producto 1', 'Producto 2'],
+          valor: 100000,
+        ),
+      ];
+
+      return _Cliente(
+        id: json['id'] as int,
+        nombre: json['empresa'] as String,
+        direccion: (json['direccion'] ?? '') as String,
+        telefono: (json['telefono'] ?? '') as String,
+        correo: (json['email'] ?? '') as String,
+        pedidosPendientes: (json['pedidosPendientes'] ?? 0) as int,
+        ultimaVisita: (json['ultima visita'] ?? '') as String,
+        valorTotal: (json['valorTotal'] ?? 0) as int,
+        pedidos: pedidosEstaticos,
+      );
+    }).toList();
+  }
+
+  List<_Cliente> _filtrar(List<_Cliente> clientes) {
     final q = _filtro.trim().toLowerCase();
-    if (q.isEmpty) return _clientes;
-    return _clientes
+    if (q.isEmpty) return clientes;
+    return clientes
         .where((c) => c.nombre.toLowerCase().contains(q) || c.direccion.toLowerCase().contains(q))
         .toList();
   }
 
-  String _getPendingOrders() {
-    return '11';
+  String _getPendingOrders(List<_Cliente> clientes) {
+    final total = clientes.fold<int>(0, (acc, c) => acc + c.pedidosPendientes);
+    return total.toString();
   }
 
-  String _getTotalValue() {
-    return '\$1250000';
+  String _getTotalValue(List<_Cliente> clientes) {
+    final total = clientes.fold<int>(0, (acc, c) => acc + c.valorTotal);
+    return '\$$total';
   }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    context.watch<AppState>();
 
-    if (_seleccionado != null) {
-      final c = _seleccionado!;
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ScreenTitleAndBackNavigation(
-            title: c.nombre,
-            subtitle: 'Información detallada del cliente',
-            textTheme: textTheme,
-            onBack: () => setState(() => _seleccionado = null),
-          ),
-          const SizedBox(height: 20),
+    return FutureBuilder<List<_Cliente>>(
+      future: _futureClientes,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                spacing: 4,
-                children: [
-                  Container(
-                    decoration: AppStyles.decoration,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Información de Contacto', style: textTheme.labelLarge),
-                          const SizedBox(height: 20),
-                          _iconRow(AppIcons.pin, c.direccion),
-                          _iconRow(AppIcons.phone, c.telefono),
-                          _iconRow(AppIcons.mail, c.correo),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  QuickStats(
-                    stat1Color: AppStyles.orange,
-                    stat1Title: 'Pedidos Pendientes',
-                    stat1Value: c.pedidosPendientes.toString(),
-                    stat2Color: AppStyles.green1,
-                    stat2Title: 'Valor Total',
-                    stat2Value: '\$${c.valorTotal}',
-                  ),
-                  const SizedBox(height: 8),
-
-                  Container(
-                    decoration: AppStyles.decoration,
-                    child: Padding(
-                      padding: const EdgeInsets.all(22),
-                      child: Column(
-                        spacing: 4,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Pedidos Recientes', style: textTheme.titleSmall),
-                          const SizedBox(height: 18),
-                          ...c.pedidos.map((p) => _pedidoTile(p)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Error cargando clientes: ${snapshot.error}',
+              style: textTheme.bodyMedium?.copyWith(color: Colors.red),
             ),
-          )
-        ],
-      );
-    }
+          );
+        }
 
-    // Vista de lista
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ScreenTitleAndBackNavigation(
-          title: 'Mis Clientes',
-          subtitle: '${_filtrados.length} clientes',
-          textTheme: textTheme,
-          onBack: widget.onBack,
-        ),
-        const SizedBox(height: 18),
+        final clientes = snapshot.data ?? [];
+        final filtrados = _filtrar(clientes);
 
-        AppInputField(
-          label: 'Buscar por nombre o dirección...',
-          prefixIconData: AppIcons.search,
-          onChanged: (v) => setState(() => _filtro = v),
-        ),
-        const SizedBox(height: 12),
+        if (_seleccionado != null) {
+          final c = _seleccionado!;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ScreenTitleAndBackNavigation(
+                title: c.nombre,
+                subtitle: 'Información detallada del cliente',
+                textTheme: textTheme,
+                onBack: () => setState(() => _seleccionado = null),
+              ),
+              const SizedBox(height: 20),
 
-        QuickStats(
-          stat1Color: AppStyles.blue1,
-          stat1Title: 'Pedidos Pendientes',
-          stat1Value: _getPendingOrders(),
-          stat2Color: AppStyles.green1,
-          stat2Title: 'Valor Total',
-          stat2Value: _getTotalValue(),
-        ),
-        const SizedBox(height: 12),
-
-        if (_filtrados.isEmpty)
-          NotFoundSection(
-            iconData: AppIcons.package,
-            label: 'No se encontraron clientes',
-          )
-        else
-          Expanded(
-            child: ListView.separated(
-              itemCount: _filtrados.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, i) {
-                final c = _filtrados[i];
-                return GestureDetector(
-                  onTap: () => setState(() => _seleccionado = c),
-                  child: Container(
-                    decoration: AppStyles.decoration,
-                    padding: const EdgeInsets.all(12.0),
-                    child: Row(
-                      children: [
-                        Expanded(
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    spacing: 4,
+                    children: [
+                      Container(
+                        decoration: AppStyles.decoration,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
                           child: Column(
-                            spacing: 6,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(c.nombre, style: textTheme.titleSmall),
-                                  if (c.pedidosPendientes > 0)
-                                    _Badge(
-                                      label: '${c.pedidosPendientes} pendientes',
-                                      color: AppStyles.red2,
-                                      textStyle: textTheme.bodySmall?.copyWith(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white),
-                                    ),
-                                ],
-                              ),
-                              Row(
-                                spacing: 4,
-                                children: [
-                                  Icon(AppIcons.pin, size: 14, color: AppStyles.grey1),
-                                  Text(c.direccion, style: textTheme.labelMedium?.copyWith(color: AppStyles.grey1, fontWeight: FontWeight.w400)),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text('Última visita: ${c.ultimaVisita}', style: textTheme.labelMedium?.copyWith(color: AppStyles.grey1, fontWeight: FontWeight.w400)),
-                                  Text('\$${c.valorTotal}', style: textTheme.labelMedium?.copyWith(fontSize: 12, color: AppStyles.green1)),
-                                ],
-                              ),
+                              Text('Información de Contacto', style: textTheme.labelLarge),
+                              const SizedBox(height: 20),
+                              _iconRow(AppIcons.pin, c.direccion),
+                              _iconRow(AppIcons.phone, c.telefono),
+                              _iconRow(AppIcons.mail, c.correo),
                             ],
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Icon(AppIcons.chevronRight, size: 18,),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      QuickStats(
+                        stat1Color: AppStyles.orange,
+                        stat1Title: 'Pedidos Pendientes',
+                        stat1Value: c.pedidosPendientes.toString(),
+                        stat2Color: AppStyles.green1,
+                        stat2Title: 'Valor Total',
+                        stat2Value: '\$${c.valorTotal}',
+                      ),
+                      const SizedBox(height: 8),
+
+                      Container(
+                        decoration: AppStyles.decoration,
+                        child: Padding(
+                          padding: const EdgeInsets.all(22),
+                          child: Column(
+                            spacing: 4,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Pedidos Recientes', style: textTheme.titleSmall),
+                              const SizedBox(height: 18),
+                              ...c.pedidos.map((p) => _pedidoTile(p)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                );
-              },
+                ),
+              )
+            ],
+          );
+        }
+
+        // Vista de lista
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ScreenTitleAndBackNavigation(
+              title: 'Mis Clientes',
+              subtitle: '${filtrados.length} clientes',
+              textTheme: textTheme,
+              onBack: widget.onBack,
             ),
-          ),
-      ],
+            const SizedBox(height: 18),
+
+            AppInputField(
+              label: 'Buscar por nombre o dirección...',
+              prefixIconData: AppIcons.search,
+              onChanged: (v) => setState(() => _filtro = v),
+            ),
+            const SizedBox(height: 12),
+
+            QuickStats(
+              stat1Color: AppStyles.blue1,
+              stat1Title: 'Pedidos Pendientes',
+              stat1Value: _getPendingOrders(clientes),
+              stat2Color: AppStyles.green1,
+              stat2Title: 'Valor Total',
+              stat2Value: _getTotalValue(clientes),
+            ),
+            const SizedBox(height: 12),
+
+            if (filtrados.isEmpty)
+              NotFoundSection(
+                iconData: AppIcons.package,
+                label: 'No se encontraron clientes',
+              )
+            else
+              Expanded(
+                child: ListView.separated(
+                  itemCount: filtrados.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (context, i) {
+                    final c = filtrados[i];
+                    return GestureDetector(
+                      onTap: () => setState(() => _seleccionado = c),
+                      child: Container(
+                        decoration: AppStyles.decoration,
+                        padding: const EdgeInsets.all(12.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                spacing: 6,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(c.nombre, style: textTheme.titleSmall),
+                                      if (c.pedidosPendientes > 0)
+                                        _Badge(
+                                          label: '${c.pedidosPendientes} pendientes',
+                                          color: AppStyles.red2,
+                                          textStyle: textTheme.bodySmall?.copyWith(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white),
+                                        ),
+                                    ],
+                                  ),
+                                  Row(
+                                    spacing: 4,
+                                    children: [
+                                      Icon(AppIcons.pin, size: 14, color: AppStyles.grey1),
+                                      Text(c.direccion, style: textTheme.labelMedium?.copyWith(color: AppStyles.grey1, fontWeight: FontWeight.w400)),
+                                    ],
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text('Última visita: ${c.ultimaVisita}', style: textTheme.labelMedium?.copyWith(color: AppStyles.grey1, fontWeight: FontWeight.w400)),
+
+                                      if (c.pedidosPendientes > 0) ...[
+                                        Text('\$${c.valorTotal}', style: textTheme.labelMedium?.copyWith(fontSize: 12, color: AppStyles.green1)),
+                                      ]
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Icon(AppIcons.chevronRight, size: 18,),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 

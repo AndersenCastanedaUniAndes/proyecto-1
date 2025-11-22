@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:medisupply_movil/styles/styles.dart';
 import 'package:medisupply_movil/widgets/widgets.dart';
+import 'package:medisupply_movil/utils/utils.dart';
+import 'package:medisupply_movil/state/app_state.dart';
+import 'package:medisupply_movil/view_types.dart';
 import 'package:provider/provider.dart';
-import '../state/app_state.dart';
-import '../view_types.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordCtrl = TextEditingController();
   UserType _selectedType = UserType.vendedor;
   bool _showPassword = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -27,18 +29,38 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    var response = await login(
+      _emailCtrl.text.trim(),
+      _passwordCtrl.text.trim(),
+      _selectedType,
+    );
+
+    setState(() => _isLoading = false);
+
+    if (response.statusCode != 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error ${response.statusCode}: ${response.body}'),
+        ),
+      );
+      return;
+    }
+
     final appState = context.read<AppState>();
-    await appState.login(
-      email: _emailCtrl.text,
-      password: _passwordCtrl.text,
+    appState.login(
+      body: response.body,
       asType: _selectedType,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final appState = context.watch<AppState>();
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -61,17 +83,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         AppIcon(colorScheme: colorScheme),
                         const SizedBox(height: 26),
-        
+
                         AppTitleAndSubtitle(
                           textTheme: textTheme,
                           titleLabel: 'Bienvenido a MediSupply',
                           subtitleLabel: 'Inicia sesión en tu cuenta de distribución farmacéutica',
                         ),
                         const SizedBox(height: 24),
-        
+
                         Text('Tipo de Usuario', style: textTheme.titleMedium),
                         const SizedBox(height: 8),
-        
+
                         Row(
                           spacing: 12,
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -103,7 +125,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ]
                         ),
                         const SizedBox(height: 32),
-        
+
                         Text('Correo Electrónico', style: textTheme.titleMedium),
                         SizedBox(height: 2),
                         AppTextFormField(
@@ -117,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                         ),
                         const SizedBox(height: 16),
-        
+
                         Text('Contraseña', style: textTheme.titleMedium),
                         SizedBox(height: 2),
                         AppTextFormField(
@@ -136,23 +158,23 @@ class _LoginScreenState extends State<LoginScreen> {
                           }
                         ),
                         const SizedBox(height: 16),
-        
+
                         // Iniciar sesión
                         ConfirmationButton(
-                          isLoading: appState.isLoading,
+                          isLoading: _isLoading,
                           onTap: _submit,
                           idleLabel: 'Iniciar Sesión',
                           onTapLabel: 'Iniciando sesión...',
                         ),
                         const SizedBox(height: 20),
-        
+
                         // Olvidaste contraseña
                         AppClickableText(
                           onTap: () => context.read<AppState>().navigateTo(AppView.forgotPassword),
                           label: '¿Olvidaste tu contraseña?',
                           textTheme: textTheme
                         ),
-        
+
                         // Registrarse
                         if (_selectedType == UserType.cliente) ...[
                           const SizedBox(height: 12),

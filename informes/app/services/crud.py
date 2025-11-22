@@ -6,30 +6,19 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, date
 from fastapi.security import OAuth2PasswordBearer
-from app.models.databases import Base
+from app.models.database import engine, Base
+from app.models.models import DBVisita
+from app.models.visitas import VisitaBase, VisitaCreate
 from config.config import DATABASE_URL, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 from app.models import models
 from typing import List, Optional
 import pandas as pd
-
-# Configuración de BD
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Configuración de encriptación
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Configuración de OAuth2
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
-
-
-# Dependencia para obtener la DB
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 # Crear las tablas en la base de datos
@@ -137,3 +126,47 @@ def delete_venta(db: Session, db_venta: models.Venta):
     db.delete(db_venta)
     db.commit()
     return
+
+
+# =====================================================
+# CRUD para la entidad VISITAS
+# =====================================================
+
+def create_visita(db: Session, visita: VisitaCreate) -> models.DBVisita:
+    # fecha a partir de visita.fecha + visita.hora
+    fecha = datetime.combine(visita.fecha, visita.hora)
+
+    db_obj: DBVisita = DBVisita(
+        cliente=visita.cliente,
+        cliente_id=visita.cliente_id,
+        vendedor=visita.vendedor,
+        vendedor_id=visita.vendedor_id,
+        fecha=fecha,
+        direccion=visita.direccion,
+        hallazgos=visita.hallazgos,
+        sugerencias=visita.sugerencias
+    )
+
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+def get_visitas(vendedor_id: int, db: Session, skip: int = 0, limit: int = 100) -> List[VisitaBase]:
+    visitas: List[DBVisita] = db.query(DBVisita).filter(DBVisita.vendedor_id == vendedor_id).offset(skip).limit(limit).all()
+    response = [
+        {
+            "cliente": visita.cliente,
+            "cliente_id": visita.cliente_id,
+            "vendedor": visita.vendedor,
+            "vendedor_id": visita.vendedor_id,
+            "fecha": visita.fecha,
+            "hora": visita.hora,
+            "direccion": visita.direccion,
+            "hallazgos": visita.hallazgos,
+            "sugerencias": visita.sugerencias
+        }
+        for visita in visitas
+    ]
+
+    return response

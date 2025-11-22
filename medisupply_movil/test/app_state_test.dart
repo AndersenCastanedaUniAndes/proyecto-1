@@ -12,7 +12,7 @@ void main() {
 
   test('AppState login sets userType and view accordingly', () async {
     final s = AppState();
-    await s.login(email: 'a', password: 'b', asType: UserType.cliente);
+    await s.login(userName: 'a', password: 'b', asType: UserType.cliente);
     expect(s.userType, UserType.cliente);
     expect(s.currentView, AppView.clientHome);
   });

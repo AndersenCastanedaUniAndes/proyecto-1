@@ -1,7 +1,12 @@
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 # Configuración de la base de datos, claves secretas, etc.
 #DATABASE_URL = "sqlite:///./products.db"
-DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/users"
-SECRET_KEY = "user-secret-key"
+DATABASE_URL = os.getenv("DATABASE_URL")
+SECRET_KEY = os.getenv("SECRET_KEY")
+
 # Configuración de JWT
-ALGORITHM = "HS256" 
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ALGORITHM = os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))

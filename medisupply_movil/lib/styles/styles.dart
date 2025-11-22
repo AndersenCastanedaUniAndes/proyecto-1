@@ -25,6 +25,8 @@ class AppIcons {
   static IconData chevronRight = LucideIcons.chevronRight;
   static IconData chevronDown = LucideIcons.chevronDown;
   static IconData calendar = LucideIcons.calendar;
+  static IconData historyList = LucideIcons.fileText;
+  static IconData clock = LucideIcons.clock;
 }
 
 class AppStyles {

@@ -522,6 +522,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
                 ),
               ),
               const SizedBox(height: 12),
+
               if (_cantidades.isNotEmpty)
                 Card(
                   color: Colors.grey.shade100,

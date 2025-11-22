@@ -46,6 +46,6 @@ async def validation_exception_handler(request, exc):
 
 app.include_router(routes.router)
 
-@app.get("/")
+@app.get("/health")
 def read_root():
     return {"Hello": "Informes Service"}

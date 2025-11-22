@@ -4,8 +4,9 @@ from typing import List
 from datetime import date
 
 from ..services import crud
-from ..models.databases import get_db
+from ..models.database import get_db
 from ..models.ventas import VentaCreate, VentaUpdate, VentaOut
+from ..models.visitas import VisitaCreate
 
 router = APIRouter()
 
@@ -50,3 +51,13 @@ def delete_venta(venta_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Venta no encontrada")
     crud.delete_venta(db, db_venta)
     return None
+
+
+@router.post("/visitas")
+def create_visita_route(visita: VisitaCreate, db: Session = Depends(get_db)):
+    return crud.create_visita(db, visita)
+
+
+@router.get("/visitas/vendedor/{vendedor_id}")
+def get_visitas_route(vendedor_id: int, db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
+    return crud.get_visitas(vendedor_id, db, skip=skip, limit=limit)

@@ -28,6 +28,9 @@ class UserUpdate(BaseModel):
     rol: Optional[str] = None
     estado: Optional[bool] = None
 
+class PutClient(BaseModel):
+    client_id: int
+
 # Modelo interno de DB (incluye contraseña)
 class UserInDB(UserBase):
     usuario_id: int
@@ -41,3 +44,12 @@ class PlanVentaUpdate(BaseModel):
     valor_ventas: Optional[float] = None
     estado: Optional[str] = None
     vendedores_ids: Optional[List[int]] = None
+
+class ClientCreate(BaseModel):
+    empresa: str
+    nombre_usuario: str
+    email: str
+    contrasena: str
+    telefono: str
+    direccion: str
+    ciudad: str

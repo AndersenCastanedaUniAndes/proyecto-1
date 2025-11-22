@@ -3,7 +3,7 @@ import pytest
 from datetime import date, datetime
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from app.models.databases import Base
+from app.models.database import Base
 from app.models.models import Proveedor  # 👈 Importa el modelo explícitamente
 from app.services import crud
 from app.models import models
