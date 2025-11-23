@@ -6,7 +6,7 @@ class Order {
   final String fecha;
   final String estado; // Pendiente | Procesando | Enviado | Entregado | Cancelado
   final List<OrderItem> items;
-  final int total;
+  final double total;
   final String fechaCreacion;
   Order({required this.id, required this.cliente, required this.fecha, required this.estado, required this.items, required this.total, required this.fechaCreacion});
 }

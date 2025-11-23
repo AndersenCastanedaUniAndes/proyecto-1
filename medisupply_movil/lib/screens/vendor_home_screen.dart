@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:medisupply_movil/screens/vendor_visits_screen.dart';
 import 'package:medisupply_movil/styles/styles.dart';
 import 'package:medisupply_movil/widgets/widgets.dart';
 import 'package:provider/provider.dart';
@@ -63,8 +64,7 @@ class VendorHome extends StatelessWidget {
                   } else if (snapshot.hasError) {
                     activeClientsLabel = '-';
                   } else if (snapshot.hasData) {
-                    final clients = snapshot.data!.body;
-                    activeClientsLabel = jsonDecode(clients).length.toString();
+                    activeClientsLabel = snapshot.data!.length.toString();
                   }
 
                   return Expanded(
@@ -84,7 +84,8 @@ class VendorHome extends StatelessWidget {
                     visitsTodayLabel = '-';
                   } else if (snapshot.hasData) {
                     final clients = snapshot.data!.body;
-                    visitsTodayLabel = jsonDecode(clients).length.toString();
+                    final decoded = jsonDecode(clients);
+                    visitsTodayLabel = _getTodayVisitsCount(decoded).toString();
                   }
 
                   return Expanded(
@@ -118,10 +119,7 @@ class VendorHome extends StatelessWidget {
                       } else if (snapshot.hasError) {
                         badgeText = 'Error';
                       } else if (snapshot.hasData) {
-                        final body = snapshot.data!.body;
-                        final decoded = jsonDecode(body);
-
-                        badgeText = '${decoded.length} clientes';
+                        badgeText = '${snapshot.data!.length} clientes';
                       }
 
                       return MenuCard(
@@ -147,10 +145,9 @@ class VendorHome extends StatelessWidget {
                       } else if (snapshot.hasData) {
                         final body = snapshot.data!.body;
                         final decoded = jsonDecode(body);
+                        final count = _getTodayVisitsCount(decoded);
 
-                        print("decoded visits: $decoded");
-
-                        badgeText = '${decoded.length} hoy';
+                        badgeText = '$count hoy';
                       }
 
                       return MenuCard(
@@ -188,5 +185,21 @@ class VendorHome extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  int _getTodayVisitsCount(List<dynamic> visits) {
+    final now = DateTime.now();
+    int count = 0;
+
+    for (var item in visits) {
+      final visitaDate = DateTime.parse(item['fecha']);
+      if (visitaDate.year == now.year &&
+          visitaDate.month == now.month &&
+          visitaDate.day == now.day) {
+        count++;
+      }
+    }
+
+    return count;
   }
 }

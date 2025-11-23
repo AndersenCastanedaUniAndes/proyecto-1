@@ -53,6 +53,21 @@ services:
     networks:
       - appnet
 
+  inventario-service:
+    build: ./inventario
+    container_name: inventario-service
+    ports:
+      - "8005:80"
+    env_file:
+      - ./.env
+    environment:
+      - DB_HOST=database
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - appnet
+
   database:
     image: postgres:15
     container_name: database

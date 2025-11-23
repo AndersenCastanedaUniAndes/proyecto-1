@@ -25,6 +25,11 @@ def create_venta(venta: VentaCreate, db: Session = Depends(get_db)):
     return crud.create_venta(db, venta)
 
 
+@router.get("/vendedor/{vendedor_id}", response_model=List[VentaOut])
+def get_ventas_vendedor(vendedor_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return crud.get_ventas_vendedor(db, vendedor_id, skip=skip, limit=limit)
+
+
 @router.get("/{venta_id}", response_model=VentaOut)
 def get_venta(venta_id: int, db: Session = Depends(get_db)):
     """Obtener una venta por su ID"""

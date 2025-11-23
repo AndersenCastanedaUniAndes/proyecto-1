@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, Numeric, ForeignKey, func
+from sqlalchemy import Column, Integer, String, Date, Numeric, ForeignKey, func, JSON
 from app.models.database import Base  
 
 
@@ -9,18 +9,15 @@ class Venta(Base):
     fecha = Column(Date, nullable=False, server_default=func.now())
     vendedor = Column(String(200), nullable=False)
     vendedor_id = Column(Integer, nullable=False)
-    producto = Column(String(250), nullable=False)
-    producto_id = Column(Integer, nullable=False)
-    cantidad = Column(Integer, nullable=False)
-    valor_unitario = Column(Numeric(12, 2), nullable=False)
-    valor_total = Column(Numeric(14, 2), nullable=False)
+    productos = Column(JSON, nullable=False)
     cliente = Column(String(250), nullable=False)
     comision = Column(Numeric(10, 2), nullable=False)
 
     def __repr__(self):
+        # self.productos a dictionary or JSON string if needed
         return (
             f"<Venta(id={self.id}, fecha={self.fecha}, vendedor='{self.vendedor}', "
-            f"producto='{self.producto}', cantidad={self.cantidad}, valor_total={self.valor_total})>"
+            f"productos='{self.productos}', cliente='{self.cliente}', comision={self.comision})>"
         )
 
 

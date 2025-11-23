@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 # URL de conexión
 from config.config import DATABASE_URL
 
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Base ÚNICA

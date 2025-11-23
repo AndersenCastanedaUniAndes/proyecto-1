@@ -60,14 +60,7 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
 
   Future<List<_Cliente>> _fetchClientes() async {
     final state = context.read<AppState>();
-
-    final response = await getClients(state.id, state.token);
-
-    if (response.statusCode != 200) {
-      throw Exception('Error al obtener clientes (${response.statusCode})');
-    }
-
-    final data = jsonDecode(response.body) as List<dynamic>;
+    final data = await getClients(state.id, state.token);
 
     return data.map<_Cliente>((raw) {
       final json = raw as Map<String, dynamic>;
@@ -120,7 +113,7 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
     final textTheme = Theme.of(context).textTheme;
     context.watch<AppState>();
 
-    return FutureBuilder<List<_Cliente>>(
+    return FutureBuilder(
       future: _futureClientes,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {

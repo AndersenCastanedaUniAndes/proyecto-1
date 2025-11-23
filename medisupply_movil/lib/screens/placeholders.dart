@@ -626,8 +626,8 @@ class _ClientOrdersViewState extends State<ClientOrdersView>
     super.dispose();
   }
 
-  int _calcularTotal() {
-    int total = 0;
+  double _calcularTotal() {
+    double total = 0;
     _cantidades.forEach((prodId, cant) {
       final prod = _productos.firstWhere((p) => p.id == prodId);
       total += prod.precio * cant;

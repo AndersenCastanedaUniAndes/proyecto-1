@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import config from "../config/config";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
@@ -22,7 +23,8 @@ import {
 interface Bodega {
   id: number;
   nombre: string;
-  cantidadDisponible: number;
+  direccion: string;
+  cantidad_disponible: number;
   pasillo: string;
   estante: string;
 }
@@ -32,139 +34,38 @@ interface ProductoInventario {
   nombre: string;
   lote: string;
   sku: string;
-  stockTotal: number;
-  stockMinimo: number;
+  stock_total: number;
+  stock_minimo: number;
   status: "disponible" | "existencias bajas" | "agotado";
   bodegas: Bodega[];
-  fechaUltimaActualizacion: string;
+  fecha_ultima_actualizacion: string;
   proveedor: string;
   categoria: string;
-  valorUnitario: number;
+  valor_unitario: number;
 }
 
 export function InventarioView() {
-  const [productosInventario] = useState<ProductoInventario[]>([
-    {
-      id: 1,
-      nombre: "Paracetamol 500mg",
-      lote: "PT2024001",
-      sku: "PAR500-001",
-      stockTotal: 2500,
-      stockMinimo: 500,
-      status: "disponible",
-      bodegas: [
-        {
-          id: 1,
-          nombre: "Bodega Principal",
-          cantidadDisponible: 1500,
-          pasillo: "A",
-          estante: "A-12"
-        },
-        {
-          id: 2,
-          nombre: "Bodega Norte",
-          cantidadDisponible: 1000,
-          pasillo: "B",
-          estante: "B-08"
-        }
-      ],
-      fechaUltimaActualizacion: "2024-03-15",
-      proveedor: "Laboratorios Pharma Plus",
-      categoria: "Analgésicos",
-      valorUnitario: 0.25
-    },
-    {
-      id: 2,
-      nombre: "Vacuna COVID-19",
-      lote: "VC2024001", 
-      sku: "VAC-CV19-001",
-      stockTotal: 45,
-      stockMinimo: 50,
-      status: "existencias bajas",
-      bodegas: [
-        {
-          id: 3,
-          nombre: "Bodega Controlada",
-          cantidadDisponible: 45,
-          pasillo: "C",
-          estante: "C-01"
-        }
-      ],
-      fechaUltimaActualizacion: "2024-03-14",
-      proveedor: "Distribuidora Médica Central",
-      categoria: "Vacunas",
-      valorUnitario: 15.50
-    },
-    {
-      id: 3,
-      nombre: "Ibuprofeno 600mg",
-      lote: "IB2024001",
-      sku: "IBU600-001", 
-      stockTotal: 1200,
-      stockMinimo: 300,
-      status: "disponible",
-      bodegas: [
-        {
-          id: 1,
-          nombre: "Bodega Principal",
-          cantidadDisponible: 800,
-          pasillo: "A",
-          estante: "A-15"
-        },
-        {
-          id: 4,
-          nombre: "Bodega Sur",
-          cantidadDisponible: 400,
-          pasillo: "D",
-          estante: "D-05"
-        }
-      ],
-      fechaUltimaActualizacion: "2024-03-13",
-      proveedor: "Laboratorios Pharma Plus",
-      categoria: "Antiinflamatorios",
-      valorUnitario: 0.35
-    },
-    {
-      id: 4,
-      nombre: "Insulina Rápida",
-      lote: "IN2024001",
-      sku: "INS-RAP-001",
-      stockTotal: 0,
-      stockMinimo: 20,
-      status: "agotado",
-      bodegas: [],
-      fechaUltimaActualizacion: "2024-03-10",
-      proveedor: "Distribuidora Médica Central", 
-      categoria: "Hormonas",
-      valorUnitario: 25.00
-    },
-    {
-      id: 5,
-      nombre: "Amoxicilina 875mg",
-      lote: "AM2024001",
-      sku: "AMX875-001",
-      stockTotal: 35,
-      stockMinimo: 100,
-      status: "existencias bajas",
-      bodegas: [
-        {
-          id: 2,
-          nombre: "Bodega Norte",
-          cantidadDisponible: 35,
-          pasillo: "B",
-          estante: "B-12"
-        }
-      ],
-      fechaUltimaActualizacion: "2024-03-12",
-      proveedor: "Farmacéutica del Valle",
-      categoria: "Antibióticos",
-      valorUnitario: 0.65
-    }
-  ]);
+  const [productosInventario, setInventario] = useState<ProductoInventario[]>([]);
 
   const [filtro, setFiltro] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
+
+  useEffect(() => {
+    const cargarInventario = async () => {
+      try {
+        const response = await fetch(`${config.API_BASE_INVENTARIO_URL}/inventario/productos`);
+        if (!response.ok) throw new Error("Error al cargar proveedores");
+        const data = await response.json();
+        setInventario(data);
+      } catch (error) {
+        console.error("Error al cargar proveedores:", error);
+        setInventario([]);
+      }
+    };
+
+    cargarInventario();
+  }, []);
 
   // Filtrar productos
   const productosFiltrados = useMemo(() => {
@@ -226,7 +127,7 @@ export function InventarioView() {
     disponibles: productosInventario.filter(p => p.status === "disponible").length,
     existenciasBajas: productosInventario.filter(p => p.status === "existencias bajas").length,
     agotados: productosInventario.filter(p => p.status === "agotado").length,
-    valorTotalInventario: productosInventario.reduce((acc, p) => acc + (p.stockTotal * p.valorUnitario), 0),
+    valorTotalInventario: productosInventario.reduce((acc, p) => acc + (p.stock_total * p.valor_unitario), 0),
     bodegasUnicas: new Set(productosInventario.flatMap(p => p.bodegas.map(b => b.nombre))).size
   };
 
@@ -358,14 +259,14 @@ export function InventarioView() {
                           <div className="flex items-center gap-2">
                             <Package className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">Stock:</span> 
-                            <span className={producto.stockTotal <= producto.stockMinimo ? 'text-orange-600 font-medium' : ''}>
-                              {producto.stockTotal.toLocaleString()} unid.
+                            <span className={producto.stock_total <= producto.stock_minimo ? 'text-orange-600 font-medium' : ''}>
+                              {producto.stock_total.toLocaleString()} unid.
                             </span>
                           </div>
                           
                           <div className="flex items-center gap-2">
                             <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-medium">Min.:</span> {producto.stockMinimo.toLocaleString()} unid.
+                            <span className="font-medium">Min.:</span> {producto.stock_minimo.toLocaleString()} unid.
                           </div>
                           
                           <div className="flex items-center gap-2">
@@ -387,12 +288,12 @@ export function InventarioView() {
                             <span className="font-medium">Categoría:</span> {producto.categoria}
                           </div>
                           <div>
-                            <span className="font-medium">Valor Unit.:</span> ${producto.valorUnitario.toFixed(2)}
+                            <span className="font-medium">Valor Unit.:</span> ${producto.valor_unitario.toFixed(2)}
                           </div>
                         </div>
                         
                         <p className="text-xs text-muted-foreground">
-                          Última actualización: {new Date(producto.fechaUltimaActualizacion).toLocaleDateString('es-ES')}
+                          Última actualización: {new Date(producto.fecha_ultima_actualizacion).toLocaleDateString('es-ES')}
                         </p>
                       </div>
                       
@@ -446,21 +347,21 @@ export function InventarioView() {
                                   <div className="space-y-2 text-sm">
                                     <div className="flex justify-between">
                                       <span>Stock Total:</span>
-                                      <span className={`font-medium ${producto.stockTotal <= producto.stockMinimo ? 'text-orange-600' : ''}`}>
-                                        {producto.stockTotal.toLocaleString()} unid.
+                                      <span className={`font-medium ${producto.stock_total <= producto.stock_minimo ? 'text-orange-600' : ''}`}>
+                                        {producto.stock_total.toLocaleString()} unid.
                                       </span>
                                     </div>
                                     <div className="flex justify-between">
                                       <span>Stock Mínimo:</span>
-                                      <span className="font-medium">{producto.stockMinimo.toLocaleString()} unid.</span>
+                                      <span className="font-medium">{producto.stock_minimo.toLocaleString()} unid.</span>
                                     </div>
                                     <div className="flex justify-between">
                                       <span>Valor Unitario:</span>
-                                      <span className="font-medium">${producto.valorUnitario.toFixed(2)}</span>
+                                      <span className="font-medium">${producto.valor_unitario.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                       <span>Valor Total:</span>
-                                      <span className="font-medium">${(producto.stockTotal * producto.valorUnitario).toLocaleString()}</span>
+                                      <span className="font-medium">${(producto.stock_total * producto.valor_unitario).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between">
                                       <span>Estado:</span>
@@ -490,7 +391,7 @@ export function InventarioView() {
                                         <div className="flex items-center justify-between mb-2">
                                           <h5 className="font-medium">{bodega.nombre}</h5>
                                           <Badge variant="outline">
-                                            {bodega.cantidadDisponible.toLocaleString()} unid.
+                                            {bodega.cantidad_disponible.toLocaleString()} unid.
                                           </Badge>
                                         </div>
                                         
@@ -510,13 +411,13 @@ export function InventarioView() {
                                         <div className="mt-2">
                                           <div className="flex justify-between text-xs text-muted-foreground mb-1">
                                             <span>Porcentaje del total</span>
-                                            <span>{Math.round((bodega.cantidadDisponible / producto.stockTotal) * 100)}%</span>
+                                            <span>{Math.round((bodega.cantidad_disponible / producto.stock_total) * 100)}%</span>
                                           </div>
                                           <div className="w-full bg-muted rounded-full h-2">
                                             <div 
                                               className="bg-primary h-2 rounded-full transition-all"
                                               style={{ 
-                                                width: `${(bodega.cantidadDisponible / producto.stockTotal) * 100}%` 
+                                                width: `${(bodega.cantidad_disponible / producto.stock_total) * 100}%` 
                                               }}
                                             />
                                           </div>
@@ -528,7 +429,7 @@ export function InventarioView() {
                               </div>
                               
                               <div className="pt-4 border-t text-xs text-muted-foreground">
-                                Última actualización: {new Date(producto.fechaUltimaActualizacion).toLocaleDateString('es-ES')} a las {new Date(producto.fechaUltimaActualizacion).toLocaleTimeString('es-ES')}
+                                Última actualización: {new Date(producto.fecha_ultima_actualizacion).toLocaleDateString('es-ES')} a las {new Date(producto.fecha_ultima_actualizacion).toLocaleTimeString('es-ES')}
                               </div>
                             </div>
                           </DialogContent>

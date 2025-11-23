@@ -195,6 +195,7 @@ async def crear_productos():
 
 async def crear_ventas():
     venta1 = {
+        "fecha": "2025-11-21 10:30 AM",
         "vendedor": "vendedor uno",
         "vendedor_id": 2,
         "producto": "Producto AAA",
@@ -207,6 +208,7 @@ async def crear_ventas():
     }
 
     venta2 = {
+        "fecha": "2025-11-22 10:30 AM",
         "vendedor": "vendedor uno",
         "vendedor_id": 2,
         "producto": "Producto AB",
@@ -222,8 +224,8 @@ async def crear_ventas():
     async with httpx.AsyncClient() as client:
         response = await client.post(url, headers={"Content-Type": "application/json"}, json=venta1)
         print (f"Creado: {response.json()}")
-        response = await client.post(url, headers={"Content-Type": "application/json"}, json=venta2)
-        print (f"Creado: {response.json()}")
+        # response = await client.post(url, headers={"Content-Type": "application/json"}, json=venta2)
+        # print (f"Creado: {response.json()}")
 
 async def crear_visitas():
     visita1 = {
@@ -255,10 +257,20 @@ async def crear_visitas():
         response = await client.post(url, headers={"Content-Type": "application/json"}, json=visita2)
         print (f"Creado: {response.json()}")
 
+async def llenar_inventario():
+    async with httpx.AsyncClient() as client:
+        produdctos_response = await client.get("http://localhost:8003/productos/", headers={"Content-Type": "application/json"})
+        json = produdctos_response.json()
+        for producto in json:
+            pass
+        pass
+
+
 async def main():
-    await crear_usuarios()
+    # await crear_usuarios()
     # await crear_proveedores()
     # await crear_productos()
     # await crear_ventas()
+    await llenar_inventario()
 
 asyncio.run(main())

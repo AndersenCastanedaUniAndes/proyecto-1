@@ -14,11 +14,19 @@ class EstadoInventario(str, Enum):
 
 @dataclass
 class Bodega:
-    id: int
+    id: int | None
     nombre: str
-    cantidad_disponible: int
-    pasillo: str
-    estante: str
+    direccion: str = ""
+
+
+@dataclass
+class BodegaDetalle:
+    id: int | None
+    nombre: str
+    direccion: str = ""
+    cantidad_disponible: int = 0
+    pasillo: str = ""
+    estante: str = ""
 
 
 @dataclass
@@ -29,7 +37,7 @@ class ProductoInventario:
     sku: str
     stock_total: int
     stock_minimo: int
-    bodegas: List[Bodega] = field(default_factory=list)
+    bodegas: List[BodegaDetalle] = field(default_factory=list)
     fecha_ultima_actualizacion: datetime = field(default_factory=datetime.utcnow)
     proveedor: str = ""
     categoria: str = ""
@@ -48,17 +56,15 @@ class ProductoInventario:
 
         for b in self.bodegas:
             if b.id == bodega_id:
-                nueva = b.cantidad_disponible + delta
-
-                if nueva < 0:
-                    raise ValueError("Stock en bodega no puede ser negativo")
-
-                b.cantidad_disponible = nueva
+                # El ajuste de stock ahora se hace a nivel de inventario_bodega
+                # Este método se mantiene para compatibilidad, pero el dominio
+                # de Bodega ya no tiene campos de cantidad.
                 found = True
                 break
 
         if not found:
             raise ValueError("Bodega no encontrada para el producto")
 
-        self.stock_total = sum(b.cantidad_disponible for b in self.bodegas)
+        # El cálculo de stock_total ahora debe hacerse desde infraestructura
+        # en función de inventario_bodega.
         self.fecha_ultima_actualizacion = datetime.utcnow()

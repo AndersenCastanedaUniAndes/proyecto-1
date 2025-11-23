@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:medisupply_movil/data/data.dart';
-import 'package:medisupply_movil/widgets/widgets.dart';
+import 'package:medisupply_movil/state/app_state.dart';
 import 'package:medisupply_movil/styles/styles.dart';
+import 'package:medisupply_movil/utils/utils.dart';
+import 'package:medisupply_movil/widgets/widgets.dart';
+import 'package:provider/provider.dart';
 
 class VendorOrderScreen extends StatefulWidget {
   final VoidCallback onBack;
@@ -19,116 +22,22 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
   );
 
   // Nuevo pedido
+  final _formKey = GlobalKey<FormState>();
   String? _clienteSel;
   final _fechaCtrl = TextEditingController();
-  bool _isLoading = false;
+  bool _isCreatingOrder = false;
+  bool _isLoadingClients = false;
+  bool _isLoadingInventory = false;
+
   final Map<int, int> _cantidades = {}; // productoId -> cantidad
 
   // Filtros historial
   final _filtroFechaCtrl = TextEditingController();
   final _filtroClienteCtrl = TextEditingController();
 
-  final List<String> _clientes = const [
-    'Farmacia Central',
-    'Droguería La Salud',
-    'Hospital Nacional',
-    'Red Farmacias Unidos',
-    'Clínica San Juan',
-  ];
+  late Map<int, String> _clientes = const {};
 
-  final List<Product> _productos = [
-    Product(
-      id: 1,
-      nombre: 'Paracetamol 500mg',
-      precio: 250,
-      stock: 1000,
-      categoria: 'Analgésicos',
-    ),
-    Product(
-      id: 2,
-      nombre: 'Ibuprofeno 600mg',
-      precio: 350,
-      stock: 800,
-      categoria: 'Analgésicos',
-    ),
-    Product(
-      id: 3,
-      nombre: 'Amoxicilina 875mg',
-      precio: 450,
-      stock: 600,
-      categoria: 'Antibióticos',
-    ),
-    Product(
-      id: 4,
-      nombre: 'Insulina Rápida',
-      precio: 15000,
-      stock: 200,
-      categoria: 'Diabetes',
-    ),
-    Product(
-      id: 5,
-      nombre: 'Vacuna COVID-19',
-      precio: 25000,
-      stock: 150,
-      categoria: 'Vacunas',
-    ),
-    Product(
-      id: 6,
-      nombre: 'Vitamina C',
-      precio: 180,
-      stock: 500,
-      categoria: 'Vitaminas',
-    ),
-    Product(
-      id: 7,
-      nombre: 'Multivitamínico',
-      precio: 320,
-      stock: 400,
-      categoria: 'Vitaminas',
-    ),
-    Product(
-      id: 8,
-      nombre: 'Glucómetro',
-      precio: 45000,
-      stock: 50,
-      categoria: 'Diabetes',
-    ),
-    Product(
-      id: 9,
-      nombre: 'Insulina Rápida',
-      precio: 15000,
-      stock: 200,
-      categoria: 'Diabetes',
-    ),
-    Product(
-      id: 10,
-      nombre: 'Vacuna COVID-19',
-      precio: 25000,
-      stock: 150,
-      categoria: 'Vacunas',
-    ),
-    Product(
-      id: 11,
-      nombre: 'Vitamina C',
-      precio: 180,
-      stock: 500,
-      categoria: 'Vitaminas',
-    ),
-    Product(
-      id: 12,
-      nombre: 'Multivitamínico',
-      precio: 320,
-      stock: 400,
-      categoria: 'Vitaminas',
-    ),
-    Product(
-      id: 13,
-      nombre: 'Glucómetro',
-      precio: 45000,
-      stock: 50,
-      categoria: 'Diabetes',
-    ),
-  ];
+  late List<Product> _productos = [];
 
   final List<Order> _pedidos = [
     Order(
@@ -210,6 +119,13 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
   }
 
   @override
+  void initState() {
+    super.initState();
+    _loadClients();
+    _loadInventory();
+  }
+
+  @override
   void dispose() {
     _tabController.dispose();
     _fechaCtrl.dispose();
@@ -218,8 +134,49 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
     super.dispose();
   }
 
-  int _calculateTotal() {
-    int total = 0;
+  Future<void> _loadClients() async {
+    setState(() => _isLoadingClients = true);
+
+    final state = context.read<AppState>();
+
+    final response = await getClientsSmall(state.id, state.token);
+    setState(() => _isLoadingClients = false);
+
+    try {
+      _clientes = response;
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cargar los clientes: $error'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _loadInventory() async {
+    setState(() => _isLoadingInventory = true);
+
+    final state = context.read<AppState>();
+
+    final products = await getInventory(state.id, state.token);
+    setState(() => _isLoadingInventory = false);
+
+    try {
+      _productos = products;
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cargar el inventario: $error'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _loadHistory() async {
+  }
+
+  double _calculateTotal() {
+    double total = 0;
     _cantidades.forEach((prodId, cant) {
       final prod = _productos.firstWhere((p) => p.id == prodId);
       total += prod.precio * cant;
@@ -254,14 +211,45 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
   }
 
   Future<void> _submit() async {
-    if (_clienteSel == null ||
-        _clienteSel!.isEmpty ||
-        _fechaCtrl.text.isEmpty ||
-        _cantidades.isEmpty) {
+    if (!_formKey.currentState!.validate()) {
       return;
     }
-    setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1));
+
+    setState(() => _isCreatingOrder = true);
+
+    final state = context.read<AppState>();
+
+    final productos = _cantidades.entries.map((e) {
+      final prod = _productos.firstWhere((p) => p.id == e.key);
+      return {
+        'producto': prod.nombre,
+        'producto_id': prod.id,
+        'cantidad': e.value,
+        'valor_unitario': prod.precio,
+        'valor_total': prod.precio * e.value,
+      };
+    }).toList();
+
+    final response = await createOrder({
+      'vendedor': state.userName,
+      'vendedor_id': state.id,
+      'productos': productos,
+      'cliente': _clienteSel,
+      'comision': (_calculateTotal() * 0.05).round(),
+    }, state.id, state.token);
+
+    setState(() => _isCreatingOrder = false);
+
+    if (response.statusCode != 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error ${response.statusCode}: ${response.body}'),
+        ),
+      );
+      return;
+    }
+
+    _loadHistory();
 
     final items = _cantidades.entries.map((e) {
       final prod = _productos.firstWhere((p) => p.id == e.key);
@@ -288,7 +276,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
       _clienteSel = null;
       _fechaCtrl.clear();
       _cantidades.clear();
-      _isLoading = false;
+      _isCreatingOrder = false;
       _tabController.index = 1; // ir a historial
     });
   }
@@ -387,170 +375,190 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
   }
 
   Widget _buildNuevo(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return SingleChildScrollView(
       child: Container(
         decoration: AppStyles.decoration,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Nuevo Pedido',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontSize: 16),
-              ),
-              const SizedBox(height: 18),
-
-              Row(
-                spacing: 12,
-                children: [
-                  Expanded(child: Text('Cliente', style: Theme.of(context).textTheme.titleMedium)),
-                  Expanded(child: Text('Fecha', style: Theme.of(context).textTheme.titleMedium))
-                ],
-              ),
-              const SizedBox(height: 2),
-
-              Row(
-                spacing: 12,
-                children: [
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      isExpanded: true,
-                      icon: const SizedBox.shrink(),
-                      value: _clienteSel,
-                      items: _clientes.map((c) => DropdownMenuItem(value: c, child: Text(c)),).toList(),
-                      onChanged: (v) => setState(() => _clienteSel = v),
-                      decoration: _baseInputDecoration().copyWith(
-                        hintText: 'Seleccionar',
-                        suffixIcon: Icon(AppIcons.chevronDown, size: 16),
-                      ),
-                      validator: (v) => (v == null || v.isEmpty) ? 'Selecciona un cliente' : null,
-                    ),
-                  ),
-
-                  Expanded(
-                    child: TextFormField(
-                      controller: _fechaCtrl,
-                      readOnly: true,
-                      decoration: _baseInputDecoration().copyWith(
-                        hintText: 'mm/dd/yyyy'
-                      ),
-                      onTap: _pickDate,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              Text('Productos', style: Theme.of(context).textTheme.labelLarge),
-              const SizedBox(height: 8),
-
-              Container(
-                constraints: const BoxConstraints(maxHeight: 400),
-                decoration: AppStyles.decoration,
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: _productos.length,
-                  separatorBuilder: (_, __) => Container(),
-                  itemBuilder: (context, i) {
-                    final p = _productos[i];
-                    final cantidad = _cantidades[p.id] ?? 0;
-                    return Padding(
-                      padding: EdgeInsets.only(
-                        left: 12,
-                        right: 12,
-                        bottom: 8,
-                        top: i == 0 ? 12 : 0,
-                      ),
-                      child: Container(
-                        decoration: AppStyles.decoration.copyWith(
-                          borderRadius: BorderRadius.all(Radius.circular(4)),
-                        ),
-                        padding: const EdgeInsets.all(8),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    p.nombre,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    '\$${p.precio.toString()} • Stock: ${p.stock}',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(
-                              width: 70,
-                              child: TextFormField(
-                                initialValue: cantidad == 0
-                                    ? ''
-                                    : cantidad.toString(),
-                                keyboardType: TextInputType.number,
-                                decoration: InputDecoration(
-                                  hintText: '0',
-                                  contentPadding: EdgeInsets.only(left: 12),
-                                  filled: true,
-                                  fillColor: AppStyles.grey1.withAlpha(30),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8.0),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                                onChanged: (v) =>
-                                    _setQuantity(p.id, int.tryParse(v) ?? 0),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Nuevo Pedido',
+                  style: textTheme.titleMedium?.copyWith(fontSize: 16),
                 ),
-              ),
-              const SizedBox(height: 12),
+                const SizedBox(height: 18),
 
-              if (_cantidades.isNotEmpty)
-                Card(
-                  color: Colors.grey.shade100,
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Total del pedido:'),
-                        Text(
-                          '\$${_calculateTotal()}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
+                Row(
+                  spacing: 12,
+                  children: [
+                    Expanded(child: Text('Cliente', style: textTheme.titleMedium)),
+                    Expanded(child: Text('Fecha', style: textTheme.titleMedium))
+                  ],
+                ),
+                const SizedBox(height: 2),
+
+                Row(
+                  spacing: 12,
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        dropdownColor: Colors.white,
+                        menuMaxHeight: 300,
+                        isExpanded: true,
+                        icon: const SizedBox.shrink(),
+                        value: _clienteSel,
+                        items: _clientes.values.map((c) => DropdownMenuItem(
+                          value: c,
+                          child: Text(c, style: textTheme.bodySmall),
+                        )).toList(),
+                        onChanged: (v) => setState(() => _clienteSel = v),
+                        decoration: _baseInputDecoration().copyWith(
+                          hintText: _isLoadingClients ? 'Cargando...' : 'Seleccionar',
+                          suffixIcon: Icon(AppIcons.chevronDown, size: 16),
+                        ),
+                        validator: (v) => (v == null || v.isEmpty) ? 'Selecciona un cliente' : null,
+                      ),
+                    ),
+
+                    Expanded(
+                      child: TextFormField(
+                        controller: _fechaCtrl,
+                        readOnly: true,
+                        decoration: _baseInputDecoration().copyWith(
+                          hintText: 'mm/dd/yyyy'
+                        ),
+                        onTap: _pickDate,
+                        validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                Text('Productos', style: textTheme.labelLarge),
+                const SizedBox(height: 8),
+
+                Container(
+                  constraints: const BoxConstraints(
+                    minHeight: 162,
+                  ),
+                  decoration: AppStyles.decoration,
+                  child: _isLoadingInventory ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: CircularProgressIndicator(
+                          color: AppStyles.green1,
+                        ),
+                      ),
+                    )
+                    :ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: _productos.length,
+                    separatorBuilder: (_, __) => Container(),
+                    itemBuilder: (context, i) {
+                      final p = _productos[i];
+                      final cantidad = _cantidades[p.id] ?? 0;
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          left: 12,
+                          right: 12,
+                          bottom: 8,
+                          top: i == 0 ? 12 : 0,
+                        ),
+                        child: Container(
+                          decoration: AppStyles.decoration.copyWith(
+                            borderRadius: BorderRadius.all(Radius.circular(4)),
+                          ),
+                          padding: const EdgeInsets.all(8),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      p.nombre,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '\$${p.precio.toString()} • Stock: ${p.stock}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(
+                                width: 70,
+                                child: TextFormField(
+                                  initialValue: cantidad == 0
+                                      ? ''
+                                      : cantidad.toString(),
+                                  keyboardType: TextInputType.number,
+                                  decoration: InputDecoration(
+                                    hintText: '0',
+                                    contentPadding: EdgeInsets.only(left: 12),
+                                    filled: true,
+                                    fillColor: AppStyles.grey1.withAlpha(30),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8.0),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                  onChanged: (v) =>
+                                      _setQuantity(p.id, int.tryParse(v) ?? 0),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ),
-              const SizedBox(height: 8),
-              ConfirmationButton(
-                isLoading: _isLoading,
-                onTap: _submit,
-                idleLabel: 'Registrar Pedido',
-                onTapLabel: 'Registrando...',
-              ),
-            ],
+                const SizedBox(height: 12),
+
+                if (_cantidades.isNotEmpty)
+                  Card(
+                    color: Colors.grey.shade100,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Total del pedido:'),
+                          Text(
+                            '\$${_calculateTotal()}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                ConfirmationButton(
+                  isEnabled: !_isLoadingClients && !_isLoadingInventory,
+                  isLoading: _isCreatingOrder,
+                  onTap: _submit,
+                  idleLabel: 'Registrar Pedido',
+                  onTapLabel: 'Registrando...',
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -601,139 +609,137 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
         ),
         const SizedBox(height: 12),
 
-        if (pedidos.isEmpty) ...[
-          Container(
-            decoration: AppStyles.decoration,
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(AppIcons.shoppingCart, size: 48, color: AppStyles.grey1),
-                  SizedBox(height: 8),
-                  Text(
-                    'No se encontraron pedidos',
-                    style: TextStyle(color: AppStyles.grey1),
-                  ),
-                ],
-              ),
+        pedidos.isEmpty ? Container(
+          decoration: AppStyles.decoration,
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(AppIcons.shoppingCart, size: 48, color: AppStyles.grey1),
+                SizedBox(height: 8),
+                Text(
+                  'No se encontraron pedidos',
+                  style: TextStyle(color: AppStyles.grey1),
+                ),
+              ],
             ),
           ),
-        ] else
-          Expanded(
-            child: ListView.separated(
-              itemCount: pedidos.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, i) {
-                final p = pedidos[i];
-                return Container(
-                  decoration: AppStyles.decoration,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 16, top: 18, right: 16, bottom: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  p.cliente,
-                                  style: textTheme.titleSmall?.copyWith(fontSize: 15),
-                                ),
-                                Text(
-                                  '#${p.id}',
-                                  style: textTheme.bodySmall?.copyWith(fontSize: 12),
-                                ),
-                              ],
-                            ),
-                            _orderStateBadge(p.estado),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  AppIcons.calendar,
-                                  size: 14,
-                                  color: AppStyles.grey1,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  p.fecha,
-                                  style: textTheme.bodySmall?.copyWith(fontSize: 12.5, color: AppStyles.grey1),
-                                ),
-                              ],
-                            ),
-
-                            Row(
-                              children: [
-                                Icon(
-                                  AppIcons.package,
-                                  size: 14,
-                                  color: AppStyles.grey1,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${p.items.length} productos',
-                                  style: textTheme.bodySmall?.copyWith(fontSize: 12.5, color: AppStyles.grey1),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-
-                        ...p.items.map(
-                          (it) => Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        )
+        : Expanded(
+          child: ListView.separated(
+            itemCount: pedidos.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, i) {
+              final p = pedidos[i];
+              return Container(
+                decoration: AppStyles.decoration,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 16, top: 18, right: 16, bottom: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  it.nombre,
-                                  style: textTheme.bodySmall?.copyWith(fontSize: 12, fontWeight: FontWeight.w500),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                              Text(
+                                p.cliente,
+                                style: textTheme.titleSmall?.copyWith(fontSize: 15),
                               ),
                               Text(
-                                '${it.cantidad} × \$${it.precio}',
+                                '#${p.id}',
                                 style: textTheme.bodySmall?.copyWith(fontSize: 12),
                               ),
                             ],
                           ),
-                        ),
-                        const Divider(height: 16),
+                          _orderStateBadge(p.estado),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
 
-                        Row(
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                AppIcons.calendar,
+                                size: 14,
+                                color: AppStyles.grey1,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                p.fecha,
+                                style: textTheme.bodySmall?.copyWith(fontSize: 12.5, color: AppStyles.grey1),
+                              ),
+                            ],
+                          ),
+
+                          Row(
+                            children: [
+                              Icon(
+                                AppIcons.package,
+                                size: 14,
+                                color: AppStyles.grey1,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${p.items.length} productos',
+                                style: textTheme.bodySmall?.copyWith(fontSize: 12.5, color: AppStyles.grey1),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      ...p.items.map(
+                        (it) => Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Total:', style: textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700)),
-                            Text(
-                              // total price with comma separation
-                              '\$${p.total.toString().replaceAllMapped(
-                                RegExp(r'(\d+)(\d{3})'),
-                                (Match m) => '${m[1]},${m[2]}',
-                              )}',
-                              style: textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: AppStyles.green1,
+                            Expanded(
+                              child: Text(
+                                it.nombre,
+                                style: textTheme.bodySmall?.copyWith(fontSize: 12, fontWeight: FontWeight.w500),
+                                overflow: TextOverflow.ellipsis,
                               ),
+                            ),
+                            Text(
+                              '${it.cantidad} × \$${it.precio}',
+                              style: textTheme.bodySmall?.copyWith(fontSize: 12),
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                      const Divider(height: 16),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Total:', style: textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700)),
+                          Text(
+                            // total price with comma separation
+                            '\$${p.total.toString().replaceAllMapped(
+                              RegExp(r'(\d+)(\d{3})'),
+                              (Match m) => '${m[1]},${m[2]}',
+                            )}',
+                            style: textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: AppStyles.green1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
+        ),
       ],
     );
   }
