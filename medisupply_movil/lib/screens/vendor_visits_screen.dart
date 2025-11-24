@@ -3,30 +3,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:medisupply_movil/state/app_state.dart';
+import 'package:medisupply_movil/data/data.dart';
 import 'package:medisupply_movil/styles/styles.dart';
 import 'package:medisupply_movil/utils/utils.dart';
 import 'package:medisupply_movil/widgets/widgets.dart';
 import 'package:provider/provider.dart';
-
-class Visita {
-  final int id;
-  final String cliente;
-  final String fecha; // YYYY-MM-DD
-  final String hora; // HH:mm
-  final String direccion;
-  final String hallazgos;
-  final List<String> sugerencias;
-
-  Visita({
-    required this.id,
-    required this.cliente,
-    required this.fecha,
-    required this.hora,
-    required this.direccion,
-    required this.hallazgos,
-    required this.sugerencias,
-  });
-}
 
 class VendorVisitsScreen extends StatefulWidget {
   final VoidCallback onBack;
@@ -116,27 +97,9 @@ class _VendorVisitsScreenState extends State<VendorVisitsScreen>
     final response = await getVisits(state.id, state.token);
 
     try {
-      final decodedBody = jsonDecode(response.body);
-
-      final List<Visita> visitas = [];
-      for (var item in decodedBody) {
-        var sugerencias = item['sugerencias'] as String;
-        sugerencias.split(',');
-
-        visitas.add(Visita(
-          id: item['id'],
-          cliente: item['cliente'],
-          fecha: item['fecha'],
-          hora: item['hora'],
-          direccion: item['direccion'],
-          hallazgos: item['hallazgos'],
-          sugerencias: sugerencias.split(','),
-        ));
-      }
-
       setState(() {
         _visitasBase.clear();
-        _visitasBase.addAll(visitas);
+        _visitasBase.addAll(response);
       });
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(

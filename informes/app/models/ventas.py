@@ -16,6 +16,7 @@ class VentaBase(BaseModel):
     vendedor_id: int
     productos: list[ProductoVenta]
     cliente: str
+    cliente_id: int
     comision: float
 
     @field_validator("vendedor", "cliente")
@@ -62,6 +63,7 @@ class VentaOut(VentaBase):
     """Esquema para devolver una venta (lectura)"""
     id: int
     fecha: date
+    estado: str
 
     class Config:
         orm_mode = True

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:medisupply_movil/state/app_state.dart';
+import 'package:medisupply_movil/data/data.dart';
 import 'package:medisupply_movil/styles/styles.dart';
 import 'package:medisupply_movil/widgets/widgets.dart';
 import 'dart:convert';
@@ -12,8 +13,13 @@ class _Pedido {
   final String fecha;
   final String estado; // Pendiente | Procesando | Enviado | Entregado
   final List<String> productos;
-  final int valor;
+  final double valor;
   _Pedido({required this.id, required this.fecha, required this.estado, required this.productos, required this.valor});
+
+  @override
+  String toString() {
+    return 'Pedido{id: $id, fecha: $fecha, estado: $estado, productos: $productos, valor: $valor}';
+  }
 }
 
 class _Cliente {
@@ -22,9 +28,8 @@ class _Cliente {
   final String direccion;
   final String telefono;
   final String correo;
-  final int pedidosPendientes;
   final String ultimaVisita; // ISO string
-  final int valorTotal;
+  final double valorTotal;
   final List<_Pedido> pedidos;
   _Cliente({
     required this.id,
@@ -32,7 +37,6 @@ class _Cliente {
     required this.direccion,
     required this.telefono,
     required this.correo,
-    required this.pedidosPendientes,
     required this.ultimaVisita,
     required this.valorTotal,
     required this.pedidos,
@@ -51,6 +55,7 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
   String _filtro = '';
   _Cliente? _seleccionado;
   late Future<List<_Cliente>> _futureClientes;
+  late Future<List<dynamic>> futureOrders;
 
   @override
   void initState() {
@@ -60,21 +65,30 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
 
   Future<List<_Cliente>> _fetchClientes() async {
     final state = context.read<AppState>();
-    final data = await getClients(state.id, state.token);
 
-    return data.map<_Cliente>((raw) {
+    final response = await Future.wait([
+      getClients(state.id, state.token),
+      getVendorOrders(state.id, state.token),
+    ]);
+
+    final clients = response[0];
+    final orders = response[1] as List<Order>;
+
+    return clients.map<_Cliente>((raw) {
       final json = raw as Map<String, dynamic>;
 
-      // Por ahora los pedidos siguen siendo estáticos
-      final pedidosEstaticos = <_Pedido>[
-        _Pedido(
-          id: 1,
-          fecha: '2024-03-20',
-          estado: 'Pendiente',
-          productos: ['Producto 1', 'Producto 2'],
-          valor: 100000,
-        ),
-      ];
+      final pedidos = <_Pedido>[];
+      for (var order in orders) {
+        if (order.clienteId == json['id']) {
+          pedidos.add(_Pedido(
+            id: order.id,
+            fecha: order.fecha,
+            estado: order.estado,
+            productos: order.items.map((p) => p.nombre).toList(),
+            valor: order.total,
+          ));
+        }
+      }
 
       return _Cliente(
         id: json['id'] as int,
@@ -82,10 +96,9 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
         direccion: (json['direccion'] ?? '') as String,
         telefono: (json['telefono'] ?? '') as String,
         correo: (json['email'] ?? '') as String,
-        pedidosPendientes: (json['pedidosPendientes'] ?? 0) as int,
         ultimaVisita: (json['ultima visita'] ?? '') as String,
-        valorTotal: (json['valorTotal'] ?? 0) as int,
-        pedidos: pedidosEstaticos,
+        valorTotal: pedidos.fold<double>(0, (acc, p) => acc + p.valor),
+        pedidos: pedidos,
       );
     }).toList();
   }
@@ -99,12 +112,12 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
   }
 
   String _getPendingOrders(List<_Cliente> clientes) {
-    final total = clientes.fold<int>(0, (acc, c) => acc + c.pedidosPendientes);
+    final total = clientes.fold<int>(0, (acc, c) => acc + c.pedidos.where((p) => p.estado == 'Pendiente').length);
     return total.toString();
   }
 
   String _getTotalValue(List<_Cliente> clientes) {
-    final total = clientes.fold<int>(0, (acc, c) => acc + c.valorTotal);
+    final total = clientes.fold<double>(0, (acc, c) => acc + c.valorTotal);
     return '\$$total';
   }
 
@@ -134,6 +147,8 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
 
         if (_seleccionado != null) {
           final c = _seleccionado!;
+          final pedidosPendientes = c.pedidos.where((p) => p.estado == 'Pendiente').length;
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -148,6 +163,7 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     spacing: 4,
                     children: [
                       Container(
@@ -171,7 +187,7 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
                       QuickStats(
                         stat1Color: AppStyles.orange,
                         stat1Title: 'Pedidos Pendientes',
-                        stat1Value: c.pedidosPendientes.toString(),
+                        stat1Value: pedidosPendientes.toString(),
                         stat2Color: AppStyles.green1,
                         stat2Title: 'Valor Total',
                         stat2Value: '\$${c.valorTotal}',
@@ -188,7 +204,10 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
                             children: [
                               Text('Pedidos Recientes', style: textTheme.titleSmall),
                               const SizedBox(height: 18),
-                              ...c.pedidos.map((p) => _pedidoTile(p)),
+                              if (c.pedidos.isEmpty) ...[
+                                Text('Este cliente no ha realizado pedidos aún.', style: textTheme.bodySmall)
+                              ]
+                              else ...c.pedidos.map((p) => _pedidoTile(p)),
                             ],
                           ),
                         ),
@@ -242,6 +261,8 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
                   separatorBuilder: (_, __) => const SizedBox(height: 8),
                   itemBuilder: (context, i) {
                     final c = filtrados[i];
+                    final pedidosPendientes = c.pedidos.where((p) => p.estado == 'Pendiente').length;
+
                     return GestureDetector(
                       onTap: () => setState(() => _seleccionado = c),
                       child: Container(
@@ -257,9 +278,9 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(c.nombre, style: textTheme.titleSmall),
-                                      if (c.pedidosPendientes > 0)
+                                      if (pedidosPendientes > 0)
                                         _Badge(
-                                          label: '${c.pedidosPendientes} pendientes',
+                                          label: '$pedidosPendientes pendientes',
                                           color: AppStyles.red2,
                                           textStyle: textTheme.bodySmall?.copyWith(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white),
                                         ),
@@ -277,7 +298,7 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
                                     children: [
                                       Text('Última visita: ${c.ultimaVisita}', style: textTheme.labelMedium?.copyWith(color: AppStyles.grey1, fontWeight: FontWeight.w400)),
 
-                                      if (c.pedidosPendientes > 0) ...[
+                                      if (pedidosPendientes > 0) ...[
                                         Text('\$${c.valorTotal}', style: textTheme.labelMedium?.copyWith(fontSize: 12, color: AppStyles.green1)),
                                       ]
                                     ],

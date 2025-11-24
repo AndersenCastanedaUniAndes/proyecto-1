@@ -179,6 +179,8 @@ def get_proveedores():
     base_url = os.getenv("PROVEEDOR_API_BASE_URL", "http://136.112.245.46:8003/")
     url = f"{base_url.rstrip('/')}/proveedores/?skip=0&limit=100"
 
+    print(f"url de proveedores: {url}")
+
     try:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
@@ -205,7 +207,7 @@ def get_tipo_almacenamiento() -> List[str]:
      * @return List[str] Lista de tipos de almacenamiento.
      */
     """
-    tipos = ["seco" , "refrigerado"]
+    tipos = ["ambiente", "controlado", "hazmat"]
     # Ordena la lista alfabéticamente ignorando mayúsculas y tildes
     return sorted(tipos, key=lambda p: p.lower())
 

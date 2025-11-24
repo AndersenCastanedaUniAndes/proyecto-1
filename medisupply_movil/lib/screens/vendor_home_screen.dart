@@ -4,13 +4,14 @@ import 'package:medisupply_movil/styles/styles.dart';
 import 'package:medisupply_movil/widgets/widgets.dart';
 import 'package:provider/provider.dart';
 import 'dart:convert';
+import 'package:medisupply_movil/data/data.dart';
 import 'package:medisupply_movil/state/app_state.dart';
 import 'package:medisupply_movil/utils/utils.dart';
 import 'package:medisupply_movil/utils/requests.dart';
 
 enum VendorScreenEnum { home, clientes, visitas, pedidos, recomendaciones }
 
-class VendorHome extends StatelessWidget {
+class VendorHome extends StatefulWidget {
   final VoidCallback onOpenMenu;
   final void Function(VendorScreenEnum) onTapCard;
   const VendorHome({
@@ -18,6 +19,15 @@ class VendorHome extends StatelessWidget {
     required this.onOpenMenu,
     required this.onTapCard
   });
+
+  @override
+  State<VendorHome> createState() => _VendorHomeState();
+}
+
+class _VendorHomeState extends State<VendorHome> {
+  late Future<List<dynamic>> futureActiveClients;
+  late Future<List<Visita>> futureVisitsToday;
+  late Future<List<dynamic>> futureOrders;
 
   String _getSales(String id, String token) {
     getSailes(id, token);
@@ -29,11 +39,19 @@ class VendorHome extends StatelessWidget {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    final state = context.read<AppState>();
+    futureActiveClients = getClients(state.id, state.token);
+    futureVisitsToday = getVisits(state.id, state.token);
+    futureOrders = getVendorOrders(state.id, state.token);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
 
-    final futureActiveClients = getClients(state.id, state.token);
-    final futureVisitsToday = getVisits(state.id, state.token);
 
     return SingleChildScrollView(
       child: Column(
@@ -43,7 +61,7 @@ class VendorHome extends StatelessWidget {
             gradient: LinearGradient(colors: [AppStyles.blue1, AppStyles.blue2]),
             title: '¡Hola, ${state.userName}!',
             subtitle: 'Vendedor MediSupply',
-            onTap: onOpenMenu,
+            onTap: widget.onOpenMenu,
             stat1Title: 'Ventas este mes',
             stat1Value: _getSales(state.id, state.token),
             stat2Title: 'Meta alcanzada',
@@ -83,9 +101,7 @@ class VendorHome extends StatelessWidget {
                   } else if (snapshot.hasError) {
                     visitsTodayLabel = '-';
                   } else if (snapshot.hasData) {
-                    final clients = snapshot.data!.body;
-                    final decoded = jsonDecode(clients);
-                    visitsTodayLabel = _getTodayVisitsCount(decoded).toString();
+                    visitsTodayLabel = _getTodayVisitsCount(snapshot.data!).toString();
                   }
 
                   return Expanded(
@@ -128,7 +144,7 @@ class VendorHome extends StatelessWidget {
                         title: 'Clientes',
                         description: 'Gestiona tu cartera de clientes',
                         badge: badgeText,
-                        onTap: () => onTapCard(VendorScreenEnum.clientes),
+                        onTap: () => widget.onTapCard(VendorScreenEnum.clientes),
                       );
                     },
                   ),
@@ -143,9 +159,7 @@ class VendorHome extends StatelessWidget {
                       } else if (snapshot.hasError) {
                         badgeText = 'Error';
                       } else if (snapshot.hasData) {
-                        final body = snapshot.data!.body;
-                        final decoded = jsonDecode(body);
-                        final count = _getTodayVisitsCount(decoded);
+                        final count = _getTodayVisitsCount(snapshot.data!);
 
                         badgeText = '$count hoy';
                       }
@@ -156,18 +170,34 @@ class VendorHome extends StatelessWidget {
                         title: 'Visitas',
                         description: 'Registra y revisa tus visitas',
                         badge: badgeText,
-                        onTap: () => onTapCard(VendorScreenEnum.visitas),
+                        onTap: () => widget.onTapCard(VendorScreenEnum.visitas),
                       );
                     },
                   ),
 
-                  MenuCard(
-                    color: Color(0xFFFF6900),
-                    icon: AppIcons.shoppingCart,
-                    title: 'Pedidos',
-                    description: 'Gestiona pedidos de clientes',
-                    badge: '12 pendientes',
-                    onTap: () => onTapCard(VendorScreenEnum.pedidos),
+                  FutureBuilder(
+                    future: futureOrders,
+                    builder: (context, snapshot) {
+                      String badgeText = '...';
+
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        badgeText = 'Cargando...';
+                      } else if (snapshot.hasError) {
+                        badgeText = 'Error';
+                      } else if (snapshot.hasData) {
+                        final orders = snapshot.data!;
+                        badgeText = '${orders.length} pedidos';
+                      }
+
+                      return MenuCard(
+                        color: Color(0xFFFF6900),
+                        icon: AppIcons.shoppingCart,
+                        title: 'Pedidos',
+                        description: 'Gestiona pedidos de clientes',
+                        badge: badgeText,
+                        onTap: () => widget.onTapCard(VendorScreenEnum.pedidos),
+                      );
+                    }
                   ),
 
                   MenuCard(
@@ -176,7 +206,7 @@ class VendorHome extends StatelessWidget {
                     title: 'Recomendaciones',
                     description: 'Generación de recomendaciones',
                     badge: 'Próximamente',
-                    onTap: () => onTapCard(VendorScreenEnum.recomendaciones),
+                    onTap: () => widget.onTapCard(VendorScreenEnum.recomendaciones),
                   ),
                 ],
               );
@@ -187,12 +217,12 @@ class VendorHome extends StatelessWidget {
     );
   }
 
-  int _getTodayVisitsCount(List<dynamic> visits) {
+  int _getTodayVisitsCount(List<Visita> visits) {
     final now = DateTime.now();
     int count = 0;
 
     for (var item in visits) {
-      final visitaDate = DateTime.parse(item['fecha']);
+      final visitaDate = DateTime.parse(item.fecha);
       if (visitaDate.year == now.year &&
           visitaDate.month == now.month &&
           visitaDate.day == now.day) {

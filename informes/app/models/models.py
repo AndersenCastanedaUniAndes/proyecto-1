@@ -11,13 +11,15 @@ class Venta(Base):
     vendedor_id = Column(Integer, nullable=False)
     productos = Column(JSON, nullable=False)
     cliente = Column(String(250), nullable=False)
+    cliente_id = Column(Integer, nullable=False)
     comision = Column(Numeric(10, 2), nullable=False)
+    estado = Column(String(50), nullable=False, default="Pendiente") # Pendiente | Procesando | Enviado
 
     def __repr__(self):
         # self.productos a dictionary or JSON string if needed
         return (
             f"<Venta(id={self.id}, fecha={self.fecha}, vendedor='{self.vendedor}', "
-            f"productos='{self.productos}', cliente='{self.cliente}', comision={self.comision})>"
+            f"productos='{self.productos}', cliente='{self.cliente}', cliente_id={self.cliente_id}, comision={self.comision}, estado='{self.estado}')>"
         )
 
 

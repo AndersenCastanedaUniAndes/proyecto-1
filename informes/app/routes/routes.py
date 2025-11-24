@@ -30,6 +30,19 @@ def get_ventas_vendedor(vendedor_id: int, skip: int = 0, limit: int = 100, db: S
     return crud.get_ventas_vendedor(db, vendedor_id, skip=skip, limit=limit)
 
 
+@router.get("/cliente/{cliente_id}", response_model=List[VentaOut])
+def get_ventas_cliente(cliente_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return crud.get_ventas_cliente(db, cliente_id, skip=skip, limit=limit)
+
+
+@router.post("/cliente", response_model=VentaOut)
+def create_venta_cliente(venta: VentaCreate, db: Session = Depends(get_db)):
+    """Crear una nueva venta para un cliente específico"""
+    if not hasattr(venta, 'fecha') or venta.fecha is None:
+        venta.fecha = date.today()
+    return crud.create_venta(db, venta)
+
+
 @router.get("/{venta_id}", response_model=VentaOut)
 def get_venta(venta_id: int, db: Session = Depends(get_db)):
     """Obtener una venta por su ID"""

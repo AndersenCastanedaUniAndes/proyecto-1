@@ -68,6 +68,19 @@ services:
     networks:
       - appnet
 
+  rutas-service:
+    build: ./rutas
+    container_name: rutas-service
+    ports:
+      - "8006:80"
+    env_file:
+      - ./.env
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - appnet
+
   database:
     image: postgres:15
     container_name: database

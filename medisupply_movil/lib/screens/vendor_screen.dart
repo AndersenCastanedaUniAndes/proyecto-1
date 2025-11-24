@@ -10,7 +10,7 @@ class VendorScreen extends StatefulWidget {
 }
 
 class _VendorScreenState extends State<VendorScreen> {
-  VendorScreenEnum _current = VendorScreenEnum.pedidos;
+  VendorScreenEnum _current = VendorScreenEnum.clientes;
   bool _showUserMenu = false;
 
   void _goHome() => setState(() => _current = VendorScreenEnum.home);

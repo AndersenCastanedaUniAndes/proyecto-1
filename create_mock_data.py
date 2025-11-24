@@ -155,22 +155,31 @@ async def crear_usuarios():
             "direccion": "Calle 321 #45-67",
             "ciudad": "Medellín",
         },
+        {
+            "empresa": "Farmacia Centro",
+            "nombre_usuario": "Camila Rojas",
+            "email": "camila@farmaciacentro.com",
+            "contrasena": "Password123!",
+            "telefono": "1234567890",
+            "direccion": "Calle 213 #54-76",
+            "ciudad": "Medellín",
+        }
     ]
 
     async with httpx.AsyncClient() as client:
         # for user in users:
         #     response = await client.post("http://localhost:8001/users/", headers={"Content-Type": "application/json"}, json=user)
         #     print (f"Creado: {response.json()}")
-        # for cliente in clientes:
-        #     response = await client.post("http://localhost:8001/clients", headers={"Content-Type": "application/json"}, json=cliente)
-        #     print (f"Creado: {response.json()}")
+        for cliente in clientes:
+            response = await client.post("http://localhost:8001/clients", headers={"Content-Type": "application/json"}, json=cliente)
+            print (f"Creado: {response.json()}")
 
-        clientes_actuales = await client.get("http://localhost:8001/clients", headers={"Content-Type": "application/json"})
-        cliente_list = clientes_actuales.json()
-        print("Clientes actuales:", cliente_list)
-        for c in cliente_list:
-            response = await client.post(f"http://localhost:8001/vendedor/2/cliente", headers={"Content-Type": "application/json"}, json={"client_id": c['id']})
-            print (f"Asignado: {response.json()}")
+        # clientes_actuales = await client.get("http://localhost:8001/clients", headers={"Content-Type": "application/json"})
+        # cliente_list = clientes_actuales.json()
+        # print("Clientes actuales:", cliente_list)
+        # for c in cliente_list:
+        #     response = await client.post(f"http://localhost:8001/vendedor/2/cliente", headers={"Content-Type": "application/json"}, json={"client_id": c['id']})
+        #     print (f"Asignado: {response.json()}")
 
 
 async def crear_proveedores():
@@ -267,10 +276,10 @@ async def llenar_inventario():
 
 
 async def main():
-    # await crear_usuarios()
+    await crear_usuarios()
     # await crear_proveedores()
     # await crear_productos()
     # await crear_ventas()
-    await llenar_inventario()
+    # await llenar_inventario()
 
 asyncio.run(main())

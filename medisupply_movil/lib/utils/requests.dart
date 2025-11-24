@@ -86,7 +86,7 @@ Future<Map<int, String>> getClientsSmall(String id, String token) async {
       },
     );
 
-    await Future.delayed(const Duration(seconds: 1));
+    // await Future.delayed(const Duration(seconds: 1));
 
     if (response.statusCode != 200) {
       return {};
@@ -117,7 +117,7 @@ Future<List<dynamic>> getClients(String id, String token) async {
       },
     );
 
-    await Future.delayed(const Duration(seconds: 1));
+    // await Future.delayed(const Duration(seconds: 1));
 
     final body = jsonDecode(response.body);
     final clients = body as List<dynamic>;
@@ -128,7 +128,7 @@ Future<List<dynamic>> getClients(String id, String token) async {
   }
 }
 
-Future<http.Response> getVisits(String id, String token) async {
+Future<List<Visita>> getVisits(String id, String token) async {
   final baseUrl = dotenv.env[informesServiceURL];
   final visitas = Uri.parse('$baseUrl/ventas/visitas/vendedor/$id');
 
@@ -140,11 +140,31 @@ Future<http.Response> getVisits(String id, String token) async {
       },
     );
 
-    await Future.delayed(const Duration(seconds: 1));
+    // await Future.delayed(const Duration(seconds: 1));
 
-    return response;
+    final decodedBody = jsonDecode(response.body) as List<dynamic>;
+
+    final List<Visita> list = [];
+    for (var item in decodedBody) {
+      var sugerencias = item['sugerencias'] as String;
+      sugerencias.split(',');
+
+      list.add(Visita(
+        id: item['id'],
+        cliente: item['cliente'],
+        fecha: item['fecha'],
+        hora: item['hora'],
+        direccion: item['direccion'],
+        hallazgos: item['hallazgos'],
+        sugerencias: sugerencias.split(','),
+      ));
+    }
+
+    list.sort((a, b) => b.fecha.compareTo(a.fecha));
+
+    return list;
   } catch (e) {
-    return http.Response('Error: $e', 500);
+    return [];
   }
 }
 
@@ -181,8 +201,8 @@ Future<List<Product>> getInventory(String id, String token) async {
     );
 
     final body = jsonDecode(response.body);
-    final products = body as List<dynamic>;
-    final List<Product> productList = products.map((p) => Product(
+    final list = body as List<dynamic>;
+    final products = list.map((p) => Product(
       id: p['id'],
       nombre: p['nombre'],
       precio: p['valor_unitario'],
@@ -190,49 +210,15 @@ Future<List<Product>> getInventory(String id, String token) async {
       categoria: p['categoria'],
     )).toList();
 
-    await Future.delayed(const Duration(seconds: 1));
+    // await Future.delayed(const Duration(seconds: 1));
 
-    return productList;
-
-    // {
-    //   "id": 1,
-    //   "nombre": "Producto AAA",
-    //   "lote": "2023A",
-    //   "sku": "SNNE2RCQH2",
-    //   "stock_total": 980,
-    //   "stock_minimo": 200,
-    //   "status": "disponible",
-    //   "bodegas": [
-    //       {
-    //           "id": 1,
-    //           "nombre": "Bodega Norte",
-    //           "direccion": "Calle 112 #45-55",
-    //           "cantidad_disponible": 300,
-    //           "pasillo": "A",
-    //           "estante": "A12"
-    //       },
-    //       {
-    //           "id": 2,
-    //           "nombre": "Bodega Sur",
-    //           "direccion": "Calle 112 Sur #45A-55",
-    //           "cantidad_disponible": 680,
-    //           "pasillo": "A",
-    //           "estante": "A12"
-    //       }
-    //   ],
-    //   "fecha_ultima_actualizacion": "2025-11-23T21:11:00.325657",
-    //   "proveedor": "Proveedor A",
-    //   "categoria": "Hormonas",
-    //   "valor_unitario": 2500.0
-    // },
-
-
+    return products;
   } catch (e) {
     return [];
   }
 }
 
-Future<http.Response> getOrders(String id, String token) async {
+Future<List<Order>> getVendorOrders(String id, String token) async {
   final baseUrl = dotenv.env[informesServiceURL];
   final url = Uri.parse('$baseUrl/ventas/vendedor/$id');
 
@@ -244,9 +230,41 @@ Future<http.Response> getOrders(String id, String token) async {
       },
     );
 
-    return response;
+    // await Future.delayed(const Duration(seconds: 1));
+
+    final body = jsonDecode(response.body);
+    final list = body as List<dynamic>;
+    var orders = <Order>[];
+
+    for (var item in list) {
+      double total = 0;
+      for (var product in item['productos']) {
+        total += product['cantidad'] * product['valor_unitario'];
+      }
+
+      orders.add(Order(
+        id: item['id'],
+        cliente: item['cliente'],
+        clienteId: item['cliente_id'],
+        fecha: item['fecha'],
+        estado: item['estado'],
+        items: (item['productos'] as List<dynamic>).map((product) => OrderItem(
+          id: product['producto_id'],
+          nombre: product['producto'],
+          cantidad: product['cantidad'],
+          precio: product['valor_unitario'],
+        )).toList(),
+        total: total,
+        fechaCreacion: item['fecha'],
+      ));
+    }
+
+    orders.sort((a, b) => b.fecha.compareTo(a.fecha));
+
+    return orders;
   } catch (e) {
-    return http.Response('Error: $e', 500);
+    print('Error fetching orders: $e');
+    return [];
   }
 }
 
@@ -267,5 +285,54 @@ Future<http.Response> createOrder(Object body, String id, String token) async {
     return response;
   } catch (e) {
     return http.Response('Error: $e', 500);
+  }
+}
+
+Future<List<Order>> getClientOrders(String id, String token) async {
+  final baseUrl = dotenv.env[informesServiceURL];
+  final url = Uri.parse('$baseUrl/ventas/cliente/$id');
+
+  try {
+    final response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token'
+      },
+    );
+
+    // await Future.delayed(const Duration(seconds: 1));
+
+    final body = jsonDecode(response.body);
+    final list = body as List<dynamic>;
+    var orders = <Order>[];
+
+    for (var item in list) {
+      double total = 0;
+      for (var product in item['productos']) {
+        total += product['cantidad'] * product['valor_unitario'];
+      }
+
+      orders.add(Order(
+        id: item['id'],
+        cliente: item['cliente'],
+        clienteId: item['cliente_id'],
+        fecha: item['fecha'],
+        estado: item['estado'],
+        items: (item['productos'] as List<dynamic>).map((product) => OrderItem(
+          id: product['producto_id'],
+          nombre: product['producto'],
+          cantidad: product['cantidad'],
+          precio: product['valor_unitario'],
+        )).toList(),
+        total: total,
+        fechaCreacion: item['fecha'],
+      ));
+    }
+
+    orders.sort((a, b) => b.fecha.compareTo(a.fecha));
+
+    return orders;
+  } catch (e) {
+    return [];
   }
 }

@@ -28,6 +28,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
   bool _isCreatingOrder = false;
   bool _isLoadingClients = false;
   bool _isLoadingInventory = false;
+  bool _isLoadingHistory = false;
 
   final Map<int, int> _cantidades = {}; // productoId -> cantidad
 
@@ -39,74 +40,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
 
   late List<Product> _productos = [];
 
-  final List<Order> _pedidos = [
-    Order(
-      id: 1,
-      cliente: 'Farmacia Central',
-      fecha: '2024-03-20',
-      estado: 'Pendiente',
-      items: [
-        OrderItem(
-          productoId: 1,
-          nombre: 'Paracetamol 500mg',
-          cantidad: 100,
-          precio: 250,
-        ),
-        OrderItem(
-          productoId: 2,
-          nombre: 'Ibuprofeno 600mg',
-          cantidad: 50,
-          precio: 350,
-        ),
-      ],
-      total: 42500,
-      fechaCreacion: '2024-03-20',
-    ),
-    Order(
-      id: 2,
-      cliente: 'Hospital Nacional',
-      fecha: '2024-03-19',
-      estado: 'Procesando',
-      items: [
-        OrderItem(
-          productoId: 3,
-          nombre: 'Amoxicilina 875mg',
-          cantidad: 200,
-          precio: 450,
-        ),
-        OrderItem(
-          productoId: 4,
-          nombre: 'Insulina Rápida',
-          cantidad: 10,
-          precio: 15000,
-        ),
-      ],
-      total: 240000,
-      fechaCreacion: '2024-03-19',
-    ),
-    Order(
-      id: 3,
-      cliente: 'Droguería La Salud',
-      fecha: '2024-03-18',
-      estado: 'Enviado',
-      items: [
-        OrderItem(
-          productoId: 4,
-          nombre: 'Insulina Rápida',
-          cantidad: 5,
-          precio: 15000,
-        ),
-        OrderItem(
-          productoId: 8,
-          nombre: 'Glucómetro',
-          cantidad: 2,
-          precio: 45000,
-        ),
-      ],
-      total: 165000,
-      fechaCreacion: '2024-03-18',
-    ),
-  ];
+  late List<Order> _pedidos = [];
 
   List<Order> get _pedidosFiltrados {
     final fFecha = _filtroFechaCtrl.text.trim();
@@ -123,6 +57,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
     super.initState();
     _loadClients();
     _loadInventory();
+    _loadHistory();
   }
 
   @override
@@ -173,6 +108,22 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
   }
 
   Future<void> _loadHistory() async {
+    setState(() => _isLoadingHistory = true);
+
+    final state = context.read<AppState>();
+
+    final pedidos = await getVendorOrders(state.id, state.token);
+    setState(() => _isLoadingHistory = false);
+
+    try {
+      _pedidos = pedidos;
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cargar el historial de pedidos: $error'),
+        ),
+      );
+    }
   }
 
   double _calculateTotal() {
@@ -231,10 +182,12 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
     }).toList();
 
     final response = await createOrder({
+      'fecha': _fechaCtrl.text.trim(),
       'vendedor': state.userName,
       'vendedor_id': state.id,
       'productos': productos,
       'cliente': _clienteSel,
+      'cliente_id': _clientes.entries.firstWhere((entry) => entry.value == _clienteSel!).key,
       'comision': (_calculateTotal() * 0.05).round(),
     }, state.id, state.token);
 
@@ -254,7 +207,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
     final items = _cantidades.entries.map((e) {
       final prod = _productos.firstWhere((p) => p.id == e.key);
       return OrderItem(
-        productoId: prod.id,
+        id: prod.id,
         nombre: prod.nombre,
         cantidad: e.value,
         precio: prod.precio,
@@ -266,6 +219,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
         Order(
           id: _pedidos.length + 1,
           cliente: _clienteSel!,
+          clienteId: _clientes.entries.firstWhere((entry) => entry.value == _clienteSel!).key,
           fecha: _fechaCtrl.text,
           estado: 'Pendiente',
           items: items,
@@ -567,8 +521,8 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
 
   Widget _buildHistory(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-
     final pedidos = _pedidosFiltrados;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -609,7 +563,15 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
         ),
         const SizedBox(height: 12),
 
-        pedidos.isEmpty ? Container(
+        _isLoadingHistory ? Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: CircularProgressIndicator(
+              color: AppStyles.green1,
+            ),
+          ),
+        )
+        : pedidos.isEmpty ? Container(
           decoration: AppStyles.decoration,
           child: Padding(
             padding: const EdgeInsets.all(24.0),

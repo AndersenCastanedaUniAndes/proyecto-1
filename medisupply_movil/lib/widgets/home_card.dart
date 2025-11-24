@@ -51,14 +51,14 @@ class HomeCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            spacing: 10,
-            children: [
-              _MiniStat(title: stat1Title, value: stat1Value, valueColor: Colors.white),
-              _MiniStat(title: stat2Title, value: stat2Value, valueColor: Colors.white),
-            ],
-          ),
+          // Row(
+          //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+          //   spacing: 10,
+          //   children: [
+          //     _MiniStat(title: stat1Title, value: stat1Value, valueColor: Colors.white),
+          //     _MiniStat(title: stat2Title, value: stat2Value, valueColor: Colors.white),
+          //   ],
+          // ),
         ],
       ),
     );

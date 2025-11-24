@@ -86,7 +86,9 @@ def create_venta(db: Session, venta: VentaCreate) -> models.Venta:
         vendedor_id=venta.vendedor_id,
         productos=[p.dict() for p in venta.productos],
         cliente=venta.cliente,
-        comision=venta.comision
+        cliente_id=venta.cliente_id,
+        comision=venta.comision,
+        estado="Pendiente"
     )
 
     db.add(db_obj)

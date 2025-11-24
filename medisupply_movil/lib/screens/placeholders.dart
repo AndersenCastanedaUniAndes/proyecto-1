@@ -52,10 +52,18 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
   }
 }
 
-class _ClientHome extends StatelessWidget {
+class _ClientHome extends StatefulWidget {
   final VoidCallback onOpenMenu;
   final void Function(_ClientView) onTapCard;
   const _ClientHome({required this.onOpenMenu, required this.onTapCard});
+
+  @override
+  State<_ClientHome> createState() => _ClientHomeState();
+}
+
+class _ClientHomeState extends State<_ClientHome> {
+  bool _isLoadingOrders = false;
+  late Future<List<dynamic>> _futureOrders;
 
   String _getMonthOrdersCost() {
     return '\$285,400';
@@ -74,7 +82,28 @@ class _ClientHome extends StatelessWidget {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    var state = context.read<AppState>();
+    _futureOrders = _fetchClientOrders();
+  }
+
+  Future<List<Order>> _fetchClientOrders() async {
+    setState(() => _isLoadingOrders = true);
+
+    final state = context.read<AppState>();
+
+    final response = getClientOrders(state.id, state.token);
+
+    setState(() => _isLoadingOrders = false);
+
+    return response;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final state = context.watch<AppState>();
     final pendingOrders = _getPendingOrders();
 
     return SingleChildScrollView(
@@ -83,9 +112,9 @@ class _ClientHome extends StatelessWidget {
         children: [
           HomeCard(
             gradient: LinearGradient(colors: [AppStyles.green1, AppStyles.green2]),
-            title: '¡Hola, Farmacia Central!',
+            title: '¡Hola, ${state.userName}!',
             subtitle: 'Cliente MediSupply',
-            onTap: onOpenMenu,
+            onTap: widget.onOpenMenu,
             stat1Title: 'Total este mes',
             stat1Value: _getMonthOrdersCost(),
             stat2Title: 'Pedidos realizados',
@@ -124,7 +153,7 @@ class _ClientHome extends StatelessWidget {
                     title: 'Pedidos',
                     description: 'Crear y gestionar tus pedidos',
                     badge: '$pendingOrders pendientes',
-                    onTap: () => onTapCard(_ClientView.pedidos),
+                    onTap: () => widget.onTapCard(_ClientView.pedidos),
                   ),
                   MenuCard(
                     color: AppStyles.menuCardGreen,
@@ -132,7 +161,7 @@ class _ClientHome extends StatelessWidget {
                     title: 'Entregas',
                     description: 'Consultar entregas programadas',
                     badge: '2 próximas',
-                    onTap: () => onTapCard(_ClientView.entregas),
+                    onTap: () => widget.onTapCard(_ClientView.entregas),
                   ),
                 ],
               );
@@ -586,11 +615,12 @@ class _ClientOrdersViewState extends State<ClientOrdersView>
     Order(
       id: 1,
       cliente: 'Farmacia Central',
+      clienteId: 1,
       fecha: '2024-03-20',
       estado: 'Pendiente',
       items: [
-        OrderItem(productoId: 1, nombre: 'Paracetamol 500mg', cantidad: 100, precio: 250),
-        OrderItem(productoId: 2, nombre: 'Ibuprofeno 600mg', cantidad: 50, precio: 350),
+        OrderItem(id: 1, nombre: 'Paracetamol 500mg', cantidad: 100, precio: 250),
+        OrderItem(id: 2, nombre: 'Ibuprofeno 600mg', cantidad: 50, precio: 350),
       ],
       total: 42500,
       fechaCreacion: '2024-03-20',
@@ -598,11 +628,12 @@ class _ClientOrdersViewState extends State<ClientOrdersView>
     Order(
       id: 2,
       cliente: 'Farmacia Central',
+      clienteId: 1,
       fecha: '2024-03-19',
       estado: 'Procesando',
       items: [
-        OrderItem(productoId: 3, nombre: 'Amoxicilina 875mg', cantidad: 200, precio: 450),
-        OrderItem(productoId: 4, nombre: 'Insulina Rápida', cantidad: 10, precio: 15000),
+        OrderItem(id: 3, nombre: 'Amoxicilina 875mg', cantidad: 200, precio: 450),
+        OrderItem(id: 4, nombre: 'Insulina Rápida', cantidad: 10, precio: 15000),
       ],
       total: 240000,
       fechaCreacion: '2024-03-19',
@@ -668,7 +699,7 @@ class _ClientOrdersViewState extends State<ClientOrdersView>
 
     final items = _cantidades.entries.map((e) {
       final prod = _productos.firstWhere((p) => p.id == e.key);
-      return OrderItem(productoId: prod.id, nombre: prod.nombre, cantidad: e.value, precio: prod.precio);
+      return OrderItem(id: prod.id, nombre: prod.nombre, cantidad: e.value, precio: prod.precio);
     }).toList();
 
     setState(() {
@@ -676,6 +707,7 @@ class _ClientOrdersViewState extends State<ClientOrdersView>
         Order(
           id: _pedidos.length + 1,
           cliente: _clienteActual,
+          clienteId: 0,
           fecha: _fechaCtrl.text,
           estado: 'Pendiente',
           items: items,
