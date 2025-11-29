@@ -56,21 +56,32 @@ Future<http.Response> login(
   }
 }
 
-Future<http.Response> getSailes(String id, String token) async {
+Future<List<SalesPlan>> getSalesPlans(String id, String token) async {
   final baseUrl = dotenv.env[userServiceURL];
-  final url = Uri.parse('$baseUrl/vendedor/$id');
+  final url = Uri.parse('$baseUrl/planes_venta/vendedor/$id');
 
   try {
     final response = await http.get(
       url,
       headers: {
         'Authorization': 'Bearer $token'
-      },
+      }
     );
 
-    return response;
+    final decodedBody = jsonDecode(response.body);
+    final list = decodedBody as List<dynamic>;
+
+    final plans = list.map((p) => SalesPlan(
+      id: p['id'],
+      period: p['periodo'],
+      totalSales: p['valor_ventas'],
+      sellers: (p['vendedores_asignados'] as List<dynamic>).length,
+      state: p['estado'],
+    )).toList();
+
+    return plans;
   } catch (e) {
-    return http.Response('Error: $e', 500);
+    return [];
   }
 }
 
@@ -263,7 +274,6 @@ Future<List<Order>> getVendorOrders(String id, String token) async {
 
     return orders;
   } catch (e) {
-    print('Error fetching orders: $e');
     return [];
   }
 }

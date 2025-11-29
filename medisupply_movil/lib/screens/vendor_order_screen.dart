@@ -444,7 +444,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      '\$${p.precio.toString()} • Stock: ${p.stock}',
+                                      '\$${toMoneyFormat(p.precio)} • Stock: ${p.stock}',
                                       style: const TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey,
@@ -670,7 +670,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
                               ),
                             ),
                             Text(
-                              '${it.cantidad} × \$${it.precio}',
+                              '${it.cantidad} × \$${toMoneyFormat(it.precio)}',
                               style: textTheme.bodySmall?.copyWith(fontSize: 12),
                             ),
                           ],
@@ -684,10 +684,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
                           Text('Total:', style: textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700)),
                           Text(
                             // total price with comma separation
-                            '\$${p.total.toString().replaceAllMapped(
-                              RegExp(r'(\d+)(\d{3})'),
-                              (Match m) => '${m[1]},${m[2]}',
-                            )}',
+                            '\$${toMoneyFormat(p.total)}',
                             style: textTheme.bodySmall?.copyWith(
                               fontWeight: FontWeight.w700,
                               color: AppStyles.green1,

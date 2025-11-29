@@ -27,12 +27,9 @@ class VendorHome extends StatefulWidget {
 class _VendorHomeState extends State<VendorHome> {
   late Future<List<dynamic>> futureActiveClients;
   late Future<List<Visita>> futureVisitsToday;
-  late Future<List<dynamic>> futureOrders;
-
-  String _getSales(String id, String token) {
-    getSailes(id, token);
-    return '\$45,670';
-  }
+  late Future<List<Order>> futureOrders;
+  late Future<List<SalesPlan>> futureSalesPlans;
+  late Future<List> combinedOrdersAndSalesPlans;
 
   String _getSalesPercentage() {
     return '87%';
@@ -46,26 +43,68 @@ class _VendorHomeState extends State<VendorHome> {
     futureActiveClients = getClients(state.id, state.token);
     futureVisitsToday = getVisits(state.id, state.token);
     futureOrders = getVendorOrders(state.id, state.token);
+    futureSalesPlans = getSalesPlans(state.id, state.token);
+
+    combinedOrdersAndSalesPlans = Future.wait([futureOrders, futureSalesPlans]);
   }
 
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
 
-
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          HomeCard(
-            gradient: LinearGradient(colors: [AppStyles.blue1, AppStyles.blue2]),
-            title: '¡Hola, ${state.userName}!',
-            subtitle: 'Vendedor MediSupply',
-            onTap: widget.onOpenMenu,
-            stat1Title: 'Ventas este mes',
-            stat1Value: _getSales(state.id, state.token),
-            stat2Title: 'Meta alcanzada',
-            stat2Value: _getSalesPercentage(),
+          FutureBuilder(
+            future: combinedOrdersAndSalesPlans,
+            builder: (context, snapshot) {
+              String monthSales = '...';
+              String salesGoal = '...';
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                monthSales = '...';
+                salesGoal = '...';
+              } else if (snapshot.hasError) {
+                monthSales = '-';
+                salesGoal = '-';
+              } else if (snapshot.hasData) {
+                final orders = snapshot.data![0] as List<Order>;
+
+                final filteredOrders = orders.where((order) {
+                  final orderDate = DateTime.parse(order.fecha);
+                  final now = DateTime.now();
+                  return orderDate.year == now.year && orderDate.month == now.month;
+                });
+
+                // total sells price with comma separation
+                final totalSales = filteredOrders.fold<double>(0, (previousValue, order) => previousValue + order.total);
+                monthSales = toMoneyFormat(totalSales);
+
+                final plans = snapshot.data![1] as List<SalesPlan>;
+
+                // all active sales plans
+                final activePlans = plans.where((plan) => plan.state == 'activo').toList();
+                double totalGoal = 0;
+                for (var plan in activePlans) {
+                  totalGoal += (plan.totalSales / plan.sellers);
+                }
+
+                double percentage = totalGoal == 0 ? 0 : (totalSales / totalGoal) * 100;
+                salesGoal = '${toMoneyFormat(percentage)}%';
+              }
+
+              return HomeCard(
+                gradient: LinearGradient(colors: [AppStyles.blue1, AppStyles.blue2]),
+                title: '¡Hola, ${state.userName}!',
+                subtitle: 'Vendedor MediSupply',
+                onTap: widget.onOpenMenu,
+                stat1Title: 'Ventas este mes',
+                stat1Value: '\$$monthSales',
+                stat2Title: 'Meta alcanzada',
+                stat2Value: salesGoal,
+              );
+            }
           ),
           const SizedBox(height: 16),
 

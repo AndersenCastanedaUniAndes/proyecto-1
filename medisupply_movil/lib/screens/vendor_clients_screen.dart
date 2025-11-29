@@ -118,7 +118,7 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
 
   String _getTotalValue(List<_Cliente> clientes) {
     final total = clientes.fold<double>(0, (acc, c) => acc + c.valorTotal);
-    return '\$$total';
+    return '\$${toMoneyFormat(total)}';
   }
 
   @override
@@ -190,7 +190,7 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
                         stat1Value: pedidosPendientes.toString(),
                         stat2Color: AppStyles.green1,
                         stat2Title: 'Valor Total',
-                        stat2Value: '\$${c.valorTotal}',
+                        stat2Value: '\$${toMoneyFormat(c.valorTotal)}',
                       ),
                       const SizedBox(height: 8),
 
@@ -205,7 +205,7 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
                               Text('Pedidos Recientes', style: textTheme.titleSmall),
                               const SizedBox(height: 18),
                               if (c.pedidos.isEmpty) ...[
-                                Text('Este cliente no ha realizado pedidos aún.', style: textTheme.bodySmall)
+                                Text('No se encontraron pedidos.', style: textTheme.bodySmall)
                               ]
                               else ...c.pedidos.map((p) => _pedidoTile(p)),
                             ],
@@ -299,7 +299,7 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
                                       Text('Última visita: ${c.ultimaVisita}', style: textTheme.labelMedium?.copyWith(color: AppStyles.grey1, fontWeight: FontWeight.w400)),
 
                                       if (pedidosPendientes > 0) ...[
-                                        Text('\$${c.valorTotal}', style: textTheme.labelMedium?.copyWith(fontSize: 12, color: AppStyles.green1)),
+                                        Text('\$${toMoneyFormat(c.valorTotal)}', style: textTheme.labelMedium?.copyWith(fontSize: 12, color: AppStyles.green1)),
                                       ]
                                     ],
                                   ),
@@ -398,7 +398,7 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
         Text(p.productos.join(', '), style: const TextStyle(fontSize: 12, color: Colors.grey)),
         const SizedBox(height: 6),
 
-        Text('\$${p.valor}', style: const TextStyle(fontSize: 12, color: Colors.green)),
+        Text('\$${toMoneyFormat(p.valor)}', style: const TextStyle(fontSize: 12, color: Colors.green)),
       ]),
     );
   }

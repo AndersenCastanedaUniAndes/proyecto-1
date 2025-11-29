@@ -88,6 +88,28 @@ def eliminar_plan_venta(
     return eliminar_plan_de_venta(plan_id, db, current_user)
 
 
+@router.get("/planes_venta/vendedor/{vendedor_id}", response_model=list)
+def obtener_planes_venta_por_vendedor(vendedor_id: int, db: Session = Depends(get_db), current_user: DBUser = Depends(get_current_user)):
+    vendedor = db.query(DBUser).filter(DBUser.usuario_id == vendedor_id).first()
+    if not vendedor:
+        raise HTTPException(status_code=404, detail="Vendedor no encontrado")
+
+    planes: List[PlanVenta] = db.query(PlanVenta).join(PlanVenta.vendedores_asignados).filter(PlanVendedor.vendedor_id == vendedor_id).all()
+
+    response = [
+        {
+            "id": plan.id,
+            "periodo": plan.periodo,
+            "valor_ventas": float(plan.valor_ventas) if plan.valor_ventas is not None else None,
+            "vendedores_asignados": [pv.vendedor_id for pv in plan.vendedores_asignados],
+            "fecha_creacion": plan.fecha_creacion,
+            "estado": plan.estado,
+        }
+        for plan in planes
+    ]
+
+    return response
+
 # Crear usuario vendedor (registro)
 @router.post("/vendedor/", response_model=User)
 def create_user_vendedor(user: UserCreate, db: Session = Depends(get_db),current_user: DBUser = Depends(get_current_user)):
@@ -96,7 +118,6 @@ def create_user_vendedor(user: UserCreate, db: Session = Depends(get_db),current
 # Obtener usuario vendedor por ID (protegido)
 @router.get("/vendedor/{user_id}", response_model=User)
 def read_user_vendedor(user_id: int, db: Session = Depends(get_db), current_user: DBUser = Depends(get_current_user)):
-     
     return read_vendedor(user_id, db,current_user)
 
 
@@ -122,7 +143,7 @@ def asignar_cliente_a_vendedor(user_id: int, client: PutClient, db: Session = De
 # Obtener los usuarios vendedores (protegido)
 @router.get("/vendedores",response_model=List[User])
 def read_users_vendedores( db: Session = Depends(get_db),skip: int = 0, limit: int = 100, current_user: DBUser = Depends(get_current_user)):
-     return read_vendedores( db,skip,limit,current_user)
+    return read_vendedores( db,skip,limit,current_user)
 
 
 # Actualizar usuario vendedor por ID (protegido)

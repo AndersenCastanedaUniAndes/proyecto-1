@@ -147,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           label: 'Ingresa tu contraseña',
                           prefixIconData: AppIcons.lock,
                           suffixIcon: IconButton(
-                            icon: Icon(_showPassword ? AppIcons.eye : AppIcons.eyeOff),
+                            icon: Icon(_showPassword ? AppIcons.eyeOff : AppIcons.eye),
                             onPressed: () => setState(() => _showPassword = !_showPassword),
                           ),
                           obscureText: !_showPassword,
