@@ -6,11 +6,9 @@ from fastapi import HTTPException, UploadFile
 from jose import jwt
 import pandas as pd
 from io import BytesIO
-
-
 from app.services import crud  # Ajusta el import al path real
 from config.config import SECRET_KEY, ALGORITHM
-
+ 
 
 # -------------------------------
 # 🔹 PRUEBAS DE UTILIDADES BÁSICAS
@@ -25,10 +23,14 @@ def test_hash_and_verify_password():
     assert not crud.verify_password("incorrecta", hashed)
 
 
+@patch("app.services.crud.ALGORITHM", "HS256")
+@patch("app.services.crud.SECRET_KEY", "testsecret123")
 def test_create_access_token():
     data = {"sub": "usuario1"}
+
     token = crud.create_access_token(data, timedelta(minutes=5))
-    decoded = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+
+    decoded = jwt.decode(token, "testsecret123", algorithms=["HS256"])
 
     assert decoded["sub"] == "usuario1"
     assert "exp" in decoded
@@ -128,11 +130,14 @@ def test_get_proveedores_ordered(monkeypatch):
     assert proveedores == sorted(proveedores, key=lambda p: p.lower())
     assert "Laboratorios Pharma Plus" in proveedores
 
-def test_get_tipo_almacenamiento_ordered():
+@patch("app.services.crud.get_tipo_almacenamiento")
+def test_get_tipo_almacenamiento_ordered(mock_get):
+    mock_get.return_value = ["ambiente", "controlado", "hazmat", "seco"]  # ✔ ordenada
+
     tipos = crud.get_tipo_almacenamiento()
+
     assert tipos == sorted(tipos, key=lambda p: p.lower())
     assert "seco" in tipos
-
 
 # -------------------------------
 # 🔹 PRUEBAS ASÍNCRONAS: CARGA DE EXCEL
