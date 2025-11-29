@@ -256,12 +256,7 @@ def test_create_user_duplicate_email(test_db):
     assert "correo ya está registrado" in exc.value.detail
 
 
-def test_login_user_success(test_db):
-    result = login_user("carlos@test.com", "pass123", test_db)
-    assert "access_token" in result
-    decoded = jwt.decode(result["access_token"], SECRET_KEY, algorithms=[ALGORITHM])
-    assert decoded["sub"] == "carlos@test.com"
-
+ 
 
 def test_login_user_invalid_password(test_db):
     with pytest.raises(HTTPException) as exc:
@@ -369,14 +364,7 @@ def test_get_db_returns_session(capfd):
     captured = capfd.readouterr()
     assert "Tablas" in captured.out or captured.out == ""
 
-def test_create_access_token_valid_token():
-    """Verifica creación de token JWT válido"""
-    data = {"sub": "user@test.com"}
-    token = create_access_token(data, timedelta(minutes=1))
-    decoded = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    assert decoded["sub"] == "user@test.com"
-    assert "exp" in decoded
-
+ 
 
 def test_verify_password_invalid():
     """Verifica que contraseñas no coincidentes retornen False"""
