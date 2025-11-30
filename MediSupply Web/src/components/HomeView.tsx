@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {  
   Sidebar,
   SidebarContent,
@@ -188,6 +188,25 @@ export function HomeView({ onLogout }: HomeViewProps) {
       setTimeout(() => marcarTodasComoLeidas(), 500);
     }
   };
+
+  useEffect(() => {
+    const storedSection = localStorage.getItem("active_section");
+    if (
+      storedSection === "proveedores" ||
+      storedSection === "productos" ||
+      storedSection === "vendedores" ||
+      storedSection === "planes-venta" ||
+      storedSection === "informes" ||
+      storedSection === "inventario" ||
+      storedSection === "rutas"
+    ) {
+      setActiveSection(storedSection);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("active_section", activeSection);
+  }, [activeSection]);
 
   const renderMainContent = () => {
     switch (activeSection) {

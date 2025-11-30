@@ -1,4 +1,6 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
+import config from "../config/config";
+import axios from "axios";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -11,17 +13,17 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Checkbox } from "./ui/checkbox";
 import { Textarea } from "./ui/textarea";
 import { Switch } from "./ui/switch";
-import { 
-  Edit, 
-  Trash2, 
-  Save, 
-  X, 
-  Plus, 
-  Truck, 
-  Search, 
-  ChevronDown, 
-  AlertCircle, 
-  ChevronLeft, 
+import {
+  Edit,
+  Trash2,
+  Save,
+  X,
+  Plus,
+  Truck,
+  Search,
+  ChevronDown,
+  AlertCircle,
+  ChevronLeft,
   ChevronRight,
   MapPin,
   Clock,
@@ -80,160 +82,18 @@ interface RutaEntrega {
   tiempoEstimado: number; // minutos
 }
 
-export function RutasEntregaView() {
+interface RutasEntregaViewProps {
+  onSuccess: (mensaje: string, tipo?: "success" | "info" | "warning") => void;
+}
+export function RutasEntregaView({ onSuccess }: RutasEntregaViewProps) {
   // Datos de ejemplo de pedidos listos para despacho
-  const pedidosDisponibles: Pedido[] = [
-    {
-      id: 1,
-      cliente: "Farmacia Central",
-      direccion: "Av. Principal 123, Centro",
-      latitud: 4.6097,
-      longitud: -74.0817,
-      volumen: 0.5,
-      peso: 15,
-      ventanaInicio: "08:00",
-      ventanaFin: "12:00",
-      productos: ["Paracetamol 500mg", "Ibuprofeno 600mg"],
-      valor: 250.00,
-      seleccionado: false
-    },
-    {
-      id: 2,
-      cliente: "Droguería La Salud",
-      direccion: "Calle 85 #15-20, Zona Norte",
-      latitud: 4.6687,
-      longitud: -74.0557,
-      volumen: 0.8,
-      peso: 25,
-      ventanaInicio: "09:00",
-      ventanaFin: "14:00",
-      productos: ["Vacuna COVID-19", "Insulina Rápida"],
-      valor: 480.00,
-      seleccionado: false
-    },
-    {
-      id: 3,
-      cliente: "Hospital Nacional",
-      direccion: "Carrera 30 #45-67, Sur",
-      latitud: 4.5709,
-      longitud: -74.0973,
-      volumen: 1.2,
-      peso: 40,
-      ventanaInicio: "07:00",
-      ventanaFin: "10:00",
-      productos: ["Amoxicilina 875mg", "Medicamentos varios"],
-      valor: 750.00,
-      seleccionado: false
-    },
-    {
-      id: 4,
-      cliente: "Red Farmacias Unidos",
-      direccion: "Av. Caracas #78-45, Occidente",
-      latitud: 4.6285,
-      longitud: -74.1030,
-      volumen: 0.3,
-      peso: 8,
-      ventanaInicio: "13:00",
-      ventanaFin: "17:00",
-      productos: ["Paracetamol 500mg"],
-      valor: 120.00,
-      seleccionado: false
-    },
-    {
-      id: 5,
-      cliente: "Clínica San Juan",
-      direccion: "Calle 127 #11-40, Norte",
-      latitud: 4.7110,
-      longitud: -74.0721,
-      volumen: 0.7,
-      peso: 18,
-      ventanaInicio: "10:00",
-      ventanaFin: "15:00",
-      productos: ["Insulina Rápida", "Ibuprofeno 600mg"],
-      valor: 340.00,
-      seleccionado: false
-    }
-  ];
+  const API_URL = config.API_BASE_RUTAS_URL || "http://localhost:8005";
+  const pedidosDisponibles: Pedido[] = [];
 
-  const [rutasEntrega, setRutasEntrega] = useState<RutaEntrega[]>([
-    {
-      id: 1,
-      nombre: "Ruta Centro-Norte",
-      conductor: "Carlos Mendoza",
-      vehiculo: "Camión Frigorífico - ABC123",
-      capacidadVolumen: 15,
-      capacidadPeso: 1000,
-      temperaturaControlada: true,
-      fechaRuta: "2024-03-20",
-      horaInicio: "07:00",
-      estado: "completada",
-      puntosEntrega: [
-        {
-          id: 1,
-          pedidoId: 1,
-          direccion: "Av. Principal 123, Centro",
-          latitud: 4.6097,
-          longitud: -74.0817,
-          estado: "entregado",
-          horaEstimada: "08:30",
-          horaReal: "08:25",
-          observaciones: "Entrega exitosa"
-        },
-        {
-          id: 2,
-          pedidoId: 2,
-          direccion: "Calle 85 #15-20, Zona Norte",
-          latitud: 4.6687,
-          longitud: -74.0557,
-          estado: "entregado",
-          horaEstimada: "10:00",
-          horaReal: "10:15",
-          observaciones: "Cliente satisfecho"
-        }
-      ],
-      fechaCreacion: "2024-03-19",
-      distanciaTotal: 45.2,
-      tiempoEstimado: 180
-    },
-    {
-      id: 2,
-      nombre: "Ruta Sur-Occidente",
-      conductor: "Ana García",
-      vehiculo: "Furgón - DEF456",
-      capacidadVolumen: 8,
-      capacidadPeso: 500,
-      temperaturaControlada: false,
-      fechaRuta: "2024-03-21",
-      horaInicio: "09:00",
-      estado: "en-progreso",
-      puntosEntrega: [
-        {
-          id: 3,
-          pedidoId: 3,
-          direccion: "Carrera 30 #45-67, Sur",
-          latitud: 4.5709,
-          longitud: -74.0973,
-          estado: "entregado",
-          horaEstimada: "09:30",
-          horaReal: "09:35"
-        },
-        {
-          id: 4,
-          pedidoId: 4,
-          direccion: "Av. Caracas #78-45, Occidente",
-          latitud: 4.6285,
-          longitud: -74.1030,
-          estado: "en-transcurso",
-          horaEstimada: "11:00"
-        }
-      ],
-      fechaCreacion: "2024-03-20",
-      distanciaTotal: 32.8,
-      tiempoEstimado: 150
-    }
-  ]);
+  const [rutasEntrega, setRutasEntrega] = useState<RutaEntrega[]>([]);
 
   const [pedidos, setPedidos] = useState<Pedido[]>(pedidosDisponibles);
+
   const [nuevaRuta, setNuevaRuta] = useState({
     nombre: "",
     conductor: "",
@@ -270,7 +130,7 @@ export function RutasEntregaView() {
   // Filtrar rutas
   const rutasFiltradas = useMemo(() => {
     if (!filtro.trim()) return rutasEntrega;
-    return rutasEntrega.filter(ruta => 
+    return rutasEntrega.filter(ruta =>
       ruta.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
       ruta.conductor.toLowerCase().includes(filtro.toLowerCase()) ||
       ruta.vehiculo.toLowerCase().includes(filtro.toLowerCase()) ||
@@ -281,7 +141,7 @@ export function RutasEntregaView() {
   // Filtrar pedidos en el selector
   const pedidosFiltrados = useMemo(() => {
     if (!filtroPedidos.trim()) return pedidos;
-    return pedidos.filter(pedido => 
+    return pedidos.filter(pedido =>
       pedido.cliente.toLowerCase().includes(filtroPedidos.toLowerCase()) ||
       pedido.direccion.toLowerCase().includes(filtroPedidos.toLowerCase())
     );
@@ -300,18 +160,68 @@ export function RutasEntregaView() {
   const pesoTotal = pedidosSeleccionados.reduce((acc, p) => acc + p.peso, 0);
   const valorTotal = pedidosSeleccionados.reduce((acc, p) => acc + p.valor, 0);
 
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const [rutasRes, pedidosRes] = await Promise.all([
+          axios.get(`${API_URL}/rutas/rutas-entrega?skip=0&limit=100`),
+          axios.get(`${API_URL}/rutas/pedidos?skip=0&limit=100`)
+        ]);
+
+        // 🔧 Normalizar nombres de campos
+        const rutasNormalizadas = rutasRes.data.map((r: any) => ({
+          id: r.id,
+          nombre: r.nombre,
+          conductor: r.conductor,
+          vehiculo: r.vehiculo,
+          capacidadVolumen: r.capacidad_volumen,
+          capacidadPeso: r.capacidad_peso,
+          temperaturaControlada: r.temperatura_controlada,
+          fechaRuta: r.fecha_ruta,
+          horaInicio: r.hora_inicio,
+          estado: r.estado,
+          fechaCreacion: r.fecha_creacion,
+          distanciaTotal: r.distancia_total,
+          tiempoEstimado: r.tiempo_estimado,
+          puntosEntrega: r.puntosEntrega || []
+        }));
+
+        setRutasEntrega(rutasNormalizadas);
+        setPedidos(pedidosRes.data);
+      } catch (error) {
+        console.error("Error al cargar datos:", error);
+        setErrorMessage("No se pudieron cargar las rutas o pedidos.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+
+
   const handleAgregarRuta = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!nuevaRuta.nombre || !nuevaRuta.conductor || !nuevaRuta.vehiculo || 
-        !nuevaRuta.capacidadVolumen || !nuevaRuta.capacidadPeso || 
-        !nuevaRuta.fechaRuta || !nuevaRuta.horaInicio || 
-        nuevaRuta.pedidosSeleccionados.length === 0) {
+
+    // 🔍 Validaciones de campos requeridos
+    if (
+      !nuevaRuta.nombre ||
+      !nuevaRuta.conductor ||
+      !nuevaRuta.vehiculo ||
+      !nuevaRuta.capacidadVolumen ||
+      !nuevaRuta.capacidadPeso ||
+      !nuevaRuta.fechaRuta ||
+      !nuevaRuta.horaInicio ||
+      nuevaRuta.pedidosSeleccionados.length === 0
+    ) {
       setErrorMessage("Por favor completa todos los campos y selecciona al menos un pedido");
       return;
     }
 
-    // Validar capacidades
+    // 🔍 Validaciones de capacidad
     if (volumenTotal > parseFloat(nuevaRuta.capacidadVolumen)) {
       setErrorMessage("El volumen total de los pedidos excede la capacidad del vehículo");
       return;
@@ -324,27 +234,28 @@ export function RutasEntregaView() {
 
     setIsLoading(true);
     setErrorMessage("");
-    
-    setTimeout(() => {
-      const pedidosSeleccionadosData = pedidos.filter(p => 
+
+    try {
+      // 🔧 Crear puntos de entrega a partir de los pedidos seleccionados
+      const pedidosSeleccionadosData = pedidos.filter(p =>
         nuevaRuta.pedidosSeleccionados.includes(p.id)
       );
 
-      // Crear puntos de entrega ordenados por ventana horaria
-      const puntosEntrega: PuntoEntrega[] = pedidosSeleccionadosData
+      const puntosEntrega = pedidosSeleccionadosData
         .sort((a, b) => a.ventanaInicio.localeCompare(b.ventanaInicio))
-        .map((pedido, index) => ({
-          id: index + 1,
+        .map((pedido) => ({
           pedidoId: pedido.id,
           direccion: pedido.direccion,
           latitud: pedido.latitud,
           longitud: pedido.longitud,
-          estado: "pendiente" as const,
-          horaEstimada: pedido.ventanaInicio
+          estado: "pendiente",
+          horaEstimada: nuevaRuta.horaInicio,
+          horaReal: nuevaRuta.horaInicio,
+          observaciones: ""
         }));
 
-      const nuevaRutaCompleta: RutaEntrega = {
-        id: Math.max(...rutasEntrega.map(r => r.id), 0) + 1,
+      // 🧱 Construir el JSON en formato correcto para el backend
+      const nuevaRutaPayload = {
         nombre: nuevaRuta.nombre,
         conductor: nuevaRuta.conductor,
         vehiculo: nuevaRuta.vehiculo,
@@ -354,17 +265,40 @@ export function RutasEntregaView() {
         fechaRuta: nuevaRuta.fechaRuta,
         horaInicio: nuevaRuta.horaInicio,
         estado: "planificada",
-        puntosEntrega,
-        fechaCreacion: new Date().toISOString().split('T')[0],
-        distanciaTotal: Math.round((Math.random() * 50 + 10) * 10) / 10, // Simulado
-        tiempoEstimado: puntosEntrega.length * 45 + 30 // Simulado
+        distanciaTotal: Math.round((Math.random() * 50 + 10) * 10) / 10,
+        tiempoEstimado: puntosEntrega.length * 45 + 30,
+        puntosEntrega: puntosEntrega
       };
 
-      setRutasEntrega([...rutasEntrega, nuevaRutaCompleta]);
-      
-      // Remover pedidos utilizados de la lista disponible
+      //console.log("Payload de nueva ruta:", nuevaRutaPayload);
+      // 🚀 Enviar la nueva ruta al backend
+      const response = await axios.post(`${API_URL}/rutas/rutas-entrega`, nuevaRutaPayload);
+
+
+
+      // 🔁 Normalizar la respuesta del backend
+      const rutaCreada = {
+        id: response.data.id,
+        nombre: response.data.nombre,
+        conductor: response.data.conductor,
+        vehiculo: response.data.vehiculo,
+        capacidadVolumen: response.data.capacidad_volumen,
+        capacidadPeso: response.data.capacidad_peso,
+        temperaturaControlada: response.data.temperatura_controlada,
+        fechaRuta: response.data.fecha_ruta,
+        horaInicio: response.data.hora_inicio,
+        estado: response.data.estado,
+        fechaCreacion: response.data.fecha_creacion,
+        distanciaTotal: response.data.distancia_total,
+        tiempoEstimado: response.data.tiempo_estimado,
+        puntosEntrega: response.data.puntos_entrega || [],
+      };
+
+      // ✅ Actualizar el estado local
+      setRutasEntrega([...rutasEntrega, rutaCreada]);
       setPedidos(pedidos.filter(p => !nuevaRuta.pedidosSeleccionados.includes(p.id)));
-      
+
+      // 🔄 Reset del formulario
       setNuevaRuta({
         nombre: "",
         conductor: "",
@@ -374,10 +308,19 @@ export function RutasEntregaView() {
         temperaturaControlada: false,
         fechaRuta: "",
         horaInicio: "",
-        pedidosSeleccionados: []
+        pedidosSeleccionados: [],
       });
+
+      setIsFormOpen(false);
+
+      onSuccess?.(`Ruta "${rutaCreada.nombre}" agregado exitosamente`, "success");
+
+    } catch (error) {
+      console.error("Error al crear la ruta:", error);
+      setErrorMessage("No se pudo crear la ruta. Verifica los datos o intenta más tarde.");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const iniciarEdicion = (ruta: RutaEntrega) => {
@@ -410,26 +353,26 @@ export function RutasEntregaView() {
   };
 
   const guardarEdicion = (id: number) => {
-    if (!rutaEditada.nombre || !rutaEditada.conductor || !rutaEditada.vehiculo || 
-        !rutaEditada.capacidadVolumen || !rutaEditada.capacidadPeso || 
-        !rutaEditada.fechaRuta || !rutaEditada.horaInicio) {
+    if (!rutaEditada.nombre || !rutaEditada.conductor || !rutaEditada.vehiculo ||
+      !rutaEditada.capacidadVolumen || !rutaEditada.capacidadPeso ||
+      !rutaEditada.fechaRuta || !rutaEditada.horaInicio) {
       setErrorMessage("Por favor completa todos los campos obligatorios");
       return;
     }
 
-    setRutasEntrega(rutasEntrega.map(r => 
-      r.id === id 
-        ? { 
-            ...r, 
-            nombre: rutaEditada.nombre,
-            conductor: rutaEditada.conductor,
-            vehiculo: rutaEditada.vehiculo,
-            capacidadVolumen: parseFloat(rutaEditada.capacidadVolumen),
-            capacidadPeso: parseFloat(rutaEditada.capacidadPeso),
-            temperaturaControlada: rutaEditada.temperaturaControlada,
-            fechaRuta: rutaEditada.fechaRuta,
-            horaInicio: rutaEditada.horaInicio
-          }
+    setRutasEntrega(rutasEntrega.map(r =>
+      r.id === id
+        ? {
+          ...r,
+          nombre: rutaEditada.nombre,
+          conductor: rutaEditada.conductor,
+          vehiculo: rutaEditada.vehiculo,
+          capacidadVolumen: parseFloat(rutaEditada.capacidadVolumen),
+          capacidadPeso: parseFloat(rutaEditada.capacidadPeso),
+          temperaturaControlada: rutaEditada.temperaturaControlada,
+          fechaRuta: rutaEditada.fechaRuta,
+          horaInicio: rutaEditada.horaInicio
+        }
         : r
     ));
     setEditandoId(null);
@@ -446,15 +389,21 @@ export function RutasEntregaView() {
     setErrorMessage("");
   };
 
-  const eliminarRuta = (id: number) => {
-    setRutasEntrega(rutasEntrega.filter(r => r.id !== id));
+
+  const eliminarRuta = async (id: number) => {
+    try {
+      await axios.delete(`${API_URL}/rutas-entrega/${id}`);
+      setRutasEntrega(rutasEntrega.filter(r => r.id !== id));
+    } catch (error) {
+      console.error("Error eliminando ruta:", error);
+    }
   };
 
   const togglePedidoSeleccionado = (pedidoId: number) => {
     const nuevosSeleccionados = nuevaRuta.pedidosSeleccionados.includes(pedidoId)
       ? nuevaRuta.pedidosSeleccionados.filter(id => id !== pedidoId)
       : [...nuevaRuta.pedidosSeleccionados, pedidoId];
-    
+
     setNuevaRuta({
       ...nuevaRuta,
       pedidosSeleccionados: nuevosSeleccionados
@@ -543,69 +492,69 @@ export function RutasEntregaView() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-7 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Total Rutas</CardTitle>
+            <CardTitle className="text-sm text-center">Total Rutas</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col items-center text-center">
             <div className="text-2xl font-bold">{estadisticas.totalRutas}</div>
             <p className="text-xs text-muted-foreground">registradas</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Planificadas</CardTitle>
+            <CardTitle className="text-sm text-center">Planificadas</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col items-center text-center">
             <div className="text-2xl font-bold text-blue-600">{estadisticas.planificadas}</div>
             <p className="text-xs text-muted-foreground">listas</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">En Progreso</CardTitle>
+            <CardTitle className="text-sm text-center">En Progreso</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col items-center text-center">
             <div className="text-2xl font-bold text-orange-600">{estadisticas.enProgreso}</div>
             <p className="text-xs text-muted-foreground">activas</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Completadas</CardTitle>
+            <CardTitle className="text-sm text-center">Completadas</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col items-center text-center">
             <div className="text-2xl font-bold text-green-600">{estadisticas.completadas}</div>
             <p className="text-xs text-muted-foreground">finalizadas</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Distancia Total</CardTitle>
+            <CardTitle className="text-sm text-center">Distancia Total</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col items-center text-center">
             <div className="text-2xl font-bold">{estadisticas.distanciaTotal.toFixed(1)} km</div>
             <p className="text-xs text-muted-foreground">recorrida</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Tiempo Total</CardTitle>
+            <CardTitle className="text-sm text-center">Tiempo Total</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col items-center text-center">
             <div className="text-2xl font-bold">{Math.round(estadisticas.tiempoTotal / 60)}h</div>
             <p className="text-xs text-muted-foreground">estimado</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Pedidos</CardTitle>
+            <CardTitle className="text-sm text-center">Pedidos</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col items-center text-center">
             <div className="text-2xl font-bold">{estadisticas.pedidosDisponibles}</div>
             <p className="text-xs text-muted-foreground">disponibles</p>
           </CardContent>
@@ -644,13 +593,13 @@ export function RutasEntregaView() {
                       placeholder="Ej: Ruta Centro-Norte"
                       value={nuevaRuta.nombre}
                       onChange={(e) => {
-                        setNuevaRuta({...nuevaRuta, nombre: e.target.value});
+                        setNuevaRuta({ ...nuevaRuta, nombre: e.target.value });
                         setErrorMessage("");
                       }}
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="conductor">Conductor</Label>
                     <Input
@@ -658,7 +607,7 @@ export function RutasEntregaView() {
                       placeholder="Nombre del conductor"
                       value={nuevaRuta.conductor}
                       onChange={(e) => {
-                        setNuevaRuta({...nuevaRuta, conductor: e.target.value});
+                        setNuevaRuta({ ...nuevaRuta, conductor: e.target.value });
                         setErrorMessage("");
                       }}
                       required
@@ -674,13 +623,13 @@ export function RutasEntregaView() {
                       placeholder="Ej: Camión Frigorífico - ABC123"
                       value={nuevaRuta.vehiculo}
                       onChange={(e) => {
-                        setNuevaRuta({...nuevaRuta, vehiculo: e.target.value});
+                        setNuevaRuta({ ...nuevaRuta, vehiculo: e.target.value });
                         setErrorMessage("");
                       }}
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
                       <Thermometer className="h-4 w-4" />
@@ -690,7 +639,7 @@ export function RutasEntregaView() {
                       <Switch
                         checked={nuevaRuta.temperaturaControlada}
                         onCheckedChange={(checked) => {
-                          setNuevaRuta({...nuevaRuta, temperaturaControlada: checked});
+                          setNuevaRuta({ ...nuevaRuta, temperaturaControlada: checked });
                           setErrorMessage("");
                         }}
                       />
@@ -714,7 +663,7 @@ export function RutasEntregaView() {
                         placeholder="15.0"
                         value={nuevaRuta.capacidadVolumen}
                         onChange={(e) => {
-                          setNuevaRuta({...nuevaRuta, capacidadVolumen: e.target.value});
+                          setNuevaRuta({ ...nuevaRuta, capacidadVolumen: e.target.value });
                           setErrorMessage("");
                         }}
                         className="pl-10"
@@ -722,7 +671,7 @@ export function RutasEntregaView() {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="capacidadPeso">Capacidad de Peso (kg)</Label>
                     <div className="relative">
@@ -734,7 +683,7 @@ export function RutasEntregaView() {
                         placeholder="1000"
                         value={nuevaRuta.capacidadPeso}
                         onChange={(e) => {
-                          setNuevaRuta({...nuevaRuta, capacidadPeso: e.target.value});
+                          setNuevaRuta({ ...nuevaRuta, capacidadPeso: e.target.value });
                           setErrorMessage("");
                         }}
                         className="pl-10"
@@ -753,13 +702,13 @@ export function RutasEntregaView() {
                       type="date"
                       value={nuevaRuta.fechaRuta}
                       onChange={(e) => {
-                        setNuevaRuta({...nuevaRuta, fechaRuta: e.target.value});
+                        setNuevaRuta({ ...nuevaRuta, fechaRuta: e.target.value });
                         setErrorMessage("");
                       }}
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="horaInicio">Hora de Inicio</Label>
                     <Input
@@ -767,7 +716,7 @@ export function RutasEntregaView() {
                       type="time"
                       value={nuevaRuta.horaInicio}
                       onChange={(e) => {
-                        setNuevaRuta({...nuevaRuta, horaInicio: e.target.value});
+                        setNuevaRuta({ ...nuevaRuta, horaInicio: e.target.value });
                         setErrorMessage("");
                       }}
                       required
@@ -778,7 +727,7 @@ export function RutasEntregaView() {
                 {/* Selección de pedidos */}
                 <div className="space-y-3">
                   <Label>Seleccionar Pedidos para la Ruta</Label>
-                  
+
                   <div className="border rounded-lg p-4 max-h-80 overflow-y-auto">
                     <div className="mb-3">
                       <div className="relative">
@@ -791,7 +740,7 @@ export function RutasEntregaView() {
                         />
                       </div>
                     </div>
-                    
+
                     <div className="space-y-3">
                       {pedidosFiltrados.length === 0 ? (
                         <p className="text-sm text-muted-foreground text-center py-4">
@@ -816,7 +765,7 @@ export function RutasEntregaView() {
                                   </label>
                                   <Badge variant="outline">${pedido.valor.toFixed(2)}</Badge>
                                 </div>
-                                
+
                                 <div className="text-sm text-muted-foreground">
                                   <div className="flex items-center gap-1 mb-1">
                                     <MapPin className="h-3 w-3" />
@@ -837,7 +786,7 @@ export function RutasEntregaView() {
                       )}
                     </div>
                   </div>
-                  
+
                   {/* Resumen de selección */}
                   {nuevaRuta.pedidosSeleccionados.length > 0 && (
                     <div className="bg-muted p-3 rounded-lg">
@@ -856,7 +805,7 @@ export function RutasEntregaView() {
                           <span className="font-medium">Valor:</span> ${valorTotal.toFixed(2)}
                         </div>
                       </div>
-                      
+
                       {/* Alertas de capacidad */}
                       {nuevaRuta.capacidadVolumen && volumenTotal > parseFloat(nuevaRuta.capacidadVolumen) && (
                         <Alert variant="destructive" className="mt-2">
@@ -866,7 +815,7 @@ export function RutasEntregaView() {
                           </AlertDescription>
                         </Alert>
                       )}
-                      
+
                       {nuevaRuta.capacidadPeso && pesoTotal > parseFloat(nuevaRuta.capacidadPeso) && (
                         <Alert variant="destructive" className="mt-2">
                           <AlertCircle className="h-4 w-4" />
@@ -878,7 +827,7 @@ export function RutasEntregaView() {
                     </div>
                   )}
                 </div>
-                
+
                 <Button type="submit" disabled={isLoading}>
                   {isLoading ? "Creando Ruta..." : "Crear Ruta de Entrega"}
                 </Button>
@@ -943,29 +892,29 @@ export function RutasEntregaView() {
                             </Badge>
                           )}
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                           <div className="flex items-center gap-2">
                             <Truck className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">Conductor:</span> {ruta.conductor}
                           </div>
-                          
+
                           <div className="flex items-center gap-2">
                             <Package className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">Entregas:</span> {ruta.puntosEntrega.length}
                           </div>
-                          
+
                           <div className="flex items-center gap-2">
                             <Navigation className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">Distancia:</span> {ruta.distanciaTotal}km
                           </div>
-                          
+
                           <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <span className="font-medium">Tiempo:</span> {Math.round(ruta.tiempoEstimado / 60)}h {ruta.tiempoEstimado % 60}m
                           </div>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-muted-foreground">
                           <div>
                             <span className="font-medium">Vehículo:</span> {ruta.vehiculo}
@@ -977,7 +926,7 @@ export function RutasEntregaView() {
                             <span className="font-medium">Hora Inicio:</span> {ruta.horaInicio}
                           </div>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
                           <div>
                             <span className="font-medium">Capacidad:</span> {ruta.capacidadVolumen}m³ / {ruta.capacidadPeso}kg
@@ -987,7 +936,7 @@ export function RutasEntregaView() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex gap-2 ml-4">
                         <Dialog>
                           <DialogTrigger asChild>
@@ -995,14 +944,16 @@ export function RutasEntregaView() {
                               <Eye className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
+
                           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+
                             <DialogHeader>
                               <DialogTitle>Detalle de Ruta - {ruta.nombre}</DialogTitle>
                               <DialogDescription>
                                 Información completa de la ruta y secuencia de entregas
                               </DialogDescription>
                             </DialogHeader>
-                            
+
                             <div className="space-y-6">
                               {/* Información general */}
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1031,7 +982,7 @@ export function RutasEntregaView() {
                                     </div>
                                   </div>
                                 </div>
-                                
+
                                 <div>
                                   <h4 className="font-medium mb-3">Detalles Operativos</h4>
                                   <div className="space-y-2 text-sm">
@@ -1062,16 +1013,16 @@ export function RutasEntregaView() {
                                   </div>
                                 </div>
                               </div>
-                              
+
                               {/* Secuencia de entregas */}
                               <div>
                                 <h4 className="font-medium mb-3 flex items-center gap-2">
                                   <Navigation className="h-4 w-4" />
-                                  Secuencia de Entregas ({ruta.puntosEntrega.length})
+                                  Secuencia de Entregas ({ruta.puntosEntrega.length || 0})
                                 </h4>
-                                
+
                                 <div className="space-y-3">
-                                  {ruta.puntosEntrega.map((punto, index) => (
+                                  {(ruta.puntosEntrega ?? []).map((punto, index) => (
                                     <div key={punto.id} className="border rounded-lg p-4">
                                       <div className="flex items-start justify-between mb-2">
                                         <div className="flex items-center gap-3">
@@ -1085,7 +1036,7 @@ export function RutasEntregaView() {
                                         </div>
                                         {getEstadoPuntoBadge(punto.estado)}
                                       </div>
-                                      
+
                                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm ml-11">
                                         <div>
                                           <span className="font-medium">Hora Estimada:</span> {punto.horaEstimada}
@@ -1099,7 +1050,7 @@ export function RutasEntregaView() {
                                           <span className="font-medium">Coordenadas:</span> {punto.latitud.toFixed(4)}, {punto.longitud.toFixed(4)}
                                         </div>
                                       </div>
-                                      
+
                                       {punto.observaciones && (
                                         <div className="mt-2 ml-11">
                                           <p className="text-sm">
@@ -1111,24 +1062,26 @@ export function RutasEntregaView() {
                                   ))}
                                 </div>
                               </div>
-                              
+
                               <div className="pt-4 border-t text-xs text-muted-foreground">
                                 Ruta creada el {new Date(ruta.fechaCreacion).toLocaleDateString('es-ES')}
                               </div>
                             </div>
+
                           </DialogContent>
+
                         </Dialog>
-                        
+
                         {editandoId === ruta.id ? (
                           <div className="flex gap-1">
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               onClick={() => guardarEdicion(ruta.id)}
                             >
                               <Save className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={cancelarEdicion}
                             >
@@ -1137,16 +1090,16 @@ export function RutasEntregaView() {
                           </div>
                         ) : (
                           <>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={() => iniciarEdicion(ruta)}
                               disabled={ruta.estado === "completada"}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={() => eliminarRuta(ruta.id)}
                               disabled={ruta.estado === "en-progreso"}
@@ -1157,7 +1110,7 @@ export function RutasEntregaView() {
                         )}
                       </div>
                     </div>
-                    
+
                     {/* Formulario de edición */}
                     {editandoId === ruta.id && (
                       <div className="mt-4 pt-4 border-t space-y-4">
@@ -1166,7 +1119,7 @@ export function RutasEntregaView() {
                             <Label>Nombre de la Ruta</Label>
                             <Input
                               value={rutaEditada.nombre}
-                              onChange={(e) => setRutaEditada({...rutaEditada, nombre: e.target.value})}
+                              onChange={(e) => setRutaEditada({ ...rutaEditada, nombre: e.target.value })}
                               placeholder="Nombre de la ruta"
                             />
                           </div>
@@ -1174,7 +1127,7 @@ export function RutasEntregaView() {
                             <Label>Conductor</Label>
                             <Input
                               value={rutaEditada.conductor}
-                              onChange={(e) => setRutaEditada({...rutaEditada, conductor: e.target.value})}
+                              onChange={(e) => setRutaEditada({ ...rutaEditada, conductor: e.target.value })}
                               placeholder="Nombre del conductor"
                             />
                           </div>
@@ -1184,7 +1137,7 @@ export function RutasEntregaView() {
                             <Label>Vehículo</Label>
                             <Input
                               value={rutaEditada.vehiculo}
-                              onChange={(e) => setRutaEditada({...rutaEditada, vehiculo: e.target.value})}
+                              onChange={(e) => setRutaEditada({ ...rutaEditada, vehiculo: e.target.value })}
                               placeholder="Información del vehículo"
                             />
                           </div>
@@ -1193,7 +1146,7 @@ export function RutasEntregaView() {
                             <Input
                               type="date"
                               value={rutaEditada.fechaRuta}
-                              onChange={(e) => setRutaEditada({...rutaEditada, fechaRuta: e.target.value})}
+                              onChange={(e) => setRutaEditada({ ...rutaEditada, fechaRuta: e.target.value })}
                             />
                           </div>
                         </div>
@@ -1201,7 +1154,7 @@ export function RutasEntregaView() {
                     )}
                   </div>
                 ))}
-                
+
                 {/* Paginación */}
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between pt-4 border-t">
@@ -1218,7 +1171,7 @@ export function RutasEntregaView() {
                         <ChevronLeft className="h-4 w-4" />
                         Anterior
                       </Button>
-                      
+
                       <div className="flex gap-1">
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                           <Button
@@ -1232,7 +1185,7 @@ export function RutasEntregaView() {
                           </Button>
                         ))}
                       </div>
-                      
+
                       <Button
                         variant="outline"
                         size="sm"

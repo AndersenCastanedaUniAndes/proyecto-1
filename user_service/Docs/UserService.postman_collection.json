@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "4d86925f-66df-43bf-9c92-a72dbf3bd126",
+		"_postman_id": "2696fe30-d01c-4f67-a5da-458d2afcc657",
 		"name": "User Service API",
 		"description": "# User Service API\n\nColección de endpoints para el microservicio de gestión de usuarios.\n\n## Endpoints disponibles\n- Crear usuario\n- Obtener usuario por ID\n- Actualizar usuario\n- Eliminar usuario\n\nIncluye ejemplos de request y response, así como descripciones detalladas de cada endpoint.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
@@ -8,214 +8,47 @@
 	},
 	"item": [
 		{
-			"name": "Rol Usuario",
-			"item": [
-				{
-					"name": "Crear",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"nombre_usuario\": \"usuario1\",\n  \"email\": \"usuario@email.com\",\n  \"contrasena\": \"Password123!\",\n  \"rol\": \"usuario\"\n}"
-						},
-						"url": {
-							"raw": "http://localhost:8000/users",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8000",
-							"path": [
-								"users"
-							]
-						},
-						"description": "Crea un nuevo usuario en el sistema.\n\n### Request Body\n- `username` (string, requerido): Nombre de usuario único.\n- `email` (string, requerido): Correo electrónico válido.\n- `password` (string, requerido): Contraseña segura.\n\n### Response\n- **201 Created**: Usuario creado exitosamente.\n- **400 Bad Request**: Datos inválidos o usuario ya existe."
-					},
-					"response": []
+			"name": "Crear usuario",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"nombre_usuario\": \"usuario1\",\n  \"email\": \"usuario1@email.com\",\n  \"contrasena\": \"Password123!\",\n  \"rol\": \"usuario\"\n}"
 				},
-				{
-					"name": "Obtener por Id",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{access_token_user}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://localhost:8000/users/1",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8000",
-							"path": [
-								"users",
-								"1"
-							]
-						},
-						"description": "Obtiene la información de un usuario por su ID.\n\n### Path Parameter\n- `id` (integer, requerido): ID del usuario.\n\n### Response\n- **200 OK**: Usuario encontrado.\n- **404 Not Found**: Usuario no existe."
-					},
-					"response": []
-				},
-				{
-					"name": "Actualizar por Id",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{access_token_user}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"username\": \"usuario1_modificado\",\n  \"email\": \"usuario1nuevo@email.com\",\n  \"password\": \"NuevoPassword123!\"\n}"
-						},
-						"url": {
-							"raw": "http://localhost:8000/users/1",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8000",
-							"path": [
-								"users",
-								"1"
-							]
-						},
-						"description": "Actualiza la información de un usuario existente.\n\n### Path Parameter\n- `id` (integer, requerido): ID del usuario.\n\n### Request Body\n- `username` (string, opcional): Nuevo nombre de usuario.\n- `email` (string, opcional): Nuevo correo electrónico.\n- `password` (string, opcional): Nueva contraseña.\n\n### Response\n- **200 OK**: Usuario actualizado.\n- **404 Not Found**: Usuario no existe."
-					},
-					"response": []
-				},
-				{
-					"name": "Eliminar (No permitido por el rol)",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{access_token_user}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "DELETE",
-						"header": [],
-						"url": {
-							"raw": "http://localhost:8000/users/2",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8000",
-							"path": [
-								"users",
-								"2"
-							]
-						},
-						"description": "Elimina un usuario del sistema por su ID.\n\n### Path Parameter\n- `id` (integer, requerido): ID del usuario.\n\n### Response\n- **200 OK**: Usuario eliminado.\n- **404 Not Found**: Usuario no existe."
-					},
-					"response": []
-				},
-				{
-					"name": "Login",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {\r",
-									"    const response = pm.response.json();\r",
-									"    console.log(\"JSON parseado:\", response);\r",
-									"    pm.environment.set(\"access_token_user\", response.access_token);\r",
-									"    pm.environment.set(\"token_type_user\", response.token_type);\r",
-									"    pm.environment.set(\"refresh_token_user\", response.refresh_token);\r",
-									"    \r",
-									"    \r",
-									"} else {\r",
-									"    console.log(\"❌ Error en la respuesta\");\r",
-									"}"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
+				"url": {
+					"raw": "http://localhost:8000/users",
+					"protocol": "http",
+					"host": [
+						"localhost"
 					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/x-www-form-urlencoded"
-							}
-						],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "usuario1nuevo@email.com",
-									"type": "text"
-								},
-								{
-									"key": "password",
-									"value": "Password123!",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "http://localhost:8000/token",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8000",
-							"path": [
-								"token"
-							]
-						},
-						"description": "Generated from cURL: curl --location 'http://localhost:8000/token' \\\n--header 'Content-Type: application/x-www-form-urlencoded' \\\n--data-urlencode 'username=admin1@email.com' \\\n--data-urlencode 'password=Admin123!'"
-					},
-					"response": []
+					"port": "8000",
+					"path": [
+						"users"
+					]
 				},
+				"description": "Crea un nuevo usuario en el sistema.\n\n### Request Body\n- `username` (string, requerido): Nombre de usuario único.\n- `email` (string, requerido): Correo electrónico válido.\n- `password` (string, requerido): Contraseña segura.\n\n### Response\n- **201 Created**: Usuario creado exitosamente.\n- **400 Bad Request**: Datos inválidos o usuario ya existe."
+			},
+			"response": [
 				{
-					"name": "Refresh token",
-					"request": {
-						"method": "POST",
+					"name": "Usuario creado",
+					"originalRequest": {
+						"method": "GET",
 						"header": [
 							{
 								"key": "Content-Type",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"refresh_token\": \"{{refresh_token_user}}\"\n}",
+							"raw": "{\r\n    \"nombre_usuario\": \"usuario_prueba\",\r\n    \"email\": \"prueba@example.com\",\r\n    \"contrasena\": \"password123\",\r\n    \"rol\": \"usuario\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -223,178 +56,74 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8000/auth/refresh",
+							"raw": "http://localhost:8000/users/",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "8000",
 							"path": [
-								"auth",
-								"refresh"
+								"users",
+								""
 							]
-						},
-						"description": "Generated from cURL: curl --location 'http://localhost:8000/auth/refresh' \\\n--header 'Content-Type: application/json' \\\n--data-raw '{\n    \"refresh_token\": \"TU_REFRESH_TOKEN_AQUI\"\n}'"
+						}
 					},
-					"response": []
-				},
-				{
-					"name": "Blacklist",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{access_token_user}}"
-							}
-						],
-						"url": {
-							"raw": "http://localhost:8000/auth/blacklist",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8000",
-							"path": [
-								"auth",
-								"blacklist"
-							]
-						},
-						"description": "Generated from cURL: curl --location 'http://localhost:8000/auth/blacklist' \\\n--header 'Authorization: Bearer TU_ACCESS_TOKEN_AQUI'"
-					},
-					"response": []
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": "Text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1,\n  \"username\": \"usuario1\",\n  \"email\": \"usuario1@email.com\"\n}"
 				}
 			]
 		},
 		{
-			"name": "Rol Admin",
-			"item": [
+			"name": "Crear administrador",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"nombre_usuario\": \"admin1\",\n  \"email\": \"admin1@email.com\",\n  \"contrasena\": \"Admin123!\",\n  \"rol\": \"admin\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8000/users",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"users"
+					]
+				},
+				"description": "Crea un nuevo usuario en el sistema.\n\n### Request Body\n- `username` (string, requerido): Nombre de usuario único.\n- `email` (string, requerido): Correo electrónico válido.\n- `password` (string, requerido): Contraseña segura.\n\n### Response\n- **201 Created**: Usuario creado exitosamente.\n- **400 Bad Request**: Datos inválidos o usuario ya existe."
+			},
+			"response": [
 				{
-					"name": "Crear",
-					"request": {
-						"method": "POST",
+					"name": "Usuario creado",
+					"originalRequest": {
+						"method": "GET",
 						"header": [
 							{
 								"key": "Content-Type",
-								"value": "application/json"
+								"value": "application/json",
+								"type": "text"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"nombre_usuario\": \"admin1\",\n  \"email\": \"admin1@emai3l.com\",\n  \"contrasena\": \"Admin123!\",\n  \"rol\": \"admin\"\n}"
-						},
-						"url": {
-							"raw": "http://localhost:8000/users",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8000",
-							"path": [
-								"users"
-							]
-						},
-						"description": "Crea un nuevo usuario en el sistema.\n\n### Request Body\n- `username` (string, requerido): Nombre de usuario único.\n- `email` (string, requerido): Correo electrónico válido.\n- `password` (string, requerido): Contraseña segura.\n\n### Response\n- **201 Created**: Usuario creado exitosamente.\n- **400 Bad Request**: Datos inválidos o usuario ya existe."
-					},
-					"response": []
-				},
-				{
-					"name": "Login",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {\r",
-									"    const response = pm.response.json();\r",
-									"    console.log(\"JSON parseado:\", response);\r",
-									"    pm.environment.set(\"access_token_admin\", response.access_token);\r",
-									"    pm.environment.set(\"token_type_admin\", response.token_type);\r",
-									"    pm.environment.set(\"refresh_token_admin\", response.refresh_token);\r",
-									"    \r",
-									"    \r",
-									"} else {\r",
-									"    console.log(\"❌ Error en la respuesta\");\r",
-									"}"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/x-www-form-urlencoded"
-							}
-						],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "admin1@emai3l.com",
-									"type": "text"
-								},
-								{
-									"key": "password",
-									"value": "Admin123!",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "http://localhost:8000/token",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8000",
-							"path": [
-								"token"
-							]
-						},
-						"description": "Generated from cURL: curl --location 'http://localhost:8000/token' \\\n--header 'Content-Type: application/x-www-form-urlencoded' \\\n--data-urlencode 'username=admin1@email.com' \\\n--data-urlencode 'password=Admin123!'"
-					},
-					"response": []
-				},
-				{
-					"name": "Refresh token",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 200) {\r",
-									"    const response = pm.response.json();\r",
-									"    console.log(\"JSON parseado:\", response);\r",
-									"    pm.environment.set(\"access_token_admin\", response.access_token);\r",
-									"    pm.environment.set(\"token_type_admin\", response.token_type);\r",
-									"    pm.environment.set(\"refresh_token_admin\", response.refresh_token);\r",
-									"    \r",
-									"    \r",
-									"} else {\r",
-									"    console.log(\"❌ Error en la respuesta\");\r",
-									"}"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"refresh_token\": \"{{refresh_token_admin}}\"\n}",
+							"raw": "{\r\n    \"nombre_usuario\": \"usuario_prueba\",\r\n    \"email\": \"prueba@example.com\",\r\n    \"contrasena\": \"password123\",\r\n    \"rol\": \"usuario\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -402,22 +131,263 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:8000/auth/refresh",
+							"raw": "http://localhost:8000/users/",
 							"protocol": "http",
 							"host": [
 								"localhost"
 							],
 							"port": "8000",
 							"path": [
-								"auth",
-								"refresh"
+								"users",
+								""
 							]
-						},
-						"description": "Generated from cURL: curl --location 'http://localhost:8000/auth/refresh' \\\n--header 'Content-Type: application/json' \\\n--data-raw '{\n    \"refresh_token\": \"TU_REFRESH_TOKEN_AQUI\"\n}'"
+						}
 					},
-					"response": []
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": "Text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1,\n  \"username\": \"usuario1\",\n  \"email\": \"usuario1@email.com\"\n}"
 				}
 			]
+		},
+		{
+			"name": "Obtener usuario por ID",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/users/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"users",
+						"1"
+					]
+				},
+				"description": "Obtiene la información de un usuario por su ID.\n\n### Path Parameter\n- `id` (integer, requerido): ID del usuario.\n\n### Response\n- **200 OK**: Usuario encontrado.\n- **404 Not Found**: Usuario no existe."
+			},
+			"response": [
+				{
+					"name": "Usuario encontrado",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": ""
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "Text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1,\n  \"username\": \"usuario1\",\n  \"email\": \"usuario1@email.com\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Actualizar usuario",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"username\": \"usuario1_modificado\",\n  \"email\": \"usuario1nuevo@email.com\",\n  \"password\": \"NuevoPassword123!\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:8000/users/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"users",
+						"1"
+					]
+				},
+				"description": "Actualiza la información de un usuario existente.\n\n### Path Parameter\n- `id` (integer, requerido): ID del usuario.\n\n### Request Body\n- `username` (string, opcional): Nuevo nombre de usuario.\n- `email` (string, opcional): Nuevo correo electrónico.\n- `password` (string, opcional): Nueva contraseña.\n\n### Response\n- **200 OK**: Usuario actualizado.\n- **404 Not Found**: Usuario no existe."
+			},
+			"response": [
+				{
+					"name": "Usuario actualizado",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": ""
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "Text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"id\": 1,\n  \"username\": \"usuario1_modificado\",\n  \"email\": \"usuario1nuevo@email.com\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Eliminar usuario",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/users/1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"users",
+						"1"
+					]
+				},
+				"description": "Elimina un usuario del sistema por su ID.\n\n### Path Parameter\n- `id` (integer, requerido): ID del usuario.\n\n### Response\n- **200 OK**: Usuario eliminado.\n- **404 Not Found**: Usuario no existe."
+			},
+			"response": [
+				{
+					"name": "Usuario eliminado",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": ""
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "Text",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						}
+					],
+					"cookie": [],
+					"body": "{\n  \"message\": \"Usuario eliminado exitosamente.\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Crear token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Script simplificado para debuggear\r",
+							"console.log(\"🚀 Script iniciado\");\r",
+							"\r",
+							"// Verificar respuesta\r",
+							"console.log(\"Código de respuesta:\", pm.response.code);\r",
+							"console.log(\"Respuesta:\", pm.response.text());\r",
+							"\r",
+							"if (pm.response.code === 200) {\r",
+							"    console.log(\"✅ Respuesta exitosa\");\r",
+							"    \r",
+							"    // Parsear respuesta\r",
+							"    const response = pm.response.json();\r",
+							"    console.log(\"JSON parseado:\", response);\r",
+							"    \r",
+							"    // Guardar variables\r",
+							"    pm.environment.set(\"access_token\", response.access_token);\r",
+							"    pm.environment.set(\"token_type\", response.token_type);\r",
+							"    \r",
+							"    console.log(\"Variables guardadas\");\r",
+							"    \r",
+							"} else {\r",
+							"    console.log(\"❌ Error en la respuesta\");\r",
+							"}"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "admin1@email.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "Admin123!",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8000/token",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"token"
+					]
+				},
+				"description": "Generated from cURL: curl --location 'http://localhost:8000/token' \\\n--header 'Content-Type: application/x-www-form-urlencoded' \\\n--data-urlencode 'username=admin1@email.com' \\\n--data-urlencode 'password=Admin123!'"
+			},
+			"response": []
 		}
 	]
 }

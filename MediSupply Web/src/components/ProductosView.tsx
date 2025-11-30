@@ -367,65 +367,83 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
     setErrorMessage("");
   };
 
-  const guardarEdicion = (id: number) => {
-    const datosCompletos = Object.entries(productoEditado).every(([key, valor]) => {
-      const val = valor ? valor.toString().trim() : "";
-      if (productoEditado.tipoAlmacenamiento === "ambiente" && (key === "temperaturaMin" || key === "temperaturaMax")) {
-        return true;
-      }
-      return val !== "";
-    });
-
-    if (!datosCompletos) {
+  const guardarEdicion = async (id: number) => {
+    if (!productoEditado.nombre.trim() || !productoEditado.lote.trim()) {
       setErrorMessage("Por favor completa todos los campos requeridos");
       return;
     }
 
-    setProductos(productos.map(p =>
-      p.id === id
-        ? {
-          ...p,
-          nombre: (productoEditado.nombre ?? "").trim(),
-          lote: (productoEditado.lote ?? "").trim(),
-          numeroSerial: (productoEditado.numeroSerial ?? "").trim(),
-          proveedor: (productoEditado.proveedor ?? "").trim(),
-          precioUnidad: parseFloat(productoEditado.precioUnidad ?? "0"),
-          precioTotal: parseFloat(productoEditado.precioTotal ?? "0"),
-          paisOrigen: (productoEditado.paisOrigen ?? "").trim(),
-          uom: (["unidad", "paquete", "caja", "pallet"].includes(productoEditado.uom ?? "")
-            ? (productoEditado.uom as "unidad" | "paquete" | "caja" | "pallet")
-            : "unidad"),
-          cantidad: parseInt(productoEditado.cantidad ?? "0"),
-          tipoAlmacenamiento: (["ambiente", "controlado", "hazmat"].includes(productoEditado.tipoAlmacenamiento ?? "")
-            ? (productoEditado.tipoAlmacenamiento as "ambiente" | "controlado" | "hazmat")
-            : "ambiente"),
-          ...(productoEditado.tipoAlmacenamiento !== "ambiente" && {
-            temperaturaMin: parseFloat(productoEditado.temperaturaMin ?? "0"),
-            temperaturaMax: parseFloat(productoEditado.temperaturaMax ?? "0"),
-          }),
-        }
-        : p
-    ));
-    setEditandoId(null);
-    setProductoEditado({
-      nombre: "",
-      lote: "",
-      numeroSerial: "",
-      proveedor: "",
-      precioUnidad: "",
-      precioTotal: "",
-      paisOrigen: "",
-      uom: "",
-      cantidad: "",
-      tipoAlmacenamiento: "",
-      temperaturaMin: "",
-      temperaturaMax: ""
-    });
+    setIsLoading(true);
     setErrorMessage("");
+
+    try {
+      const response = await fetch(`${config.API_BASE_URL}/productos/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: productoEditado.nombre.trim(),
+          lote: productoEditado.lote.trim(),
+          numeroSerial: productoEditado.numeroSerial.trim(),
+          proveedor: productoEditado.proveedor,
+          precioUnidad: parseFloat(productoEditado.precioUnidad),
+          precioTotal: parseFloat(productoEditado.precioTotal),
+          paisOrigen: productoEditado.paisOrigen,
+          uom: productoEditado.uom,
+          cantidad: parseInt(productoEditado.cantidad),
+          tipoAlmacenamiento: productoEditado.tipoAlmacenamiento,
+          temperaturaMin: productoEditado.temperaturaMin ? parseFloat(productoEditado.temperaturaMin) : null,
+          temperaturaMax: productoEditado.temperaturaMax ? parseFloat(productoEditado.temperaturaMax) : null,
+        }),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Error al actualizar producto");
+      }
+
+      const actualizado = await response.json();
+      setProductos(productos.map((p) => (p.id === id ? actualizado : p)));
+      setEditandoId(null);
+      setProductoEditado({
+        nombre: "",
+        lote: "",
+        numeroSerial: "",
+        proveedor: "",
+        precioUnidad: "",
+        precioTotal: "",
+        paisOrigen: "",
+        uom: "",
+        cantidad: "",
+        tipoAlmacenamiento: "",
+        temperaturaMin: "",
+        temperaturaMax: "",
+      });
+      onSuccess?.(`Producto "${actualizado.nombre}" actualizado correctamente`);
+    } catch (error: any) {
+      console.error(error);
+      setErrorMessage(error.message || "Error al actualizar producto");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const eliminarProducto = (id: number) => {
-    setProductos(productos.filter(p => p.id !== id));
+
+  const eliminarProducto = async (id: number) => {
+    if (!confirm("¿Seguro que deseas eliminar este producto?")) return;
+
+    try {
+      const response = await fetch(`${config.API_BASE_URL}/productos/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Error al eliminar producto");
+
+      setProductos(productos.filter((p) => p.id !== id));
+      onSuccess?.(`Producto eliminado correctamente`);
+    } catch (error: any) {
+      console.error(error);
+      setErrorMessage(error.message || "Error al eliminar producto");
+    }
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -645,10 +663,10 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                         <SelectValue placeholder="Selecciona un proveedor" />
                       </SelectTrigger>
                       <SelectContent {...({ forceMount: true } as any)}>
-                        {proveedoresDisponibles.map((proveedor) => (
-                          <SelectItem key={proveedor} value={proveedor}>
+                        {proveedoresDisponibles.map((proveedor, index) => (
+                          <SelectItem key={`${proveedor}-${index}`} value={proveedor}>
                             {proveedor}
-                          </SelectItem> 
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -737,7 +755,7 @@ export function ProductosView({ onSuccess }: ProductosViewProps) {
                       <SelectTrigger>
                         <SelectValue placeholder="Unidad de medida" />
                       </SelectTrigger>
-                      <SelectContent {...({ forceMount: true ,modal:false} as any)}>
+                      <SelectContent {...({ forceMount: true, modal: false } as any)}>
                         {uomsDisponibles.map((uom) => (
                           <SelectItem key={uom} value={uom}>
                             {uom}

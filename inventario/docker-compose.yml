@@ -1,0 +1,20 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:16
+    container_name: inventario-postgres
+    environment:
+      POSTGRES_USER: inventario
+      POSTGRES_PASSWORD: inventario
+      POSTGRES_DB: inventario
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_inventario:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inventario -d inventario"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  pgdata_inventario:

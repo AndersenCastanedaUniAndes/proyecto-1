@@ -5,11 +5,10 @@ from typing import List
 
 from ..services import crud
 from ..models.producto import ProductoBase, ProductoCreate, ProductoUpdate, ProductoOut
-from ..models.databases import get_db
+from ..models.database import get_db
 from ..utils.auth import get_current_user
 
 from ..services import crud
-from ..models.databases import get_db
 from ..models.producto import ProductoCreate
 
 router = APIRouter()

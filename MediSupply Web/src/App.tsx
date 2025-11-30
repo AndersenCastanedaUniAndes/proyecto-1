@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LoginForm } from "./components/LoginForm";
 import { ForgotPasswordForm } from "./components/ForgotPasswordForm";
 import { HomeView } from "./components/HomeView";
@@ -7,8 +7,20 @@ import { Toaster } from "./components/ui/sonner";
 export default function App() {
   const [currentView, setCurrentView] = useState<"login" | "forgot-password" | "home">("login");
 
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      setCurrentView("home");
+    }
+  }, []);
+
   const showForgotPassword = () => setCurrentView("forgot-password");
-  const showLogin = () => setCurrentView("login");
+  const showLogin = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("token_type");
+    setCurrentView("login");
+  };
   const showHome = () => setCurrentView("home");
 
   if (currentView === "home") {

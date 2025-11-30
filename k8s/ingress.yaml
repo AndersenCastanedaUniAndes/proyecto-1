@@ -1,0 +1,61 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: medisupply-ingress
+  namespace: medisupply
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+    - host: medisupply.local
+      http:
+        paths:
+          - path: /forgotPassword
+            pathType: Prefix
+            backend:
+              service:
+                name: user-service
+                port:
+                  number: 80
+          - path: /users
+            pathType: Prefix
+            backend:
+              service:
+                name: user-service
+                port:
+                  number: 80
+          - path: /proveedores
+            pathType: Prefix
+            backend:
+              service:
+                name: proveedores-service
+                port:
+                  number: 80
+          - path: /productos
+            pathType: Prefix
+            backend:
+              service:
+                name: productos-service
+                port:
+                  number: 80
+          - path: /informes
+            pathType: Prefix
+            backend:
+              service:
+                name: informes-service
+                port:
+                  number: 80
+          - path: /inventario
+            pathType: Prefix
+            backend:
+              service:
+                name: inventario-service
+                port:
+                  number: 80
+          - path: /rutas
+            pathType: Prefix
+            backend:
+              service:
+                name: rutas-service
+                port:
+                  number: 80

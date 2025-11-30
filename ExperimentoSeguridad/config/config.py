@@ -12,7 +12,7 @@ REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 # Configuración de seguridad
 CLOCK_SKEW_TOLERANCE_SECONDS = 60  # Tolerancia para clock skew ±60s
-SKEW_SECONDS = 60  # Alias para compatibilidad
+SKEW_SECONDS = 61  # Alias para compatibilidad
 
 # Configuración de claves RSA
 KEYS_DIRECTORY = "keys"

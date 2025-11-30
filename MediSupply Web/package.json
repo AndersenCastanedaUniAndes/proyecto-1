@@ -49,6 +49,9 @@
             "vaul": "^1.1.2"
       },
       "devDependencies": {
+            "@babel/preset-env": "^7.28.5",
+            "@babel/preset-react": "^7.28.5",
+            "@babel/preset-typescript": "^7.28.5",
             "@testing-library/jest-dom": "^6.9.1",
             "@testing-library/react": "^16.3.0",
             "@types/jest": "^30.0.0",
@@ -56,15 +59,18 @@
             "@types/react": "^19.2.2",
             "@types/react-dom": "^19.2.1",
             "@vitejs/plugin-react-swc": "^3.10.2",
+            "babel-jest": "^30.2.0",
+            "babel-plugin-transform-import-meta": "^2.3.3",
             "jest": "^30.2.0",
             "jest-environment-jsdom": "^30.2.0",
             "ts-jest": "^29.4.4",
-            "vite": "6.3.5"
+            "vite": "6.3.5",
+            "whatwg-fetch": "^3.6.20"
       },
       "scripts": {
-                                          "dev": "vite",
-                                          "build": "vite build",
-                                          "test": "jest --runInBand",
-                                          "test:watch": "jest --watch"
+            "dev": "vite",
+            "build": "vite build",
+            "test": "jest --runInBand",
+            "test:watch": "jest --watch"
       }
 }
