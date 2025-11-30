@@ -24,20 +24,25 @@ class QuickStats extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _CardStat(color: stat1Color, value: stat1Value, caption: stat1Title)
+          child: CardStat(color: stat1Color, value: stat1Value, caption: stat1Title)
         ),
         SizedBox(width: 12),
-        Expanded(child: _CardStat(color: stat2Color, value: stat2Value, caption: stat2Title)),
+        Expanded(child: CardStat(color: stat2Color, value: stat2Value, caption: stat2Title)),
       ],
     );
   }
 }
 
-class _CardStat extends StatelessWidget {
+class CardStat extends StatelessWidget {
   final Color color;
   final String value;
   final String caption;
-  const _CardStat({required this.color, required this.value, required this.caption});
+  const CardStat({
+    super.key,
+    required this.color,
+    required this.value,
+    required this.caption
+  });
 
   @override
   Widget build(BuildContext context) {

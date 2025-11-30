@@ -3,7 +3,6 @@ import 'package:medisupply_movil/screens/screens.dart';
 import 'package:provider/provider.dart';
 import 'view_types.dart';
 import 'state/app_state.dart';
-import 'screens/placeholders.dart';
 
 /// Parser simple que convierte un RouteInformation (location) a AppView
 class AppRouteParser extends RouteInformationParser<AppView> {
@@ -59,14 +58,11 @@ class AppRouterDelegate extends RouterDelegate<AppView>
       case AppView.register:
         screen = const RegisterScreen();
         break;
-      case AppView.adminHome:
-        screen = const AdminHomeScreen();
-        break;
       case AppView.vendorHome:
         screen = const VendorScreen();
         break;
       case AppView.clientHome:
-        screen = const ClientHomeScreen();
+        screen = const ClientScreen();
         break;
     }
 

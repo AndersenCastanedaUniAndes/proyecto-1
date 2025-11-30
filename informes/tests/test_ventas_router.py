@@ -26,40 +26,93 @@ class TestVentasRouter(unittest.TestCase):
             "valor_total": 30.0,
             "cliente": "Clínica Vida Plena",
             "comision": 12.0,
+            "cliente_id": 5,        # ← AGREGAR
+            "productos": [],        # ← AGREGAR (según tu modelo)
+            "estado": "activo",     # ← AGREGAR
+            "comision": 12.0,
         }
     # ---------- GET / ----------
     @patch("app.routes.routes.crud.get_ventas")
     def test_get_ventas_ok(self, mock_get_ventas):
+
+        self.venta_data["productos"] = [
+            {
+                "producto": "Paracetamol 500mg",
+                "producto_id": 8,
+                "cantidad": 200,
+                "valor_unitario": 0.15
+            }
+        ]
+
         mock_get_ventas.return_value = [self.venta_data]
+
         response = self.client.get("/ventas/")
         self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(response.json(), list)
-        self.assertEqual(response.json()[0]["producto"], "Paracetamol 500mg")
+
+        ventas = response.json()
+        self.assertIsInstance(ventas, list)
+
+        self.assertEqual(
+            ventas[0]["productos"][0]["producto"],
+            "Paracetamol 500mg"
+        )
+
         mock_get_ventas.assert_called_once()
+
+    
 
     # ---------- POST / ----------
     @patch("app.routes.routes.crud.create_venta")
-    def test_create_venta_ok(self, mock_create_venta):
-        mock_create_venta.return_value = VentaOut(**self.venta_data)
+    def test_create_venta(self, mock_create):
 
         venta_in = {
             "fecha": str(date.today()),
             "vendedor": "admin2_ventas",
             "vendedor_id": 1,
-            "producto": "Paracetamol 500mg",
-            "producto_id": 8,
-            "cantidad": 200,
-            "valor_unitario": 0.15,
-            "valor_total": 30.0,
+            "productos": [
+                {
+                    "producto": "Paracetamol 500mg",
+                    "producto_id": 8,
+                    "cantidad": 200,
+                    "valor_unitario": 0.15
+                }
+            ],
             "cliente": "Clínica Vida Plena",
-            "comision": 12.0,
+            "cliente_id": 5,
+            "comision": 12.0
         }
 
+        venta_out = {
+            "id": 1,
+            "fecha": str(date.today()),
+            "vendedor": "admin2_ventas",
+            "vendedor_id": 1,
+            "productos": [
+                {
+                    "producto": "Paracetamol 500mg",
+                    "producto_id": 8,
+                    "cantidad": 200,
+                    "valor_unitario": 0.15
+                }
+            ],
+            "cliente": "Clínica Vida Plena",
+            "cliente_id": 5,
+            "comision": 12.0,
+            "estado": "activo"
+        }
+
+        mock_create.return_value = venta_out
+
         response = self.client.post("/ventas/", json=venta_in)
-        print("🔍 Response:", response.json())
+
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json()["producto"], "Paracetamol 500mg")
-        mock_create_venta.assert_called_once()
+        data = response.json()
+
+        self.assertEqual(data["cliente"], venta_in["cliente"])
+        self.assertEqual(data["cliente_id"], venta_in["cliente_id"])
+        self.assertEqual(data["productos"][0]["producto"], "Paracetamol 500mg")
+
+        mock_create.assert_called_once()
 
     # ---------- GET /{id} ----------
     @patch("app.routes.routes.crud.get_venta")

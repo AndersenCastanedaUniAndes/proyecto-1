@@ -1,0 +1,3 @@
+USER_SERVICE_URL=http://localhost:8001
+INFORMES_SERVICE_URL=http://localhost:8004
+INVENTORY_SERVICE_URL=http://localhost:8005

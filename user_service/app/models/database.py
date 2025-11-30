@@ -1,24 +1,15 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# URL de conexión a la base de datos (ajústala según tu motor)
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:postgres@34.63.242.21:5432/users"
-# Para PostgreSQL sería algo como:
-# SQLALCHEMY_DATABASE_URL = "postgresql://user:password@localhost/dbname"
+# URL de conexión
+from config.config import DATABASE_URL
 
-# Crea el motor de conexión
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False}  # Solo para SQLite
-)
-
-# Configuración de sesión
+engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base para los modelos
+# Base ÚNICA
 Base = declarative_base()
 
-# Dependencia para obtener la sesión
 def get_db():
     db = SessionLocal()
     try:

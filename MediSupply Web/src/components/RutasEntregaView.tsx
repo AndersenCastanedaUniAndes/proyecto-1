@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import config from "../config/config";
 import axios from "axios";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -86,7 +87,7 @@ interface RutasEntregaViewProps {
 }
 export function RutasEntregaView({ onSuccess }: RutasEntregaViewProps) {
   // Datos de ejemplo de pedidos listos para despacho
-  const API_URL = import.meta.env.VITE_API_BASE_RUTAS_URL || "http://localhost:8005";
+  const API_URL = config.API_BASE_RUTAS_URL || "http://localhost:8005";
   const pedidosDisponibles: Pedido[] = [];
 
   const [rutasEntrega, setRutasEntrega] = useState<RutaEntrega[]>([]);

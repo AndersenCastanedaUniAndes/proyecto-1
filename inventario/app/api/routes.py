@@ -2,20 +2,25 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from ..application.commands import AjustarStockCommand, CrearProductoCommand
+from ..application.commands import AjustarStockCommand, CrearProductoCommand, CrearBodegaCommand
 from ..application.handlers import (
     handle_ajustar_stock,
     handle_crear_producto,
     handle_listar_productos,
     handle_obtener_producto,
+    handle_listar_bodegas,
+    handle_obtener_bodega,
+    handle_crear_bodega,
 )
-from ..application.queries import ListarProductosQuery, ObtenerProductoQuery
+from ..application.queries import ListarProductosQuery, ObtenerProductoQuery, ListarBodegasQuery, ObtenerBodegaQuery
 from ..domain.repositories import UnitOfWork
 from ..schemas.inventario import (
     AjusteStockRequest,
     CrearProductoRequest,
     BodegaSchema,
+    BodegaDetalleSchema,
     ProductoInventarioSchema,
+    CrearBodegaRequest,
 )
 
 
@@ -43,7 +48,7 @@ def listar_productos(q: str | None = Query(default=None), uow: UnitOfWork = Depe
             stock_total=p.stock_total,
             stock_minimo=p.stock_minimo,
             status=p.status.value,
-            bodegas=p.bodegas,
+            bodegas=[BodegaDetalleSchema.model_validate(b) for b in p.bodegas],
             fecha_ultima_actualizacion=p.fecha_ultima_actualizacion,
             proveedor=p.proveedor,
             categoria=p.categoria,
@@ -67,7 +72,7 @@ def obtener_producto(producto_id: int, uow: UnitOfWork = Depends(get_uow)):
         stock_total=p.stock_total,
         stock_minimo=p.stock_minimo,
         status=p.status.value,
-        bodegas=[BodegaSchema.model_validate(b) for b in p.bodegas],
+        bodegas=[BodegaDetalleSchema.model_validate(b) for b in p.bodegas],
         fecha_ultima_actualizacion=p.fecha_ultima_actualizacion,
         proveedor=p.proveedor,
         categoria=p.categoria,
@@ -140,3 +145,31 @@ def crear_producto(body: CrearProductoRequest, uow: UnitOfWork = Depends(get_uow
         categoria=created.categoria,
         valor_unitario=created.valor_unitario,
     )
+
+
+@router.get("/bodegas", response_model=list[BodegaSchema])
+def listar_bodegas(uow: UnitOfWork = Depends(get_uow)):
+    bodegas = handle_listar_bodegas(uow, ListarBodegasQuery())
+    return [BodegaSchema.model_validate(b) for b in bodegas]
+
+
+@router.get("/bodegas/{bodega_id}", response_model=BodegaSchema)
+def obtener_bodega(bodega_id: int, uow: UnitOfWork = Depends(get_uow)):
+    bodega = handle_obtener_bodega(uow, ObtenerBodegaQuery(bodega_id=bodega_id))
+    if not bodega:
+        raise HTTPException(status_code=404, detail="Bodega no encontrada")
+    return BodegaSchema.model_validate(bodega)
+
+
+@router.post("/bodegas", response_model=BodegaSchema, status_code=201)
+def crear_bodega(body: CrearBodegaRequest, uow: UnitOfWork = Depends(get_uow)):
+    created = handle_crear_bodega(
+        uow,
+        CrearBodegaCommand(
+            id=body.id,
+            nombre=body.nombre,
+            direccion=body.direccion,
+        ),
+    )
+    return BodegaSchema.model_validate(created)
+

@@ -1,7 +1,5 @@
 from sqlalchemy import Column, Float, Integer, String, Date, func
-from sqlalchemy.ext.declarative import declarative_base
-
-Base = declarative_base()
+from app.models.database import Base
 
 
 class Producto(Base):

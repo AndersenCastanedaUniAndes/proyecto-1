@@ -6,7 +6,6 @@ enum AppView {
   login,
   forgotPassword,
   register,
-  adminHome,
   vendorHome,
   clientHome,
 }
@@ -26,8 +25,6 @@ extension AppViewPath on AppView {
         return '/forgot-password';
       case AppView.register:
         return '/register';
-      case AppView.adminHome:
-        return '/admin';
       case AppView.vendorHome:
         return '/vendor';
       case AppView.clientHome:
@@ -44,8 +41,6 @@ AppView appViewFromPath(String path) {
       return AppView.forgotPassword;
     case '/register':
       return AppView.register;
-    case '/admin':
-      return AppView.adminHome;
     case '/vendor':
       return AppView.vendorHome;
     case '/client':

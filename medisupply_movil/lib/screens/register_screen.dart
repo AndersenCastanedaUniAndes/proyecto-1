@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:medisupply_movil/styles/styles.dart';
 import 'package:medisupply_movil/widgets/widgets.dart';
+import 'package:medisupply_movil/state/app_state.dart';
+import 'package:medisupply_movil/view_types.dart';
+import 'package:medisupply_movil/utils/utils.dart';
 import 'package:provider/provider.dart';
-import '../state/app_state.dart';
-import '../view_types.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -69,11 +70,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 2));
+
+    var response = await register({
+      'empresa': _empresaCtrl.text.trim(),
+      'nombre_usuario': _contactoCtrl.text.trim(),
+      'email': _correoCtrl.text.trim(),
+      'contrasena': _passwordCtrl.text.trim(),
+      'telefono': _telefonoCtrl.text.trim(),
+      'direccion': _direccionCtrl.text.trim(),
+      'ciudad': _ciudadCtrl.text.trim(),
+    });
+
     setState(() => _isLoading = false);
-    context.read<AppState>().registerNewClient(email: _correoCtrl.text.trim());
+
+    if (response.statusCode != 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error ${response.statusCode}: ${response.body}'),
+        ),
+      );
+      return;
+    }
+
+    final appState = context.read<AppState>();
+    appState.registerNewClient(username: _contactoCtrl.text.trim());
   }
 
   @override
@@ -101,14 +126,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       children: [
                         AppIcon(colorScheme: colorScheme),
                         const SizedBox(height: 26),
-        
+
                         AppTitleAndSubtitle(
                           textTheme: textTheme,
                           titleLabel: 'Crear Cuenta Cliente',
                           subtitleLabel: 'Regístrate para acceder a nuestros servicios farmacéuticos',
                         ),
                         const SizedBox(height: 24),
-        
+
                         Text('Nombre de la Empresa', style: textTheme.titleMedium),
                         SizedBox(height: 2),
                         AppTextFormField(
@@ -118,7 +143,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           validator: (v) => _required(v, label: 'El nombre de la empresa'),
                         ),
                         const SizedBox(height: 14),
-        
+
                         Text('Nombre de Contacto', style: textTheme.titleMedium),
                         SizedBox(height: 2),
                         AppTextFormField(
@@ -128,7 +153,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           validator: (v) => _required(v, label: 'El nombre de la empresa'),
                         ),
                         const SizedBox(height: 14),
-        
+
                         Text('Correo Electrónico', style: textTheme.titleMedium),
                         SizedBox(height: 2),
                         AppTextFormField(
@@ -139,7 +164,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           validator: _emailValidator,
                         ),
                         const SizedBox(height: 14),
-        
+
                         Text('Teléfono', style: textTheme.titleMedium),
                         SizedBox(height: 2),
                         AppTextFormField(
@@ -150,7 +175,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           validator: (v) => _required(v, label: 'El teléfono'),
                         ),
                         const SizedBox(height: 14),
-        
+
                         Text('Dirección', style: textTheme.titleMedium),
                         SizedBox(height: 2),
                         AppTextFormField(
@@ -160,7 +185,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           validator: (v) => _required(v, label: 'La dirección'),
                         ),
                         const SizedBox(height: 14),
-        
+
                         Text('Ciudad', style: textTheme.titleMedium),
                         SizedBox(height: 2),
                         AppTextFormField(
@@ -169,7 +194,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           validator: (v) => _required(v, label: 'La ciudad'),
                         ),
                         const SizedBox(height: 14),
-        
+
                         Text('Contraseña', style: textTheme.titleMedium),
                         SizedBox(height: 2),
                         AppTextFormField(
@@ -177,14 +202,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           label: 'Mínimo 6 caracteres',
                           prefixIconData: AppIcons.lock,
                           suffixIcon: IconButton(
-                            icon: Icon(_showPassword ? AppIcons.eye : AppIcons.eyeOff),
+                            icon: Icon(_showPassword ? AppIcons.eyeOff : AppIcons.eye),
                             onPressed: () => setState(() => _showPassword = !_showPassword),
                           ),
                           obscureText: !_showPassword,
                           validator: _passwordValidator,
                         ),
                         const SizedBox(height: 16),
-        
+
                         Text('Confirmar Contraseña', style: textTheme.titleMedium),
                         SizedBox(height: 2),
                         AppTextFormField(
@@ -192,14 +217,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           label: 'Confirma tu contraseña',
                           prefixIconData: AppIcons.lock,
                           suffixIcon: IconButton(
-                            icon: Icon(_showConfirmPassword ? AppIcons.eye : AppIcons.eyeOff),
+                            icon: Icon(_showConfirmPassword ? AppIcons.eyeOff : AppIcons.eye),
                             onPressed: () => setState(() => _showConfirmPassword = !_showConfirmPassword),
                           ),
                           obscureText: !_showConfirmPassword,
                           validator: _confirmPasswordValidator,
                         ),
                         const SizedBox(height: 16),
-        
+
                         ConfirmationButton(
                           isLoading: _isLoading,
                           onTap: _submit,
@@ -207,7 +232,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           onTapLabel: 'Creando cuenta...',
                         ),
                         const SizedBox(height: 20),
-        
+
                         AppClickableText(
                           onTap: () => context.read<AppState>().navigateTo(AppView.login),
                           label: '¿Ya tienes cuenta? Inicia sesión aquí',

@@ -10,3 +10,13 @@ class ListarProductosQuery:
 @dataclass
 class ObtenerProductoQuery:
     producto_id: int
+
+
+@dataclass
+class ListarBodegasQuery:
+    pass
+
+
+@dataclass
+class ObtenerBodegaQuery:
+    bodega_id: int

@@ -2,15 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app.models.user import PlanVentaUpdate, User, UserCreate, UserUpdate
-from app.models.db_models import DBUser,    PlanVenta, PlanVendedor
+from app.models.user import PlanVentaUpdate, User, UserCreate, UserUpdate, ClientCreate, PutClient
+from app.models.db_models import DBUser, PlanVenta, PlanVendedor, DBClient
+from app.models.database import get_db
 from typing import List
 from app.services.user_service import (
     create_user, 
     get_user, 
     update_user, 
     delete_user, 
-    get_db, 
     verify_password, 
     create_access_token,
     get_current_user,
@@ -24,8 +24,11 @@ from app.services.user_service import (
     listar_planes_venta,
     obtener_plan_venta_por_id,
     actualizar_plan_de_venta,
-    eliminar_plan_de_venta
-
+    eliminar_plan_de_venta,
+    create_client,
+    get_all_clients,
+    get_vendedor_clients,
+    get_client,
 )
 
 router = APIRouter()
@@ -85,6 +88,28 @@ def eliminar_plan_venta(
     return eliminar_plan_de_venta(plan_id, db, current_user)
 
 
+@router.get("/planes_venta/vendedor/{vendedor_id}", response_model=list)
+def obtener_planes_venta_por_vendedor(vendedor_id: int, db: Session = Depends(get_db), current_user: DBUser = Depends(get_current_user)):
+    vendedor = db.query(DBUser).filter(DBUser.usuario_id == vendedor_id).first()
+    if not vendedor:
+        raise HTTPException(status_code=404, detail="Vendedor no encontrado")
+
+    planes: List[PlanVenta] = db.query(PlanVenta).join(PlanVenta.vendedores_asignados).filter(PlanVendedor.vendedor_id == vendedor_id).all()
+
+    response = [
+        {
+            "id": plan.id,
+            "periodo": plan.periodo,
+            "valor_ventas": float(plan.valor_ventas) if plan.valor_ventas is not None else None,
+            "vendedores_asignados": [pv.vendedor_id for pv in plan.vendedores_asignados],
+            "fecha_creacion": plan.fecha_creacion,
+            "estado": plan.estado,
+        }
+        for plan in planes
+    ]
+
+    return response
+
 # Crear usuario vendedor (registro)
 @router.post("/vendedor/", response_model=User)
 def create_user_vendedor(user: UserCreate, db: Session = Depends(get_db),current_user: DBUser = Depends(get_current_user)):
@@ -93,13 +118,32 @@ def create_user_vendedor(user: UserCreate, db: Session = Depends(get_db),current
 # Obtener usuario vendedor por ID (protegido)
 @router.get("/vendedor/{user_id}", response_model=User)
 def read_user_vendedor(user_id: int, db: Session = Depends(get_db), current_user: DBUser = Depends(get_current_user)):
-     
     return read_vendedor(user_id, db,current_user)
+
+
+@router.post("/vendedor/{user_id}/cliente")
+def asignar_cliente_a_vendedor(user_id: int, client: PutClient, db: Session = Depends(get_db)):
+    vendedor: DBUser = db.query(DBUser).filter(DBUser.usuario_id == user_id).first()
+    if not vendedor:
+        raise HTTPException(status_code=404, detail="Vendedor no encontrado.")
+
+    cliente = db.query(DBClient).filter(DBClient.id == client.client_id).first()
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado.")
+
+    for c in vendedor.clientes:
+        if c.id == client.client_id:
+            raise HTTPException(status_code=400, detail="El cliente ya está asignado a este vendedor.")
+
+    vendedor.clientes.append(cliente)
+    db.commit()
+    return {"message": f"Cliente {client.client_id} asignado al vendedor {user_id} exitosamente."}
+
 
 # Obtener los usuarios vendedores (protegido)
 @router.get("/vendedores",response_model=List[User])
 def read_users_vendedores( db: Session = Depends(get_db),skip: int = 0, limit: int = 100, current_user: DBUser = Depends(get_current_user)):
-     return read_vendedores( db,skip,limit,current_user)
+    return read_vendedores( db,skip,limit,current_user)
 
 
 # Actualizar usuario vendedor por ID (protegido)
@@ -142,7 +186,7 @@ def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-    user = authenticate_user(db, form_data.username, form_data.password)
+    user: DBUser = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -151,7 +195,12 @@ def login_for_access_token(
         )
     
     access_token = create_access_token(data={"sub": user.email})
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "id": user.usuario_id,
+        "nombre_usuario": user.nombre_usuario,
+        "access_token": access_token,
+        "token_type": "bearer",
+    }
 
 # Autenticación interna
 def authenticate_user(db, email: str, password: str):
@@ -163,3 +212,68 @@ def authenticate_user(db, email: str, password: str):
         return user
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al autenticar usuario: {str(e)}")
+
+def authenticate_client(db, email: str, password: str):
+    try:
+        user = db.query(DBClient).filter(DBClient.email == email).first()
+
+        if not user or not verify_password(password, user.contrasena):
+            return False
+
+        return user
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al autenticar usuario: {str(e)}")
+
+@router.post("/clients")
+def create_client_route(user: ClientCreate, db: Session = Depends(get_db)):
+    # Aquí puedes agregar lógica específica para crear usuarios clientes
+    return create_client(user, db)
+
+@router.get("/clients")
+def get_clients_route(db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
+    return get_all_clients(db, skip, limit)
+
+
+@router.get("/clients-small/{vendedor_id}")
+def get_clients_small_route(vendedor_id: int, db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
+    clients = get_vendedor_clients(vendedor_id, db, skip, limit)
+
+    response = [
+        {
+            "id": client['id'],
+            "empresa": client['empresa'],
+        }
+        for client in clients
+    ]
+
+    return response
+
+
+@router.get("/clients/{vendedor_id}")
+def get_clients_route(vendedor_id: int, db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
+    return get_vendedor_clients(vendedor_id, db, skip, limit)
+
+@router.get("/clients/{client_id}")
+def read_client_route(client_id: int, db: Session = Depends(get_db)):
+    return get_client(client_id, db)
+
+@router.post("/clients/login")
+def client_login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
+    user: DBClient = authenticate_client(db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Correo o contraseña incorrectos",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    access_token = create_access_token(data={"sub": user.email})
+    return {
+        "id": user.id,
+        "nombre_usuario": user.nombre_usuario,
+        "token_type": "bearer",
+        "access_token": access_token,
+    }

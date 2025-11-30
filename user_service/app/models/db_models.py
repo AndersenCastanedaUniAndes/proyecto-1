@@ -25,6 +25,7 @@ class DBUser(Base):
 
     # Relación con planes de venta
     planes_asignados = relationship("PlanVendedor", back_populates="vendedor", cascade="all, delete-orphan")
+    clientes = relationship("DBClient", back_populates="vendedor", cascade="all, delete-orphan")
 
 
 # ============================================================
@@ -67,3 +68,25 @@ class PlanVendedor(Base):
         # Si quieres evitar duplicados:
         # UniqueConstraint('plan_id', 'vendedor_id', name='unique_plan_vendedor')
     )
+
+# ============================================================
+#  Tabla de Clientes
+# ============================================================
+class DBClient(Base):
+    __tablename__ = 'clientes'
+
+    id             = Column(Integer, primary_key=True, index=True)
+    empresa        = Column(String, nullable=False)
+    nombre_usuario = Column(String, nullable=False)
+    email          = Column(String, unique=True, index=True)
+    contrasena     = Column(String, nullable=False)
+    telefono       = Column(String, nullable=True)
+    direccion      = Column(String, nullable=True)
+    ciudad         = Column(String, nullable=True)
+    created_at     = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at     = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    estado         = Column(Boolean, default=True, nullable=True)
+
+    # Relacion cliente - vendedor
+    vendedor_id    = Column(Integer, ForeignKey("users.usuario_id"), nullable=True)
+    vendedor       = relationship("DBUser", back_populates="clientes")

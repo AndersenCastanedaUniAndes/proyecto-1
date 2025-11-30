@@ -6,30 +6,20 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, date
 from fastapi.security import OAuth2PasswordBearer
-from app.models.databases import Base
+from app.models.database import engine, Base
+from app.models.models import DBVisita
+from app.models.ventas import VentaCreate
+from app.models.visitas import VisitaBase, VisitaCreate
 from config.config import DATABASE_URL, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 from app.models import models
 from typing import List, Optional
 import pandas as pd
-
-# Configuración de BD
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Configuración de encriptación
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Configuración de OAuth2
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
-
-
-# Dependencia para obtener la DB
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 # Crear las tablas en la base de datos
@@ -79,7 +69,7 @@ def get_ventas(db: Session, skip: int = 0, limit: int = 100) -> List[models.Vent
     return db.query(models.Venta).offset(skip).limit(limit).all()
 
 
-def create_venta(db: Session, venta) -> models.Venta:
+def create_venta(db: Session, venta: VentaCreate) -> models.Venta:
     """
     /**
      * @brief Crea una nueva venta en la base de datos.
@@ -93,14 +83,12 @@ def create_venta(db: Session, venta) -> models.Venta:
     db_obj = models.Venta(
         fecha=fecha_venta,
         vendedor=venta.vendedor,
-        vendedorId=venta.vendedorId,
-        producto=venta.producto,
-        producto_id=venta.producto_id,
-        cantidad=venta.cantidad,
-        valorUnitario=venta.valorUnitario,
-        valorTotal=venta.valorTotal,
+        vendedor_id=venta.vendedor_id,
+        productos=[p.dict() for p in venta.productos],
         cliente=venta.cliente,
-        comision=venta.comision
+        cliente_id=venta.cliente_id,
+        comision=venta.comision,
+        estado="Pendiente"
     )
 
     db.add(db_obj)
@@ -108,6 +96,30 @@ def create_venta(db: Session, venta) -> models.Venta:
     db.refresh(db_obj)
     return db_obj
 
+
+def get_ventas_vendedor(db: Session, vendedor_id: int, skip: int = 0, limit: int = 100) -> List[models.Venta]:
+    """
+    /**
+     * @brief Obtiene la lista de ventas de un vendedor específico.
+     * @param db Sesión de base de datos.
+     * @param vendedor_id Identificador del vendedor.
+     * @param skip y limit para paginación.
+     * @return Ventas encontradas o lista vacía si no existen.
+     */
+    """
+    return db.query(models.Venta).filter(models.Venta.vendedor_id == vendedor_id).offset(skip).limit(limit).all()
+
+def get_ventas_cliente(db: Session, cliente_id: int, skip: int = 0, limit: int = 100) -> List[models.Venta]:
+    """
+    /**
+     * @brief Obtiene la lista de ventas de un cliente específico.
+     * @param db Sesión de base de datos.
+     * @param cliente_id Identificador del cliente.
+     * @param skip y limit para paginación.
+     * @return Ventas encontradas o lista vacía si no existen.
+     */
+    """
+    return db.query(models.Venta).filter(models.Venta.cliente_id == cliente_id).offset(skip).limit(limit).all()
 
 def update_venta(db: Session, db_venta: models.Venta, venta_in) -> models.Venta:
     """
@@ -137,3 +149,50 @@ def delete_venta(db: Session, db_venta: models.Venta):
     db.delete(db_venta)
     db.commit()
     return
+
+
+# =====================================================
+# CRUD para la entidad VISITAS
+# =====================================================
+
+def create_visita(db: Session, visita: VisitaCreate) -> models.DBVisita:
+    fecha_hora = datetime.strptime(
+        f"{visita.fecha} {visita.hora}",
+        "%Y-%m-%d %I:%M %p"
+    )
+
+    db_obj: DBVisita = DBVisita(
+        cliente=visita.cliente,
+        cliente_id=visita.cliente_id,
+        vendedor=visita.vendedor,
+        vendedor_id=visita.vendedor_id,
+        fecha=fecha_hora,
+        direccion=visita.direccion,
+        hallazgos=visita.hallazgos,
+        sugerencias=visita.sugerencias
+    )
+
+    db.add(db_obj)
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
+
+def get_visitas(vendedor_id: int, db: Session, skip: int = 0, limit: int = 100) -> List[VisitaBase]:
+    visitas: List[DBVisita] = db.query(DBVisita).filter(DBVisita.vendedor_id == vendedor_id).offset(skip).limit(limit).all()
+    response = [
+        {
+            "id": visita.id,
+            "cliente": visita.cliente,
+            "cliente_id": visita.cliente_id,
+            "vendedor": visita.vendedor,
+            "vendedor_id": visita.vendedor_id,
+            "fecha": visita.fecha.strftime("%Y-%m-%d") if visita.fecha else None,
+            "hora": visita.fecha.strftime("%I:%M %p") if visita.fecha else None,
+            "direccion": visita.direccion,
+            "hallazgos": visita.hallazgos,
+            "sugerencias": visita.sugerencias
+        }
+        for visita in visitas
+    ]
+
+    return response

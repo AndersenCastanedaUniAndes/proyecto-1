@@ -19,3 +19,10 @@ class CrearProductoCommand:
     categoria: str
     valor_unitario: float
     bodegas: List[dict]
+
+
+@dataclass
+class CrearBodegaCommand:
+    id: int | None
+    nombre: str
+    direccion: str | None

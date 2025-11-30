@@ -11,27 +11,17 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer
-from app.models.db_models import Base, DBUser, PlanVendedor, PlanVenta
-from app.models.user import UserCreate, UserUpdate
+from app.models.db_models import Base, DBUser, PlanVendedor, PlanVenta, DBClient
+from app.models.database import engine, get_db
+from app.models.user import UserCreate, UserUpdate, ClientCreate
 from config.config import DATABASE_URL, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
-# Configuración de BD
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Configuración de encriptación
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Configuración de OAuth2
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
-
-# Dependencia para obtener la DB
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 # Crear las tablas en la base de datos
 def init_db():
@@ -511,3 +501,103 @@ def delete_user(user_id: int, db: Session, current_user: DBUser):
     except SQLAlchemyError as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Error al eliminar usuario: {str(e)}")
+
+def create_client(user: ClientCreate, db: Session):
+    try:
+        if not all([
+                user.empresa, user.nombre_usuario, user.email, user.contrasena,
+                user.telefono, user.direccion, user.ciudad
+            ]):
+            raise HTTPException(status_code=422, detail="Faltan campos obligatorios.")
+
+        existing_user = db.query(DBClient).filter(DBClient.email == user.email).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail="El correo ya está registrado.")
+
+        db_user = DBClient(
+            empresa=user.empresa,
+            nombre_usuario=user.nombre_usuario,
+            email=user.email,
+            contrasena=hash_password(user.contrasena),
+            telefono=user.telefono,
+            direccion=user.direccion,
+            ciudad=user.ciudad,
+        )
+
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+
+    except HTTPException:
+        raise
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=f"Error de validación: {e.errors()}")
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error al crear usuario cliente: {str(e)}")
+
+def get_all_clients(db: Session, skip: int, limit: int):
+    try:
+        clients: list[DBClient] = db.query(DBClient).offset(skip).limit(limit).all()
+        response = [
+            {
+                "id": client.id,
+                "empresa": client.empresa,
+                "direccion": client.direccion,
+                "telefono": client.telefono,
+                "email": client.email,
+            }
+            for client in clients
+        ]
+
+        return response
+
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener los clientes: {str(e)}")
+
+
+def get_vendedor_clients(vendedor_id: int, db: Session, skip: int, limit: int):
+    try:
+        clients: list[DBClient] = db.query(DBClient).filter(DBClient.vendedor_id == vendedor_id).offset(skip).limit(limit).all()
+        response = [
+            {
+                "id": client.id,
+                "empresa": client.empresa,
+                "direccion": client.direccion,
+                "telefono": client.telefono,
+                "email": client.email,
+                "ultima visita": "no registra",
+            }
+            for client in clients
+        ]
+
+        return response
+
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener los clientes: {str(e)}")
+
+
+def get_client(client_id: int, db: Session):
+    try:
+        client: DBClient = db.query(DBClient).filter(DBClient.id == client_id).first()
+        if not client:
+            raise HTTPException(status_code=404, detail="Cliente no encontrado")
+
+        return {
+            "id": client.id,
+            "empresa": client.empresa,
+            "direccion": client.direccion,
+            "telefono": client.telefono,
+        }
+
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener el cliente: {str(e)}")
+
+

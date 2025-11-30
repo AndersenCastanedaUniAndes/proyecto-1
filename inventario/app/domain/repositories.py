@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from .models import ProductoInventario
+from .models import ProductoInventario, Bodega
 
 
 class ProductoInventarioRepository(ABC):
@@ -20,8 +20,23 @@ class ProductoInventarioRepository(ABC):
         raise NotImplementedError
 
 
+class BodegaRepository(ABC):
+    @abstractmethod
+    def list(self) -> List[Bodega]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get(self, bodega_id: int) -> Optional[Bodega]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def create(self, bodega: Bodega) -> Bodega:
+        raise NotImplementedError
+
+
 class UnitOfWork(ABC):
     productos: ProductoInventarioRepository
+    bodegas: BodegaRepository
 
     @abstractmethod
     def __enter__(self) -> "UnitOfWork":

@@ -5,11 +5,11 @@ from typing import List
 
 from ..services import crud
 from ..models.proveedor import ProveedorBase, ProveedorCreate, ProveedorUpdate, ProveedorOut
-from ..models.databases import get_db
+from ..models.database import get_db
 from ..utils.auth import get_current_user
 
 from ..services import crud
-from ..models.databases import get_db
+from ..models.database import get_db
 from ..models.proveedor import ProveedorCreate,ProveedorUpdate,ProveedorOut
 
 router = APIRouter()

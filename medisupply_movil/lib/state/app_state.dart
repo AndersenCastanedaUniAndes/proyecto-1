@@ -1,15 +1,21 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import '../view_types.dart';
 
 class AppState extends ChangeNotifier {
   AppView _currentView = AppView.login;
   UserType? _userType; // null mientras no haya login
-  bool _isLoading = false; // futuro: podría usarse para llamadas async reales
+  String _id = '';
+  String _token = '';
+  String _userName = '';
 
   AppView get currentView => _currentView;
   UserType? get userType => _userType;
   bool get isAuthenticated => _userType != null;
-  bool get isLoading => _isLoading;
+  String get id => _id;
+  String get token => _token;
+  String get userName => _userName;
 
   void navigateTo(AppView view) {
     if (_currentView == view) return;
@@ -17,14 +23,14 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> login({required String email, required String password, required UserType asType}) async {
-    _isLoading = true;
-    notifyListeners();
-
-    // Simula retardo de autenticación
-    await Future.delayed(const Duration(milliseconds: 800));
-
+  void login({required String body, required UserType asType}) async {
     _userType = asType;
+
+    var json = jsonDecode(body);
+    _id = json['id'].toString();
+    _token = json['access_token'];
+    _userName = json['nombre_usuario'];
+
     // Redirigir según tipo de usuario
     switch (asType) {
       case UserType.vendedor:
@@ -34,7 +40,7 @@ class AppState extends ChangeNotifier {
         _currentView = AppView.clientHome;
         break;
     }
-    _isLoading = false;
+
     notifyListeners();
   }
 
@@ -44,8 +50,8 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void registerNewClient({required String email}) {
-    // Para futura implementación real
+  void registerNewClient({required String username}) {
+    _userName = username;
     _userType = UserType.cliente;
     _currentView = AppView.clientHome;
     notifyListeners();
@@ -54,7 +60,7 @@ class AppState extends ChangeNotifier {
   // Para deep linking inicial
   void setInitialFromPath(String path) {
     final view = appViewFromPath(path);
-    if (view == AppView.vendorHome || view == AppView.clientHome || view == AppView.adminHome) {
+    if (view == AppView.vendorHome || view == AppView.clientHome) {
       // Necesitaría autenticación; por ahora redirigimos a login si no autenticado
       if (!isAuthenticated) {
         _currentView = AppView.login;

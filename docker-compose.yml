@@ -1,0 +1,107 @@
+version: '3.9'
+
+services:
+  user-service:
+    build: ./user_service
+    container_name: user-service
+    ports:
+      - "8001:80"
+    env_file:
+      - ./.env
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - appnet
+
+  proveedores-service:
+    build: ./proveedores
+    container_name: proveedores-service
+    ports:
+      - "8002:80"
+    env_file:
+      - ./.env
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - appnet
+
+  productos-service:
+    build: ./productos
+    container_name: productos-service
+    ports:
+      - "8003:80"
+    env_file:
+      - ./.env
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - appnet
+
+  informes-service:
+    build: ./informes
+    container_name: informes-service
+    ports:
+      - "8004:80"
+    env_file:
+      - ./.env
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - appnet
+
+  inventario-service:
+    build: ./inventario
+    container_name: inventario-service
+    ports:
+      - "8005:80"
+    env_file:
+      - ./.env
+    environment:
+      - DB_HOST=database
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - appnet
+
+  rutas-service:
+    build: ./rutas
+    container_name: rutas-service
+    ports:
+      - "8006:80"
+    env_file:
+      - ./.env
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - appnet
+
+  database:
+    image: postgres:15
+    container_name: database
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    networks:
+      - appnet
+
+volumes:
+  postgres:
+
+networks:
+  appnet:

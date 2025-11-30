@@ -11,6 +11,8 @@ dependencies:
     sdk: flutter
   lucide_icons_flutter: ^3.1.1
   provider: ^6.1.2
+  http: ^1.2.0
+  flutter_dotenv: ^5.1.0
 
 dev_dependencies:
   flutter_test:
@@ -19,3 +21,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/environment

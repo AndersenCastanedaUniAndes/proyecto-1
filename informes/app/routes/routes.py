@@ -4,8 +4,9 @@ from typing import List
 from datetime import date
 
 from ..services import crud
-from ..models.databases import get_db
+from ..models.database import get_db
 from ..models.ventas import VentaCreate, VentaUpdate, VentaOut
+from ..models.visitas import VisitaCreate
 
 router = APIRouter()
 
@@ -19,6 +20,24 @@ def get_ventas(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
 @router.post("/", response_model=VentaOut, status_code=201)
 def create_venta(venta: VentaCreate, db: Session = Depends(get_db)):
     """Crear una nueva venta"""
+    if not hasattr(venta, 'fecha') or venta.fecha is None:
+        venta.fecha = date.today()
+    return crud.create_venta(db, venta)
+
+
+@router.get("/vendedor/{vendedor_id}", response_model=List[VentaOut])
+def get_ventas_vendedor(vendedor_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return crud.get_ventas_vendedor(db, vendedor_id, skip=skip, limit=limit)
+
+
+@router.get("/cliente/{cliente_id}", response_model=List[VentaOut])
+def get_ventas_cliente(cliente_id: int, skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return crud.get_ventas_cliente(db, cliente_id, skip=skip, limit=limit)
+
+
+@router.post("/cliente", response_model=VentaOut)
+def create_venta_cliente(venta: VentaCreate, db: Session = Depends(get_db)):
+    """Crear una nueva venta para un cliente específico"""
     if not hasattr(venta, 'fecha') or venta.fecha is None:
         venta.fecha = date.today()
     return crud.create_venta(db, venta)
@@ -50,3 +69,13 @@ def delete_venta(venta_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Venta no encontrada")
     crud.delete_venta(db, db_venta)
     return None
+
+
+@router.post("/visitas")
+def create_visita_route(visita: VisitaCreate, db: Session = Depends(get_db)):
+    return crud.create_visita(db, visita)
+
+
+@router.get("/visitas/vendedor/{vendedor_id}")
+def get_visitas_route(vendedor_id: int, db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
+    return crud.get_visitas(vendedor_id, db, skip=skip, limit=limit)

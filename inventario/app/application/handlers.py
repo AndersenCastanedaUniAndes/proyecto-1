@@ -3,10 +3,10 @@ from __future__ import annotations
 from datetime import datetime
 from typing import List
 
-from ..domain.models import Bodega, ProductoInventario
+from ..domain.models import Bodega, BodegaDetalle, ProductoInventario
 from ..domain.repositories import UnitOfWork
-from .commands import AjustarStockCommand, CrearProductoCommand
-from .queries import ListarProductosQuery, ObtenerProductoQuery
+from .commands import AjustarStockCommand, CrearProductoCommand, CrearBodegaCommand
+from .queries import ListarProductosQuery, ObtenerProductoQuery, ListarBodegasQuery, ObtenerBodegaQuery
 
 
 def handle_listar_productos(uow: UnitOfWork, query: ListarProductosQuery) -> List[ProductoInventario]:
@@ -17,6 +17,16 @@ def handle_listar_productos(uow: UnitOfWork, query: ListarProductosQuery) -> Lis
 def handle_obtener_producto(uow: UnitOfWork, query: ObtenerProductoQuery) -> ProductoInventario | None:
     with uow:
         return uow.productos.get(query.producto_id)
+
+
+def handle_listar_bodegas(uow: UnitOfWork, query: ListarBodegasQuery):
+    with uow:
+        return uow.bodegas.list()
+
+
+def handle_obtener_bodega(uow: UnitOfWork, query: ObtenerBodegaQuery) -> Bodega | None:
+    with uow:
+        return uow.bodegas.get(query.bodega_id)
 
 
 def handle_ajustar_stock(uow: UnitOfWork, cmd: AjustarStockCommand) -> ProductoInventario:
@@ -36,7 +46,7 @@ def handle_ajustar_stock(uow: UnitOfWork, cmd: AjustarStockCommand) -> ProductoI
 def handle_crear_producto(uow: UnitOfWork, cmd: CrearProductoCommand) -> ProductoInventario:
     with uow:
         bodegas = [
-            Bodega(
+            BodegaDetalle(
                 id=b.get("id"),
                 nombre=b["nombre"],
                 cantidad_disponible=b.get("cantidad_disponible", 0),
@@ -69,3 +79,17 @@ def handle_crear_producto(uow: UnitOfWork, cmd: CrearProductoCommand) -> Product
         uow.commit()
 
         return producto
+
+
+def handle_crear_bodega(uow: UnitOfWork, cmd: CrearBodegaCommand) -> Bodega:
+    with uow:
+        bodega = Bodega(
+            id=cmd.id if cmd.id is not None else 0,
+            nombre=cmd.nombre,
+            direccion=cmd.direccion if cmd.direccion is not None else "",
+        )
+
+        created = uow.bodegas.create(bodega)
+        uow.commit()
+
+        return created

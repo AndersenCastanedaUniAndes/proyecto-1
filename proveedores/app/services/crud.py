@@ -28,17 +28,14 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from app.models.databases import Base
+from app.models.database import Base, engine
 from config.config import DATABASE_URL, SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 from sqlalchemy.orm import Session
 from app.models import models
 from typing import List, Optional
 from datetime import datetime
 import pandas as pd
- 
-# Configuración de BD
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 
 # Configuración de encriptación
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -46,13 +43,6 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # Configuración de OAuth2
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-# Dependencia para obtener la DB
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 # Crear las tablas en la base de datos
 def init_db():

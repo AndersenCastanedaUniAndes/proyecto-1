@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Date, func
-from app.models.databases import Base  # 👈 Importa el Base compartido
+from app.models.database import Base  # 👈 Importa el Base compartido
 
 class Proveedor(Base):
     __tablename__ = 'proveedor'

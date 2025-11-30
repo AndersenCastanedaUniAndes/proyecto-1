@@ -1,13 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:medisupply_movil/state/app_state.dart';
+import 'package:medisupply_movil/data/data.dart';
 import 'package:medisupply_movil/styles/styles.dart';
+import 'package:medisupply_movil/widgets/widgets.dart';
+import 'dart:convert';
+import 'package:medisupply_movil/utils/utils.dart';
+import 'package:medisupply_movil/utils/requests.dart';
+import 'package:provider/provider.dart';
 
 class _Pedido {
   final int id;
   final String fecha;
-  final String estado; // pendiente | procesando | enviado | entregado
+  final String estado; // Pendiente | Procesando | Enviado | Entregado
   final List<String> productos;
-  final int valor;
+  final double valor;
   _Pedido({required this.id, required this.fecha, required this.estado, required this.productos, required this.valor});
+
+  @override
+  String toString() {
+    return 'Pedido{id: $id, fecha: $fecha, estado: $estado, productos: $productos, valor: $valor}';
+  }
 }
 
 class _Cliente {
@@ -16,9 +28,8 @@ class _Cliente {
   final String direccion;
   final String telefono;
   final String correo;
-  final int pedidosPendientes;
   final String ultimaVisita; // ISO string
-  final int valorTotal;
+  final double valorTotal;
   final List<_Pedido> pedidos;
   _Cliente({
     required this.id,
@@ -26,7 +37,6 @@ class _Cliente {
     required this.direccion,
     required this.telefono,
     required this.correo,
-    required this.pedidosPendientes,
     required this.ultimaVisita,
     required this.valorTotal,
     required this.pedidos,
@@ -44,242 +54,274 @@ class VendorClientsScreen extends StatefulWidget {
 class _VendorClientsScreenState extends State<VendorClientsScreen> {
   String _filtro = '';
   _Cliente? _seleccionado;
+  late Future<List<_Cliente>> _futureClientes;
+  late Future<List<dynamic>> futureOrders;
 
-  late final List<_Cliente> _clientes = [
-    _Cliente(
-      id: 1,
-      nombre: 'Farmacia Central',
-      direccion: 'Av. Principal 123, Centro',
-      telefono: '+57 1 234-5678',
-      correo: 'contacto@farmaciacentral.com',
-      pedidosPendientes: 3,
-      ultimaVisita: '2024-03-15',
-      valorTotal: 850000,
-      pedidos: [
-        _Pedido(id: 101, fecha: '2024-03-20', estado: 'pendiente', productos: ['Paracetamol 500mg', 'Ibuprofeno 600mg'], valor: 250000),
-        _Pedido(id: 102, fecha: '2024-03-18', estado: 'procesando', productos: ['Amoxicilina 875mg'], valor: 180000),
-      ],
-    ),
-    _Cliente(
-      id: 2,
-      nombre: 'Droguería La Salud',
-      direccion: 'Calle 85 #15-20, Zona Norte',
-      telefono: '+57 1 345-6789',
-      correo: 'ventas@lasalud.com',
-      pedidosPendientes: 1,
-      ultimaVisita: '2024-03-18',
-      valorTotal: 420000,
-      pedidos: [
-        _Pedido(id: 201, fecha: '2024-03-19', estado: 'pendiente', productos: ['Insulina Rápida', 'Glucómetro'], valor: 420000),
-      ],
-    ),
-    _Cliente(
-      id: 3,
-      nombre: 'Hospital Nacional',
-      direccion: 'Carrera 30 #45-67, Sur',
-      telefono: '+57 1 456-7890',
-      correo: 'compras@hospitalnacional.gov.co',
-      pedidosPendientes: 5,
-      ultimaVisita: '2024-03-10',
-      valorTotal: 1250000,
-      pedidos: [
-        _Pedido(id: 301, fecha: '2024-03-21', estado: 'pendiente', productos: ['Antibióticos varios', 'Material quirúrgico'], valor: 750000),
-        _Pedido(id: 302, fecha: '2024-03-20', estado: 'pendiente', productos: ['Vacunas', 'Jeringas'], valor: 500000),
-      ],
-    ),
-    _Cliente(
-      id: 4,
-      nombre: 'Red Farmacias Unidos',
-      direccion: 'Av. Caracas #78-45, Occidente',
-      telefono: '+57 1 567-8901',
-      correo: 'pedidos@unidos.com',
-      pedidosPendientes: 2,
-      ultimaVisita: '2024-03-17',
-      valorTotal: 320000,
-      pedidos: [
-        _Pedido(id: 401, fecha: '2024-03-19', estado: 'pendiente', productos: ['Analgésicos', 'Antigripales'], valor: 180000),
-        _Pedido(id: 402, fecha: '2024-03-17', estado: 'pendiente', productos: ['Vitaminas', 'Suplementos'], valor: 140000),
-      ],
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _futureClientes = _fetchClientes();
+  }
 
-  List<_Cliente> get _filtrados {
+  Future<List<_Cliente>> _fetchClientes() async {
+    final state = context.read<AppState>();
+
+    final response = await Future.wait([
+      getClients(state.id, state.token),
+      getVendorOrders(state.id, state.token),
+    ]);
+
+    final clients = response[0];
+    final orders = response[1] as List<Order>;
+
+    return clients.map<_Cliente>((raw) {
+      final json = raw as Map<String, dynamic>;
+
+      final pedidos = <_Pedido>[];
+      for (var order in orders) {
+        if (order.clienteId == json['id']) {
+          pedidos.add(_Pedido(
+            id: order.id,
+            fecha: order.fecha,
+            estado: order.estado,
+            productos: order.items.map((p) => p.nombre).toList(),
+            valor: order.total,
+          ));
+        }
+      }
+
+      return _Cliente(
+        id: json['id'] as int,
+        nombre: json['empresa'] as String,
+        direccion: (json['direccion'] ?? '') as String,
+        telefono: (json['telefono'] ?? '') as String,
+        correo: (json['email'] ?? '') as String,
+        ultimaVisita: (json['ultima visita'] ?? '') as String,
+        valorTotal: pedidos.fold<double>(0, (acc, p) => acc + p.valor),
+        pedidos: pedidos,
+      );
+    }).toList();
+  }
+
+  List<_Cliente> _filtrar(List<_Cliente> clientes) {
     final q = _filtro.trim().toLowerCase();
-    if (q.isEmpty) return _clientes;
-    return _clientes
+    if (q.isEmpty) return clientes;
+    return clientes
         .where((c) => c.nombre.toLowerCase().contains(q) || c.direccion.toLowerCase().contains(q))
         .toList();
+  }
+
+  String _getPendingOrders(List<_Cliente> clientes) {
+    final total = clientes.fold<int>(0, (acc, c) => acc + c.pedidos.where((p) => p.estado == 'Pendiente').length);
+    return total.toString();
+  }
+
+  String _getTotalValue(List<_Cliente> clientes) {
+    final total = clientes.fold<double>(0, (acc, c) => acc + c.valorTotal);
+    return '\$${toMoneyFormat(total)}';
   }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    context.watch<AppState>();
 
-    if (_seleccionado != null) {
-      final c = _seleccionado!;
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
+    return FutureBuilder(
+      future: _futureClientes,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Error cargando clientes: ${snapshot.error}',
+              style: textTheme.bodyMedium?.copyWith(color: Colors.red),
+            ),
+          );
+        }
+
+        final clientes = snapshot.data ?? [];
+        final filtrados = _filtrar(clientes);
+
+        if (_seleccionado != null) {
+          final c = _seleccionado!;
+          final pedidosPendientes = c.pedidos.where((p) => p.estado == 'Pendiente').length;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              IconButton(onPressed: () => setState(() => _seleccionado = null), icon: const Icon(Icons.arrow_back)),
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(c.nombre, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 2),
-                const Text('Información detallada del cliente', style: TextStyle(fontSize: 12, color: Colors.grey)),
-              ])
-            ],
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Información de Contacto', style: Theme.of(context).textTheme.titleSmall),
-                          const SizedBox(height: 8),
-                          _iconRow(Icons.location_on_outlined, c.direccion),
-                          _iconRow(Icons.phone_outlined, c.telefono),
-                          _iconRow(Icons.mail_outline, c.correo, isEmail: true),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(children: [
-                    Expanded(child: _CardStat(color: Colors.orange, value: c.pedidosPendientes.toString(), caption: 'Pedidos Pendientes')),
-                    const SizedBox(width: 12),
-                    Expanded(child: _CardStat(color: Colors.green, value: '${c.valorTotal}', caption: 'Valor Total')),
-                  ]),
-                  const SizedBox(height: 8),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text('Pedidos Recientes', style: Theme.of(context).textTheme.titleSmall),
-                        const SizedBox(height: 8),
-                        ...c.pedidos.map((p) => _pedidoTile(p)).toList(),
-                      ]),
-                    ),
-                  ),
-                ],
+              ScreenTitleAndBackNavigation(
+                title: c.nombre,
+                subtitle: 'Información detallada del cliente',
+                textTheme: textTheme,
+                onBack: () => setState(() => _seleccionado = null),
               ),
-            ),
-          )
-        ],
-      );
-    }
+              const SizedBox(height: 20),
 
-    // Vista de lista
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            IconButton(onPressed: widget.onBack, icon: Icon(AppIcons.arrowLeft)),
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Mis Clientes', style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
-              Text('${_filtrados.length} clientes', style: textTheme.bodySmall),
-            ])
-          ],
-        ),
-        const SizedBox(height: 8),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    spacing: 4,
+                    children: [
+                      Container(
+                        decoration: AppStyles.decoration,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Información de Contacto', style: textTheme.labelLarge),
+                              const SizedBox(height: 20),
+                              _iconRow(AppIcons.pin, c.direccion),
+                              _iconRow(AppIcons.phone, c.telefono),
+                              _iconRow(AppIcons.mail, c.correo),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
 
-        TextField(
-          decoration: const InputDecoration(
-            hintText: 'Buscar por nombre o dirección...',
-            prefixIcon: Icon(Icons.search),
-          ),
-          onChanged: (v) => setState(() => _filtro = v),
-        ),
-        const SizedBox(height: 12),
+                      QuickStats(
+                        stat1Color: AppStyles.orange,
+                        stat1Title: 'Pedidos Pendientes',
+                        stat1Value: pedidosPendientes.toString(),
+                        stat2Color: AppStyles.green1,
+                        stat2Title: 'Valor Total',
+                        stat2Value: '\$${toMoneyFormat(c.valorTotal)}',
+                      ),
+                      const SizedBox(height: 8),
 
-        Row(children: [
-          Expanded(
-            child: _CardStat(
-              color: Colors.blue,
-              value: _clientes.fold<int>(0, (a, c) => a + c.pedidosPendientes).toString(),
-              caption: 'Pedidos Pendientes',
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: _CardStat(
-              color: Colors.green,
-              value: '\$${_clientes.fold<int>(0, (a, c) => a + c.valorTotal)}',
-              caption: 'Valor Total',
-            ),
-          ),
-        ]),
-        const SizedBox(height: 12),
-
-        Expanded(
-          child: _filtrados.isEmpty
-              ? Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.inventory_2_outlined, size: 48, color: Colors.grey),
-                        SizedBox(height: 8),
-                        Text('No se encontraron clientes', style: TextStyle(color: Colors.grey)),
-                      ],
-                    ),
+                      Container(
+                        decoration: AppStyles.decoration,
+                        child: Padding(
+                          padding: const EdgeInsets.all(22),
+                          child: Column(
+                            spacing: 4,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Pedidos Recientes', style: textTheme.titleSmall),
+                              const SizedBox(height: 18),
+                              if (c.pedidos.isEmpty) ...[
+                                Text('No se encontraron pedidos.', style: textTheme.bodySmall)
+                              ]
+                              else ...c.pedidos.map((p) => _pedidoTile(p)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                )
-              : ListView.separated(
-                  itemCount: _filtrados.length,
+                ),
+              )
+            ],
+          );
+        }
+
+        // Vista de lista
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ScreenTitleAndBackNavigation(
+              title: 'Mis Clientes',
+              subtitle: '${filtrados.length} clientes',
+              textTheme: textTheme,
+              onBack: widget.onBack,
+            ),
+            const SizedBox(height: 18),
+
+            AppInputField(
+              label: 'Buscar por nombre o dirección...',
+              prefixIconData: AppIcons.search,
+              onChanged: (v) => setState(() => _filtro = v),
+            ),
+            const SizedBox(height: 12),
+
+            QuickStats(
+              stat1Color: AppStyles.blue1,
+              stat1Title: 'Pedidos Pendientes',
+              stat1Value: _getPendingOrders(clientes),
+              stat2Color: AppStyles.green1,
+              stat2Title: 'Valor Total',
+              stat2Value: _getTotalValue(clientes),
+            ),
+            const SizedBox(height: 12),
+
+            if (filtrados.isEmpty)
+              NotFoundSection(
+                iconData: AppIcons.package,
+                label: 'No se encontraron clientes',
+              )
+            else
+              Expanded(
+                child: ListView.separated(
+                  itemCount: filtrados.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 8),
                   itemBuilder: (context, i) {
-                    final c = _filtrados[i];
-                    return Card(
-                      child: ListTile(
-                        title: Text(c.nombre, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    final c = filtrados[i];
+                    final pedidosPendientes = c.pedidos.where((p) => p.estado == 'Pendiente').length;
+
+                    return GestureDetector(
+                      onTap: () => setState(() => _seleccionado = c),
+                      child: Container(
+                        decoration: AppStyles.decoration,
+                        padding: const EdgeInsets.all(12.0),
+                        child: Row(
                           children: [
-                            const SizedBox(height: 4),
-                            Row(children: [
-                              const Icon(Icons.location_on_outlined, size: 14, color: Colors.grey),
-                              const SizedBox(width: 4),
-                              Expanded(child: Text(c.direccion, style: const TextStyle(fontSize: 12, color: Colors.grey)))
-                            ]),
-                            const SizedBox(height: 4),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Última visita: ${c.ultimaVisita}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                                Text('\$${c.valorTotal}', style: const TextStyle(fontSize: 12, color: Colors.green)),
-                              ],
-                            )
+                            Expanded(
+                              child: Column(
+                                spacing: 6,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(c.nombre, style: textTheme.titleSmall),
+                                      if (pedidosPendientes > 0)
+                                        _Badge(
+                                          label: '$pedidosPendientes pendientes',
+                                          color: AppStyles.red2,
+                                          textStyle: textTheme.bodySmall?.copyWith(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white),
+                                        ),
+                                    ],
+                                  ),
+                                  Row(
+                                    spacing: 4,
+                                    children: [
+                                      Icon(AppIcons.pin, size: 14, color: AppStyles.grey1),
+                                      Text(c.direccion, style: textTheme.labelMedium?.copyWith(color: AppStyles.grey1, fontWeight: FontWeight.w400)),
+                                    ],
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text('Última visita: ${c.ultimaVisita}', style: textTheme.labelMedium?.copyWith(color: AppStyles.grey1, fontWeight: FontWeight.w400)),
+
+                                      if (pedidosPendientes > 0) ...[
+                                        Text('\$${toMoneyFormat(c.valorTotal)}', style: textTheme.labelMedium?.copyWith(fontSize: 12, color: AppStyles.green1)),
+                                      ]
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Icon(AppIcons.chevronRight, size: 18,),
                           ],
                         ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (c.pedidosPendientes > 0)
-                              _Badge(text: '${c.pedidosPendientes} pendientes', color: Colors.red.shade50, textColor: Colors.red),
-                            const Icon(Icons.chevron_right),
-                          ],
-                        ),
-                        onTap: () => setState(() => _seleccionado = c),
                       ),
                     );
                   },
                 ),
-        ),
-      ],
+              ),
+          ],
+        );
+      },
     );
   }
 
-  Widget _iconRow(IconData icon, String text, {bool isEmail = false}) {
+  Widget _iconRow(IconData icon, String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -289,7 +331,7 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
           Expanded(
             child: Text(
               text,
-              style: TextStyle(fontSize: 13, color: isEmail ? Colors.blue : Colors.black87),
+              style: TextStyle(fontSize: 13, color: Colors.black87),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -298,7 +340,36 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
     );
   }
 
+  (Color background, Color foreground) _estadoBadge(String estado) {
+    Color backgroundColor;
+    Color foregroundColor = Colors.white;
+    switch (estado) {
+      case 'Pendiente':
+        backgroundColor = AppStyles.grey2;
+        foregroundColor = Colors.black;
+        break;
+      case 'Procesando':
+        backgroundColor = AppStyles.orange;
+        break;
+      case 'Enviado':
+        backgroundColor = AppStyles.blue1;
+        break;
+      case 'Entregado':
+        backgroundColor = AppStyles.green1;
+        break;
+      default:
+        backgroundColor = Colors.black54;
+        break;
+    }
+
+    return (backgroundColor, foregroundColor);
+  }
+
   Widget _pedidoTile(_Pedido p) {
+    final textTheme = Theme.of(context).textTheme;
+
+    final estadoBadge = _estadoBadge(p.estado);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
@@ -311,83 +382,45 @@ class _VendorClientsScreenState extends State<VendorClientsScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('Pedido #${p.id}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-            _estadoBadge(p.estado),
+            Tag(
+              title: p.estado,
+              textTheme: textTheme.labelMedium!,
+              backgroundColor: estadoBadge.$1,
+              foregroundColor: estadoBadge.$2,
+            ),
           ],
         ),
         const SizedBox(height: 4),
+
         Text(p.fecha, style: const TextStyle(fontSize: 11, color: Colors.grey)),
         const SizedBox(height: 4),
+
         Text(p.productos.join(', '), style: const TextStyle(fontSize: 12, color: Colors.grey)),
         const SizedBox(height: 6),
-        Text('\$${p.valor}', style: const TextStyle(fontSize: 12, color: Colors.green)),
-      ]),
-    );
-  }
 
-  Widget _estadoBadge(String estado) {
-    Color bg;
-    Color fg = Colors.white;
-    switch (estado) {
-      case 'pendiente':
-        bg = Colors.grey; fg = Colors.white; break;
-      case 'procesando':
-        bg = Colors.orange; break;
-      case 'enviado':
-        bg = Colors.blue; break;
-      case 'entregado':
-        bg = Colors.green; break;
-      default:
-        bg = Colors.black54; break;
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
-      child: Text(estado[0].toUpperCase() + estado.substring(1), style: TextStyle(fontSize: 11, color: fg)),
+        Text('\$${toMoneyFormat(p.valor)}', style: const TextStyle(fontSize: 12, color: Colors.green)),
+      ]),
     );
   }
 }
 
 class _Badge extends StatelessWidget {
-  final String text;
+  const _Badge({
+    required this.label,
+    required this.color,
+    this.textStyle
+  });
+
+  final String label;
   final Color color;
-  final Color textColor;
-  const _Badge({required this.text, required this.color, required this.textColor});
+  final TextStyle? textStyle;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(12)),
-      child: Text(text, style: TextStyle(fontSize: 11, color: textColor)),
-    );
-  }
-}
-
-class _CardStat extends StatelessWidget {
-  final Color color;
-  final String value;
-  final String caption;
-  const _CardStat({required this.color, required this.value, required this.caption});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0x2A000000), width: 1)
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: color)),
-            Text(caption, style: const TextStyle(fontSize: 12, color: Colors.black54)),
-            const SizedBox(height: 4),
-          ],
-        ),
-      ),
+      padding: const EdgeInsets.only(left: 10, right: 10, top: 0, bottom: 4),
+      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
+      child: Text(label, style: textStyle),
     );
   }
 }
