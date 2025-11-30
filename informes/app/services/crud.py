@@ -109,6 +109,17 @@ def get_ventas_vendedor(db: Session, vendedor_id: int, skip: int = 0, limit: int
     """
     return db.query(models.Venta).filter(models.Venta.vendedor_id == vendedor_id).offset(skip).limit(limit).all()
 
+def get_ventas_cliente(db: Session, cliente_id: int, skip: int = 0, limit: int = 100) -> List[models.Venta]:
+    """
+    /**
+     * @brief Obtiene la lista de ventas de un cliente específico.
+     * @param db Sesión de base de datos.
+     * @param cliente_id Identificador del cliente.
+     * @param skip y limit para paginación.
+     * @return Ventas encontradas o lista vacía si no existen.
+     */
+    """
+    return db.query(models.Venta).filter(models.Venta.cliente_id == cliente_id).offset(skip).limit(limit).all()
 
 def update_venta(db: Session, db_venta: models.Venta, venta_in) -> models.Venta:
     """

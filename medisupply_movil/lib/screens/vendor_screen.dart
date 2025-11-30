@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:medisupply_movil/screens/screens.dart';
 import 'package:medisupply_movil/widgets/widgets.dart';
+import 'package:medisupply_movil/utils/utils.dart';
 
 class VendorScreen extends StatefulWidget {
   const VendorScreen({super.key});
@@ -28,23 +29,31 @@ class _VendorScreenState extends State<VendorScreen> {
                 VendorScreenEnum.clientes => VendorClientsScreen(onBack: _goHome),
                 VendorScreenEnum.visitas => VendorVisitsScreen(onBack: _goHome),
                 VendorScreenEnum.pedidos => VendorOrderScreen(onBack: _goHome),
-                VendorScreenEnum.recomendaciones => _SimpleSubView(title: 'Recomendaciones', onBack: _goHome, child: const Text('Generación de recomendaciones próximamente...')),
-                VendorScreenEnum.home => VendorHome(onOpenMenu: () => setState(() => _showUserMenu = true), onTapCard: (view) => setState(() => _current = view)),
+                VendorScreenEnum.recomendaciones => _SimpleSubViewScreen(
+                  title: 'Recomendaciones',
+                  onBack: _goHome,
+                  child: const Text('Generación de recomendaciones próximamente...')
+                ),
+                VendorScreenEnum.home => VendorHomeScreen(
+                  onOpenMenu: () => setState(() => _showUserMenu = true),
+                  onTapCard: (view) => setState(() => _current = view)
+                ),
               },
             ),
           ),
-          if (_showUserMenu) UserMenuOverlay(onClose: () => setState(() => _showUserMenu = false)),
+          if (_showUserMenu)
+            UserMenuOverlay(onClose: () => setState(() => _showUserMenu = false)),
         ],
       ),
     );
   }
 }
 
-class _SimpleSubView extends StatelessWidget {
+class _SimpleSubViewScreen extends StatelessWidget {
   final String title;
   final Widget child;
   final VoidCallback onBack;
-  const _SimpleSubView({required this.title, required this.child, required this.onBack});
+  const _SimpleSubViewScreen({required this.title, required this.child, required this.onBack});
 
   @override
   Widget build(BuildContext context) {

@@ -58,7 +58,7 @@ class MenuCard extends StatelessWidget {
 
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(color: AppStyles.grey2, borderRadius: BorderRadius.circular(10)),
               child: Text(badge, style: textTheme.bodySmall?.copyWith(fontSize: 12, fontWeight: FontWeight.w500)),
             ),
           ],

@@ -293,7 +293,7 @@ class _VendorVisitsScreenState extends State<VendorVisitsScreen>
                     child: Text(v, style: textTheme.bodySmall),
                   )).toList(),
                   onChanged: (v) => setState(() => _clienteSel = v),
-                  decoration: _baseInputDecoration().copyWith(
+                  decoration: baseInputDecoration().copyWith(
                     hintText: _isLoadingClients ? 'Cargando...' : 'Selecciona un cliente',
                     suffixIcon: Icon(AppIcons.chevronDown, size: 16),
                   ),
@@ -318,9 +318,9 @@ class _VendorVisitsScreenState extends State<VendorVisitsScreen>
                       child: TextFormField(
                         controller: _fechaCtrl,
                         readOnly: true,
-                        decoration: _baseInputDecoration().copyWith(
+                        decoration: baseInputDecoration().copyWith(
                           hintText: 'mm/dd/yyyy',
-                          suffixIcon: Icon(AppIcons.calendar, size: 16, color: Colors.white),
+                          suffixIcon: Icon(AppIcons.calendar, size: 14, color: Colors.white),
                         ),
                         onTap: _pickDate,
                         validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
@@ -331,9 +331,9 @@ class _VendorVisitsScreenState extends State<VendorVisitsScreen>
                       child: TextFormField(
                         controller: _horaCtrl,
                         readOnly: true,
-                        decoration: _baseInputDecoration().copyWith(
+                        decoration: baseInputDecoration().copyWith(
                           hintText: _horaCtrl.text.isEmpty ? '--:-- --' : _horaCtrl.text,
-                          suffixIcon: Icon(AppIcons.clock, size: 16, color: Colors.white,)
+                          suffixIcon: Icon(AppIcons.clock, size: 14, color: Colors.white,)
                         ),
                         onTap: _pickTime,
                         validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
@@ -348,7 +348,7 @@ class _VendorVisitsScreenState extends State<VendorVisitsScreen>
                 const SizedBox(height: 2),
                 TextFormField(
                   controller: _localizacionCtrl,
-                  decoration: _baseInputDecoration(useConstraints: false).copyWith(
+                  decoration: baseInputDecoration(useConstraints: false).copyWith(
                     counterText: '',
                     hintText: 'Dirección del cliente',
                     hintStyle: textTheme.bodySmall?.copyWith(height: 1.3),
@@ -366,7 +366,7 @@ class _VendorVisitsScreenState extends State<VendorVisitsScreen>
                 TextFormField(
                   controller: _hallazgosCtrl,
                   maxLines: null,
-                  decoration: _baseInputDecoration(useConstraints: false).copyWith(
+                  decoration: baseInputDecoration(useConstraints: false).copyWith(
                     counterText: '',
                     hintText: 'Describe los hallazgos encontrados durante la visita...',
                     hintStyle: textTheme.bodySmall?.copyWith(height: 1.8),
@@ -385,7 +385,7 @@ class _VendorVisitsScreenState extends State<VendorVisitsScreen>
                 TextFormField(
                   controller: _sugerenciasCtrl,
                   maxLines: null,
-                  decoration: _baseInputDecoration(useConstraints: false).copyWith(
+                  decoration: baseInputDecoration(useConstraints: false).copyWith(
                     counterText: '',
                     hintText: 'Lista los productos recomendados (separados por comas)...',
                     hintStyle: textTheme.bodySmall?.copyWith(height: 1.8),
@@ -435,9 +435,9 @@ class _VendorVisitsScreenState extends State<VendorVisitsScreen>
             Expanded(
               child: TextField(
                 controller: _filtroFechaCtrl,
-                decoration: _baseInputDecoration().copyWith(
+                decoration: baseInputDecoration().copyWith(
                   hintText: 'mm/dd/yyyy',
-                  suffixIcon: Icon(AppIcons.calendar, size: 16, color: Colors.white),
+                  suffixIcon: Icon(AppIcons.calendar, size: 14, color: Colors.white),
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -445,9 +445,9 @@ class _VendorVisitsScreenState extends State<VendorVisitsScreen>
             Expanded(
               child: TextField(
                 controller: _filtroClienteCtrl,
-                decoration: _baseInputDecoration().copyWith(
+                decoration: baseInputDecoration().copyWith(
                   hintText: 'Cliente...',
-                  prefixIcon: Icon(AppIcons.search, size: 16),
+                  prefixIcon: Icon(AppIcons.search, size: 14),
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -595,22 +595,6 @@ class _VendorVisitsScreenState extends State<VendorVisitsScreen>
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(color: AppStyles.grey1.withAlpha(30), borderRadius: BorderRadius.circular(12)),
       child: Text(text, style: textTheme.bodySmall?.copyWith(fontSize: 12, fontWeight: FontWeight.w500)),
-    );
-  }
-
-  InputDecoration _baseInputDecoration({bool useConstraints = true}) {
-    return InputDecoration(
-      constraints: useConstraints ? BoxConstraints.expand(height: 36) : null,
-      filled: true,
-      fillColor: AppStyles.grey1.withAlpha(25),
-      contentPadding: const EdgeInsets.symmetric(
-        vertical: 12,
-        horizontal: 12,
-      ),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8.0),
-        borderSide: BorderSide.none,
-      ),
     );
   }
 }

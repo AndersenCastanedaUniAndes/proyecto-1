@@ -343,6 +343,7 @@ Future<List<Order>> getClientOrders(String id, String token) async {
 
     return orders;
   } catch (e) {
+    print('Error fetching client orders: $e');
     return [];
   }
 }

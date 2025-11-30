@@ -1,39 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:medisupply_movil/screens/vendor_visits_screen.dart';
 import 'package:medisupply_movil/styles/styles.dart';
 import 'package:medisupply_movil/widgets/widgets.dart';
 import 'package:provider/provider.dart';
-import 'dart:convert';
 import 'package:medisupply_movil/data/data.dart';
 import 'package:medisupply_movil/state/app_state.dart';
 import 'package:medisupply_movil/utils/utils.dart';
-import 'package:medisupply_movil/utils/requests.dart';
 
-enum VendorScreenEnum { home, clientes, visitas, pedidos, recomendaciones }
-
-class VendorHome extends StatefulWidget {
+class VendorHomeScreen extends StatefulWidget {
   final VoidCallback onOpenMenu;
   final void Function(VendorScreenEnum) onTapCard;
-  const VendorHome({
+  const VendorHomeScreen({
     super.key,
     required this.onOpenMenu,
     required this.onTapCard
   });
 
   @override
-  State<VendorHome> createState() => _VendorHomeState();
+  State<VendorHomeScreen> createState() => _VendorHomeScreenState();
 }
 
-class _VendorHomeState extends State<VendorHome> {
+class _VendorHomeScreenState extends State<VendorHomeScreen> {
   late Future<List<dynamic>> futureActiveClients;
   late Future<List<Visita>> futureVisitsToday;
   late Future<List<Order>> futureOrders;
   late Future<List<SalesPlan>> futureSalesPlans;
   late Future<List> combinedOrdersAndSalesPlans;
-
-  String _getSalesPercentage() {
-    return '87%';
-  }
 
   @override
   void initState() {
@@ -70,28 +61,8 @@ class _VendorHomeState extends State<VendorHome> {
                 salesGoal = '-';
               } else if (snapshot.hasData) {
                 final orders = snapshot.data![0] as List<Order>;
-
-                final filteredOrders = orders.where((order) {
-                  final orderDate = DateTime.parse(order.fecha);
-                  final now = DateTime.now();
-                  return orderDate.year == now.year && orderDate.month == now.month;
-                });
-
-                // total sells price with comma separation
-                final totalSales = filteredOrders.fold<double>(0, (previousValue, order) => previousValue + order.total);
-                monthSales = toMoneyFormat(totalSales);
-
-                final plans = snapshot.data![1] as List<SalesPlan>;
-
-                // all active sales plans
-                final activePlans = plans.where((plan) => plan.state == 'activo').toList();
-                double totalGoal = 0;
-                for (var plan in activePlans) {
-                  totalGoal += (plan.totalSales / plan.sellers);
-                }
-
-                double percentage = totalGoal == 0 ? 0 : (totalSales / totalGoal) * 100;
-                salesGoal = '${toMoneyFormat(percentage)}%';
+                final sales = snapshot.data![1] as List<SalesPlan>;
+                (monthSales, salesGoal) = _getMonthSalesAndGoals(orders, sales);
               }
 
               return HomeCard(
@@ -270,5 +241,29 @@ class _VendorHomeState extends State<VendorHome> {
     }
 
     return count;
+  }
+
+  (String, String) _getMonthSalesAndGoals(List<Order> orders, List<SalesPlan> plans) {
+    final filteredOrders = orders.where((order) {
+      final orderDate = DateTime.parse(order.fecha);
+      final now = DateTime.now();
+      return orderDate.year == now.year && orderDate.month == now.month;
+    });
+
+    // total sells price with comma separation
+    final totalSales = filteredOrders.fold<double>(0, (previousValue, order) => previousValue + order.total);
+    final monthSales = toMoneyFormat(totalSales);
+
+    // all active sales plans
+    final activePlans = plans.where((plan) => plan.state == 'activo').toList();
+    double totalGoal = 0;
+    for (var plan in activePlans) {
+      totalGoal += (plan.totalSales / plan.sellers);
+    }
+
+    double percentage = totalGoal == 0 ? 0 : (totalSales / totalGoal) * 100;
+    final salesGoal = '${toMoneyFormat(percentage)}%';
+
+    return (monthSales, salesGoal);
   }
 }

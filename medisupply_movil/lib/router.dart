@@ -59,14 +59,11 @@ class AppRouterDelegate extends RouterDelegate<AppView>
       case AppView.register:
         screen = const RegisterScreen();
         break;
-      case AppView.adminHome:
-        screen = const AdminHomeScreen();
-        break;
       case AppView.vendorHome:
         screen = const VendorScreen();
         break;
       case AppView.clientHome:
-        screen = const ClientHomeScreen();
+        screen = const ClientScreen();
         break;
     }
 

@@ -60,7 +60,7 @@ class AppState extends ChangeNotifier {
   // Para deep linking inicial
   void setInitialFromPath(String path) {
     final view = appViewFromPath(path);
-    if (view == AppView.vendorHome || view == AppView.clientHome || view == AppView.adminHome) {
+    if (view == AppView.vendorHome || view == AppView.clientHome) {
       // Necesitaría autenticación; por ahora redirigimos a login si no autenticado
       if (!isAuthenticated) {
         _currentView = AppView.login;

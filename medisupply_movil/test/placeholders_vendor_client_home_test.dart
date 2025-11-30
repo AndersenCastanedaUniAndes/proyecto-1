@@ -62,7 +62,7 @@ void main() {
     testWidgets('ClientHomeScreen shows Recent Activity and cards navigate', (tester) async {
       final state = AppState();
       state.navigateTo(AppView.clientHome);
-      await tester.pumpWidget(_wrapWithApp(const ClientHomeScreen(), state));
+      await tester.pumpWidget(_wrapWithApp(const ClientScreen(), state));
 
       await tester.pumpAndSettle();
 

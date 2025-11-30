@@ -39,6 +39,7 @@ class AppStyles {
   static Color green2 = Color(0xFF008236);
   static Color blue1 = Color(0xFF155dfc);
   static Color blue2 = Color(0xFF1447E6);
+  static Color blue3 = Color(0xFF4682B4);
   static Color red1 = Color(0xFFe7000b);
   static Color red2 = Color(0xFFd4183d);
   static Color orange = Color(0xFFff6900);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:medisupply_movil/styles/styles.dart';
 
 class ConfirmationButton extends StatefulWidget {
   const ConfirmationButton({
@@ -32,7 +33,7 @@ class _ConfirmationButtonState extends State<ConfirmationButton> {
         ),
         backgroundColor: widget.isEnabled
             ? null
-            : WidgetStateProperty.all<Color>(Color(0xFF4682B4).withValues(alpha: 0.5)),
+            : WidgetStateProperty.all<Color>(AppStyles.blue3.withValues(alpha: 0.5)),
       ),
       onPressed: widget.isLoading ? null : widget.onTap,
       child: Padding(

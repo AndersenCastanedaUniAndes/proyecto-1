@@ -1,39 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:medisupply_movil/data/data.dart';
 import 'package:medisupply_movil/state/app_state.dart';
 import 'package:medisupply_movil/styles/styles.dart';
-import 'package:medisupply_movil/utils/utils.dart';
 import 'package:medisupply_movil/widgets/widgets.dart';
+import 'package:medisupply_movil/data/data.dart';
+import 'package:medisupply_movil/utils/utils.dart';
 import 'package:provider/provider.dart';
 
-class VendorOrderScreen extends StatefulWidget {
+class ClientOrdersScreen extends StatefulWidget {
   final VoidCallback onBack;
-  const VendorOrderScreen({super.key, required this.onBack});
+  const ClientOrdersScreen({super.key, required this.onBack});
 
   @override
-  State<VendorOrderScreen> createState() => _VendorOrderScreenState();
+  State<ClientOrdersScreen> createState() => _ClientOrdersScreenState();
 }
 
-class _VendorOrderScreenState extends State<VendorOrderScreen>
+class _ClientOrdersScreenState extends State<ClientOrdersScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController = TabController(length: 2, vsync: this);
 
-  // Nuevo pedido
-  final _formKey = GlobalKey<FormState>();
-  String? _clienteSel;
+  // Nuevo pedido (para cliente actual)
   final _fechaCtrl = TextEditingController();
   bool _isCreatingOrder = false;
-  bool _isLoadingClients = false;
+  final Map<int, int> _cantidades = {}; // productoId -> cantidad
   bool _isLoadingInventory = false;
   bool _isLoadingHistory = false;
 
-  final Map<int, int> _cantidades = {}; // productoId -> cantidad
-
   // Filtros historial
   final _filtroFechaCtrl = TextEditingController();
-  final _filtroClienteCtrl = TextEditingController();
-
-  late Map<int, String> _clients = const {};
 
   late List<Product> _products = [];
 
@@ -41,18 +34,15 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
 
   List<Order> get _filteredOrders {
     final fFecha = _filtroFechaCtrl.text.trim();
-    final fCli = _filtroClienteCtrl.text.trim().toLowerCase();
     return _orders.where((p) {
       final fechaOk = fFecha.isEmpty || p.fecha.contains(fFecha);
-      final clienteOk = fCli.isEmpty || p.cliente.toLowerCase().contains(fCli);
-      return fechaOk && clienteOk;
+      return fechaOk;
     }).toList();
   }
 
   @override
   void initState() {
     super.initState();
-    _loadClients();
     _loadInventory();
     _loadHistory();
   }
@@ -62,65 +52,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
     _tabController.dispose();
     _fechaCtrl.dispose();
     _filtroFechaCtrl.dispose();
-    _filtroClienteCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadClients() async {
-    setState(() => _isLoadingClients = true);
-
-    final state = context.read<AppState>();
-
-    final response = await getClientsSmall(state.id, state.token);
-    setState(() => _isLoadingClients = false);
-
-    try {
-      _clients = response;
-    } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al cargar los clientes: $error'),
-        ),
-      );
-    }
-  }
-
-  Future<void> _loadInventory() async {
-    setState(() => _isLoadingInventory = true);
-
-    final state = context.read<AppState>();
-
-    final products = await getInventory(state.id, state.token);
-    setState(() => _isLoadingInventory = false);
-
-    try {
-      _products = products;
-    } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al cargar el inventario: $error'),
-        ),
-      );
-    }
-  }
-
-  Future<void> _loadHistory() async {
-    setState(() => _isLoadingHistory = true);
-
-    final state = context.read<AppState>();
-
-    final response = await getVendorOrders(state.id, state.token);
-    setState(() => _isLoadingHistory = false);
-
-    try {
-      _orders = response;
-    } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al cargar el historial de pedidos: $error'),
-        ),
-      );
-    }
   }
 
   double _calculateTotal() {
@@ -132,7 +64,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
     return total;
   }
 
-  void _setQuantity(int productoId, int cantidad) {
+  void _setCantidad(int productoId, int cantidad) {
     setState(() {
       if (cantidad <= 0) {
         _cantidades.remove(productoId);
@@ -142,24 +74,8 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
     });
   }
 
-  Future<void> _pickDate() async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: now,
-      firstDate: DateTime(now.year - 1),
-      lastDate: DateTime(now.year + 2),
-    );
-    if (picked != null) {
-      _fechaCtrl.text = picked.toIso8601String().substring(0, 10);
-    } else {
-      _fechaCtrl.clear();
-    }
-    setState(() {});
-  }
-
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) {
+    if (_fechaCtrl.text.isEmpty || _cantidades.isEmpty) {
       return;
     }
 
@@ -180,12 +96,12 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
 
     final response = await createOrder({
       'fecha': _fechaCtrl.text.trim(),
-      'vendedor': state.userName,
-      'vendedor_id': state.id,
+      'vendedor': 'none',
+      'vendedor_id': -1,
       'productos': productos,
-      'cliente': _clienteSel,
-      'cliente_id': _clients.entries.firstWhere((entry) => entry.value == _clienteSel!).key,
-      'comision': (_calculateTotal() * 0.05).round(),
+      'cliente': state.userName,
+      'cliente_id': state.id,
+      'comision': 0,
     }, state.id, state.token);
 
     setState(() => _isCreatingOrder = false);
@@ -202,12 +118,27 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
     _loadHistory();
 
     setState(() {
-      _clienteSel = null;
       _fechaCtrl.clear();
       _cantidades.clear();
       _isCreatingOrder = false;
       _tabController.index = 1; // ir a historial
     });
+  }
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 2),
+    );
+    if (picked != null) {
+      _fechaCtrl.text = picked.toIso8601String().substring(0, 10);
+    } else {
+      _fechaCtrl.clear();
+    }
+    setState(() {});
   }
 
   Future<void> _filterDate() async {
@@ -226,6 +157,44 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
     setState(() {});
   }
 
+  Future<void> _loadInventory() async {
+    setState(() => _isLoadingInventory = true);
+
+    final state = context.read<AppState>();
+
+    final response = await getInventory(state.id, state.token);
+    setState(() => _isLoadingInventory = false);
+
+    try {
+      _products = response;
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cargar el inventario: $error'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _loadHistory() async {
+    setState(() => _isLoadingHistory = true);
+
+    final state = context.read<AppState>();
+
+    final response = await getClientOrders(state.id, state.token);
+    setState(() => _isLoadingHistory = false);
+
+    try {
+      _orders = response;
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al cargar el inventario: $error'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -234,7 +203,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ScreenTitleAndBackNavigation(
-          title: 'Pedidos',
+          title: 'Mis Pedidos',
           subtitle: '${_filteredOrders.length} pedidos',
           textTheme: textTheme,
           onBack: widget.onBack,
@@ -268,7 +237,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
                   children: [
                     Icon(AppIcons.add, size: 16, color: Colors.black),
                     Text(
-                      "Nuevo",
+                      "Crear Pedido",
                       style: textTheme.labelMedium?.copyWith(fontSize: 13),
                     ),
                   ],
@@ -281,7 +250,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
                   spacing: 8,
                   children: [
                     Icon(AppIcons.shoppingCart, size: 16, color: Colors.black),
-                    Text("Historial", style: textTheme.labelMedium),
+                    Text("Mis Pedidos", style: textTheme.labelMedium),
                   ],
                 ),
               ),
@@ -295,10 +264,10 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
             controller: _tabController,
             children: [
               _buildNuevo(context),
-              _buildHistory(context),
+              _buildHistorial(context),
             ],
           ),
-        ),
+        )
       ],
     );
   }
@@ -311,74 +280,39 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
         decoration: AppStyles.decoration,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Nuevo Pedido',
-                  style: textTheme.titleMedium?.copyWith(fontSize: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Nuevo Pedido',
+                style: textTheme.titleMedium?.copyWith(fontSize: 16),
+              ),
+              const SizedBox(height: 12),
+
+              Text('Fecha', style: textTheme.titleMedium),
+              const SizedBox(height: 2),
+
+              TextFormField(
+                controller: _fechaCtrl,
+                readOnly: true,
+                decoration: baseInputDecoration().copyWith(
+                  hintText: 'mm/dd/yyyy',
+                  suffixIcon: Icon(AppIcons.calendar, size: 14, color: Colors.white)
                 ),
-                const SizedBox(height: 18),
+                onTap: _pickDate,
+                validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
+              ),
+              const SizedBox(height: 20),
 
-                Row(
-                  spacing: 12,
-                  children: [
-                    Expanded(child: Text('Cliente', style: textTheme.titleMedium)),
-                    Expanded(child: Text('Fecha', style: textTheme.titleMedium))
-                  ],
-                ),
-                const SizedBox(height: 2),
+              Text('Productos', style: textTheme.titleMedium),
+              const SizedBox(height: 8),
 
-                Row(
-                  spacing: 12,
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        dropdownColor: Colors.white,
-                        menuMaxHeight: 300,
-                        isExpanded: true,
-                        icon: const SizedBox.shrink(),
-                        value: _clienteSel,
-                        items: _clients.values.map((c) => DropdownMenuItem(
-                          value: c,
-                          child: Text(c, style: textTheme.bodySmall),
-                        )).toList(),
-                        onChanged: (v) => setState(() => _clienteSel = v),
-                        decoration: baseInputDecoration().copyWith(
-                          hintText: _isLoadingClients ? 'Cargando...' : 'Seleccionar',
-                          suffixIcon: Icon(AppIcons.chevronDown, size: 16),
-                        ),
-                        validator: (v) => (v == null || v.isEmpty) ? 'Selecciona un cliente' : null,
-                      ),
-                    ),
-
-                    Expanded(
-                      child: TextFormField(
-                        controller: _fechaCtrl,
-                        readOnly: true,
-                        decoration: baseInputDecoration().copyWith(
-                          hintText: 'mm/dd/yyyy',
-                          suffixIcon: Icon(AppIcons.calendar, size: 14, color: Colors.white)
-                        ),
-                        onTap: _pickDate,
-                        validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                Text('Productos', style: textTheme.labelLarge),
-                const SizedBox(height: 8),
-
-                Container(
-                  constraints: const BoxConstraints(minHeight: 162),
-                  decoration: AppStyles.decoration,
-                  child: _isLoadingInventory
-                    ? Loading()
-                    : ListView.separated(
+              Container(
+                constraints: const BoxConstraints(minHeight: 162),
+                decoration: AppStyles.decoration,
+                child: _isLoadingInventory
+                  ? Loading()
+                  : ListView.separated(
                     shrinkWrap: true,
                     itemCount: _products.length,
                     separatorBuilder: (_, __) => Container(),
@@ -430,7 +364,7 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
                                       borderSide: BorderSide.none,
                                     ),
                                   ),
-                                  onChanged: (v) => _setQuantity(p.id, int.tryParse(v) ?? 0),
+                                  onChanged: (v) => _setCantidad(p.id, int.tryParse(v) ?? 0),
                                 ),
                               ),
                             ],
@@ -439,85 +373,60 @@ class _VendorOrderScreenState extends State<VendorOrderScreen>
                       );
                     },
                   ),
-                ),
-                const SizedBox(height: 12),
+              ),
+              const SizedBox(height: 12),
 
-                if (_cantidades.isNotEmpty)
-                  Container(
-                    decoration: AppStyles.decoration,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Total del pedido:', style: textTheme.bodySmall,),
-                          Text(
-                            '\$${toMoneyFormat(_calculateTotal())}',
-                            style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: AppStyles.green1)
-                          ),
-                        ],
-                      ),
+              if (_cantidades.isNotEmpty)
+                Container(
+                  decoration: AppStyles.decoration,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Total del pedido:', style: textTheme.bodySmall,),
+                        Text(
+                          '\$${toMoneyFormat(_calculateTotal())}',
+                          style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold, color: AppStyles.green1)
+                        ),
+                      ],
                     ),
                   ),
-                const SizedBox(height: 8),
-
-                ConfirmationButton(
-                  isEnabled: !_isLoadingClients && !_isLoadingInventory,
-                  isLoading: _isCreatingOrder,
-                  onTap: _submit,
-                  idleLabel: 'Registrar Pedido',
-                  onTapLabel: 'Registrando...',
                 ),
-              ],
-            ),
+              const SizedBox(height: 8),
+
+              ConfirmationButton(
+                isEnabled: !_isLoadingInventory && _cantidades.isNotEmpty,
+                isLoading: _isCreatingOrder,
+                onTap: _submit,
+                idleLabel: 'Crear Pedido',
+                onTapLabel: 'Creando pedido...'
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildHistory(BuildContext context) {
+  Widget _buildHistorial(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final orders = _filteredOrders;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          spacing: 12,
-          children: [
-            Expanded(child: Text('Filtrar por fecha', style: textTheme.titleMedium)),
-            Expanded(child: Text('Filtrar por cliente', style: textTheme.titleMedium,))
-          ],
-        ),
+        Text('Filtrar por fecha', style: textTheme.titleMedium),
         const SizedBox(height: 2),
 
-        Row(
-          spacing: 12,
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _filtroFechaCtrl,
-                readOnly: true,
-                decoration: baseInputDecoration().copyWith(
-                  hintText: 'mm/dd/yyyy',
-                  suffixIcon: Icon(AppIcons.calendar, size: 14, color: Colors.white)
-                ),
-                onTap: _filterDate,
-              ),
-            ),
-
-            Expanded(
-              child: TextField(
-                controller: _filtroClienteCtrl,
-                decoration: baseInputDecoration().copyWith(
-                  hintText: 'Cliente...',
-                  prefixIcon: Icon(AppIcons.search, size: 14)
-                ),
-                onChanged: (_) => setState(() {}),
-              ),
-            ),
-          ],
+        TextFormField(
+          controller: _filtroFechaCtrl,
+          readOnly: true,
+          decoration: baseInputDecoration().copyWith(
+            hintText: 'mm/dd/yyyy',
+            suffixIcon: Icon(AppIcons.calendar, size: 14, color: Colors.white)
+          ),
+          onTap: _filterDate,
         ),
         const SizedBox(height: 12),
 
