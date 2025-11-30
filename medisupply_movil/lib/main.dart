@@ -5,7 +5,7 @@ import 'state/app_state.dart';
 import 'router.dart';
 
 Future<void> main() async {
-  await dotenv.load(fileName: "assets/env/.env");
+  await dotenv.load(fileName: "assets/environment");
   runApp(const MainApp());
 }
 
