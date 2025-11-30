@@ -11,7 +11,7 @@ class ClientScreen extends StatefulWidget {
 }
 
 class _ClientScreenState extends State<ClientScreen> {
-  ClientView _current = ClientView.entregas;
+  ClientView _current = ClientView.home;
   bool _showUserMenu = false;
 
   void _goHome() => setState(() => _current = ClientView.home);
