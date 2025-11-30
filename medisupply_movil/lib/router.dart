@@ -3,7 +3,6 @@ import 'package:medisupply_movil/screens/screens.dart';
 import 'package:provider/provider.dart';
 import 'view_types.dart';
 import 'state/app_state.dart';
-import 'screens/placeholders.dart';
 
 /// Parser simple que convierte un RouteInformation (location) a AppView
 class AppRouteParser extends RouteInformationParser<AppView> {

@@ -12,7 +12,9 @@ void main() {
 
   test('AppState login sets userType and view accordingly', () async {
     final s = AppState();
-    await s.login(userName: 'a', password: 'b', asType: UserType.cliente);
+    // Simula una respuesta exitosa del backend
+    const fakeBody = '{"id": 1, "access_token": "tok", "nombre_usuario": "a"}';
+    s.login(body: fakeBody, asType: UserType.cliente);
     expect(s.userType, UserType.cliente);
     expect(s.currentView, AppView.clientHome);
   });
