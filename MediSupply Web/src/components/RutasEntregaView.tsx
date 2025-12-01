@@ -46,8 +46,8 @@ interface Pedido {
   longitud: number;
   volumen: number; // m³
   peso: number; // kg
-  ventanaInicio: string; // HH:MM
-  ventanaFin: string; // HH:MM
+  ventana_inicio: string; // HH:MM
+  ventana_fin: string; // HH:MM
   productos: string[];
   valor: number;
   seleccionado: boolean;
@@ -242,7 +242,7 @@ export function RutasEntregaView({ onSuccess }: RutasEntregaViewProps) {
       );
 
       const puntosEntrega = pedidosSeleccionadosData
-        .sort((a, b) => a.ventanaInicio.localeCompare(b.ventanaInicio))
+        .sort((a, b) => a.ventana_inicio.localeCompare(b.ventana_inicio))
         .map((pedido) => ({
           pedidoId: pedido.id,
           direccion: pedido.direccion,
@@ -773,7 +773,7 @@ export function RutasEntregaView({ onSuccess }: RutasEntregaViewProps) {
                                   </div>
                                   <div className="grid grid-cols-2 gap-2">
                                     <div>Vol: {pedido.volumen}m³ | Peso: {pedido.peso}kg</div>
-                                    <div>Ventana: {pedido.ventanaInicio} - {pedido.ventanaFin}</div>
+                                    <div>Ventana: {pedido.ventana_inicio} - {pedido.ventana_fin}</div>
                                   </div>
                                   <div className="mt-1">
                                     <span className="text-xs">Productos: {pedido.productos.join(", ")}</span>
